@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('test', 'runner', 'devo8', 'emu_devo8', 'emu_tx15', 'lint')]
+    [ValidateSet('test', 'runner', 'devo8', 'emu_devo8', 'emu_tx15', 'tx15-test', 'lint')]
     [string]$Target = 'test',
     [string]$ToolsRoot = (Join-Path (Split-Path $PSScriptRoot -Parent) '..\tools'),
     [string]$NativeRoot = (Join-Path $env:TEMP 'new-deviation-ucrt64'),
@@ -14,7 +14,7 @@ $bashPath = Join-Path $toolsPath 'msys64\usr\bin\bash.exe'
 if (!(Test-Path -LiteralPath $bashPath)) {
     throw "MSYS2 is missing at $bashPath. See docs/tx15/build.md."
 }
-if ($Target -like 'emu_*' -and !(Test-Path -LiteralPath (Join-Path $NativeRoot 'bin\g++.exe'))) {
+if (($Target -like 'emu_*' -or $Target -eq 'tx15-test') -and !(Test-Path -LiteralPath (Join-Path $NativeRoot 'bin\g++.exe'))) {
     throw "Native compiler is missing at $NativeRoot. See docs/tx15/build.md."
 }
 if ($Target -eq 'devo8' -and !(Test-Path -LiteralPath (Join-Path $ArmRoot 'bin\arm-none-eabi-gcc.exe'))) {

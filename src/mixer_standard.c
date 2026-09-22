@@ -30,6 +30,18 @@
 MappedSimpleChannels mapped_std_channels;
 extern const u8 EATRG0[PROTO_MAP_LEN];
 
+int STDMIXER_SelectSwitch(int src, int dir)
+{
+    int sw = INPUT_SelectAbbrevSource(src, dir);
+    if (sw < INP_HAS_CALIBRATION + 1)
+        sw = INP_HAS_CALIBRATION + 1;
+#ifdef STDMIXER_LAST_SWITCH
+    if (sw > STDMIXER_LAST_SWITCH)
+        sw = STDMIXER_LAST_SWITCH;
+#endif
+    return sw;
+}
+
 void STDMIXER_Preset()
 {
     if(Model.mixer_mode == MIXER_ADVANCED)
@@ -123,6 +135,16 @@ void STDMIXER_SetChannelOrderByProtocol()
 unsigned STDMIXER_ValidateTraditionModel()
 {
     struct Mixer *mix = MIXER_GetAllMixers();
+#ifdef STDMIXER_LAST_SWITCH
+    for (unsigned idx = 0; idx < NUM_MIXERS; idx++) {
+        if (mix[idx].src && INPUT_NumSwitchPos(MIXER_SRC(mix[idx].sw)) > 3)
+            return 0;
+    }
+    for (unsigned ch = 0; ch < NUM_OUT_CHANNELS; ch++) {
+        if (INPUT_NumSwitchPos(MIXER_SRC(Model.limits[ch].safetysw)) > 3)
+            return 0;
+    }
+#endif
     unsigned thro_mixer_count = 0;
     unsigned pit_mixer_count = 0;
     unsigned drexp_mixer_count = 0;
@@ -235,6 +257,13 @@ void save_switch(int dest, FunctionSwitch switch_type, int thold_sw)
 
 void STDMIXER_SaveSwitches()
 {
+#ifdef STDMIXER_LAST_SWITCH
+    /* Standard pages and their temporary mixer arrays support at most 3 positions. */
+    for (unsigned i = 0; i < SWITCHFUNC_LAST; i++) {
+        if (INPUT_NumSwitchPos(mapped_std_channels.switches[i]) > 3)
+            return;
+    }
+#endif
     save_switch(mapped_std_channels.gear, SWITCHFUNC_GYROSENSE, 0);
     save_switch(mapped_std_channels.aux2, SWITCHFUNC_GYROSENSE, 0);
     save_switch(mapped_std_channels.aile, SWITCHFUNC_DREXP_AIL, 0);

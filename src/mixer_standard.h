@@ -36,5 +36,6 @@ typedef struct {
 #define GYROMIXER_COUNT 3
 
 extern MappedSimpleChannels mapped_std_channels;
+int STDMIXER_SelectSwitch(int src, int dir);
 
 #endif

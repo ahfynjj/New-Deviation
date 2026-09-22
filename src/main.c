@@ -92,6 +92,10 @@ int main() {
     //Only do this after we've initialized all channel data so the saftey works
     PROTOCOL_InitModules();
     GUI_DrawScreen();
+#ifdef STRICT_MODEL_INPUTS
+    if (CONFIG_ModelLoadError()[0])
+        PAGE_ShowWarning("Model load failed", CONFIG_ModelLoadError());
+#endif
 
     // Add startup delay to make sure audio player is initialized
     // AUDIO_Init() has already been called by CONFIG_ReadModel()

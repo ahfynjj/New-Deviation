@@ -46,11 +46,19 @@ run_target() {
             # backslash under Make 4.4; override the result without modifying it.
             make -C src "${flags[@]}" devo8 SRCLIBDIR="$root/src/libopencm3/lib"
             ;;
-        emu_devo8|emu_tx15)
+        emu_devo8|emu_tx15|tx15-test)
             export PATH="$native/bin:$PATH"
-            make -C src "${flags[@]}" "win_$target" \
+            local emutarget="$target"
+            [[ "$target" != tx15-test ]] || emutarget=emu_tx15
+            make -C src "${flags[@]}" "win_$emutarget" \
                 FLTK_DIR="$native" PORTAUDIO_DIR="$native" \
                 EXTRA_CFLAGS="-isystem $native/include"
+            if [[ "$target" == tx15-test ]]; then
+                make -C src -f ../utils/tx15-test.mk TARGET=emu_tx15 WINDOWS=1 \
+                    FLTK_DIR="$native" PORTAUDIO_DIR="$native" \
+                    EXTRA_CFLAGS="-isystem $native/include" tx15-input-test.exe
+                python3 utils/run-tx15-tests.py
+            fi
             ;;
         lint)
             (cd src && python3 ../utils/run_linter.py --diff --skip-github)

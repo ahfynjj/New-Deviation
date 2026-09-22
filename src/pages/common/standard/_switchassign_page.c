@@ -50,10 +50,7 @@ static const char *switch_cb(guiObject_t *obj, int dir, void *data)
 {
     (void)obj;
     FunctionSwitch switch_type = (long)data;
-    int sw = INPUT_SelectAbbrevSource(mp->switch_idx[switch_type], dir);
-    if (sw < INP_HAS_CALIBRATION+1)
-        sw = INP_HAS_CALIBRATION+1;
+    int sw = STDMIXER_SelectSwitch(mp->switch_idx[switch_type], dir);
     mp->switch_idx[switch_type] = sw;
     return INPUT_SourceNameAbbrevSwitch(tempstring, mp->switch_idx[switch_type]);
 }
-

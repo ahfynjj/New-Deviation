@@ -27,6 +27,36 @@ extern const u8 EATRG0[PROTO_MAP_LEN];
 struct Model Model;
 /*set this to write all model data even if it is the same as the default */
 static u32 crc32;
+#ifdef STRICT_MODEL_INPUTS
+static char model_load_error[80];
+static u8 model_save_blocked;
+static u8 model_loaded;
+
+const char *CONFIG_ModelLoadError(void)
+{
+    return model_load_error;
+}
+
+static void input_error(const char *value)
+{
+    if (!model_load_error[0])
+        snprintf(model_load_error, sizeof(model_load_error), "Unknown input: %.40s", value);
+}
+
+static void check_standard_inputs(void)
+{
+    if (Model.mixer_mode != MIXER_STANDARD)
+        return;
+    for (unsigned i = 0; i < NUM_MIXERS; i++) {
+        if (Model.mixers[i].src && INPUT_NumSwitchPos(MIXER_SRC(Model.mixers[i].sw)) > 3)
+            input_error("6POS requires Advanced mixer");
+    }
+    for (unsigned i = 0; i < NUM_OUT_CHANNELS; i++) {
+        if (INPUT_NumSwitchPos(MIXER_SRC(Model.limits[i].safetysw)) > 3)
+            input_error("6POS requires Advanced mixer");
+    }
+}
+#endif
 
 const char * const MODEL_TYPE_VAL[MODELTYPE_LAST] = { "heli", "plane", "multi" };
 
@@ -300,6 +330,9 @@ static u8 get_source(const char *section, const char *value)
         }
     }
     printf("%s: Could not parse Source %s\n", section, value);
+#ifdef STRICT_MODEL_INPUTS
+    input_error(value);
+#endif
     return 0;
 }
 
@@ -312,6 +345,9 @@ static u8 get_button(const char *section, const char *value)
         }
     }
     printf("%s: Could not parse Button %s\n", section, value);
+#ifdef STRICT_MODEL_INPUTS
+    input_error(value);
+#endif
     return 0;
 }
 
@@ -552,13 +588,21 @@ static int layout_ini_handler(void* user, const char* section, const char* name,
         {
             if(count)
                 return 1;
+            int found = 0;
             for (int j = 0; j <= NUM_SOURCES; j++) {
                 char cmp[10];
                 if(mapstrcasecmp(INPUT_SourceNameAbbrevSwitchReal(cmp, j), ptr+1) == 0) {
                     data[5] = j;
+                    found = 1;
                     break;
                 }
             }
+#ifdef STRICT_MODEL_INPUTS
+            if (!found)
+                input_error(ptr + 1);
+#else
+            (void)found;
+#endif
             break;
         }
     }
@@ -896,6 +940,9 @@ int assign_int(void* ptr, const struct struct_map *map, int map_size)
                     return 1;
                 }
             }
+#ifdef STRICT_MODEL_INPUTS
+            input_error(value);
+#endif
             return 1;
         }
         if (MATCH_KEY(TRIM_VALUE)) {
@@ -1232,6 +1279,12 @@ static void write_proto_opts(FILE *fh, struct Model *m)
 }
 
 u8 CONFIG_WriteModel(u8 model_num) {
+#ifdef STRICT_MODEL_INPUTS
+    if (model_save_blocked) {
+        snprintf(model_load_error, sizeof(model_load_error), "Save blocked: load a valid model or reset first");
+        return 0;
+    }
+#endif
     char file[20];
     FILE *fh;
     u8 idx;
@@ -1242,6 +1295,9 @@ u8 CONFIG_WriteModel(u8 model_num) {
     fh = fopen(file, "w");
     if (! fh) {
         printf("Couldn't open file: %s\n", file);
+#ifdef STRICT_MODEL_INPUTS
+        snprintf(model_load_error, sizeof(model_load_error), "Cannot save: %s", file);
+#endif
         return 0;
     }
     CONFIG_EnableLanguage(0);
@@ -1497,6 +1553,12 @@ static void clear_model(u8 full)
 }
 
 u8 CONFIG_ReadModel(u8 model_num) {
+#ifdef STRICT_MODEL_INPUTS
+    struct Model previous = Model;
+    u8 previous_model = Transmitter.current_model;
+    u32 previous_crc = crc32;
+    model_load_error[0] = 0;
+#endif
     crc32 = 0;
     Transmitter.current_model = model_num;
     clear_model(1);
@@ -1504,11 +1566,36 @@ u8 CONFIG_ReadModel(u8 model_num) {
     char file[30];
     auto_map = 0;
     get_model_file(file, model_num);
-    if (CONFIG_IniParse(file, ini_handler, &Model)) {
+    int parse_result = CONFIG_IniParse(file, ini_handler, &Model);
+    if (parse_result) {
         printf("Failed to parse Model file: %s\n", file);
     }
+#ifdef STRICT_MODEL_INPUTS
+    check_standard_inputs();
+    if (!parse_result && !model_load_error[0] && !ELEM_USED(Model.pagecfg2.elem[0]))
+        parse_result = !CONFIG_ReadLayout("layout/default.ini");
+    if (parse_result || model_load_error[0]) {
+        if (!model_load_error[0])
+            snprintf(model_load_error, sizeof(model_load_error), "Cannot load: %s", file);
+        Model = previous;
+        Transmitter.current_model = previous_model;
+        crc32 = previous_crc;
+        model_save_blocked = 1;
+        if (!model_loaded) {
+            clear_model(1);
+            Model.num_channels = 4;
+            strcpy(Model.name, "Load failed");
+        }
+        PROTOCOL_Load(1);
+        return 0;
+    }
+    model_save_blocked = 0;
+    model_loaded = 1;
+#endif
+#ifndef STRICT_MODEL_INPUTS
     if (! ELEM_USED(Model.pagecfg2.elem[0]))
         CONFIG_ReadLayout("layout/default.ini");
+#endif
     if(! PROTOCOL_HasPowerAmp(Model.protocol))
         Model.tx_power = TXPOWER_150mW;
     MIXER_SetMixers(NULL, 0);
@@ -1536,6 +1623,10 @@ u8 CONFIG_IsModelChanged() {
 }
 
 u8 CONFIG_SaveModelIfNeeded() {
+#ifdef STRICT_MODEL_INPUTS
+    if (model_save_blocked)
+        return 0;
+#endif
     if (CONFIG_IsModelChanged()) {
         crc32 = Crc(&Model, sizeof(Model));
         //printf("Saving model, page %d\n", PAGE_GetID());
@@ -1616,14 +1707,30 @@ u8 CONFIG_ReadTemplateByIndex(u8 template_num) {
 
 u8 CONFIG_ReadTemplate(const char *filename) {
     char file[25];
+#ifdef STRICT_MODEL_INPUTS
+    struct Model previous = Model;
+    model_load_error[0] = 0;
+#endif
 
     sprintf(file, "template/%s", filename);
     clear_model(0);
     auto_map = 0;
-    if (CONFIG_IniParse(file, ini_handler, &Model)) {
+    int parse_result = CONFIG_IniParse(file, ini_handler, &Model);
+#ifdef STRICT_MODEL_INPUTS
+    check_standard_inputs();
+    if (parse_result || model_load_error[0]) {
+        if (!model_load_error[0])
+            snprintf(model_load_error, sizeof(model_load_error), "Cannot load: %s", file);
+        Model = previous;
+        PROTOCOL_Load(1);
+        return 0;
+    }
+#else
+    if (parse_result) {
         printf("Failed to parse Model file: %s\n", file);
         return 0;
     }
+#endif
     if(auto_map)
         RemapChannelsForProtocol(EATRG0);
     MIXER_RegisterTrimButtons();
@@ -1634,11 +1741,25 @@ u8 CONFIG_ReadTemplate(const char *filename) {
 }
 
 u8 CONFIG_ReadLayout(const char *filename) {
+#ifdef STRICT_MODEL_INPUTS
+    struct PageCfg2 previous = Model.pagecfg2;
+    model_load_error[0] = 0;
+#endif
     memset(&Model.pagecfg2, 0, sizeof(Model.pagecfg2));
-    if (CONFIG_IniParse(filename, layout_ini_handler, &Model)) {
+    int parse_result = CONFIG_IniParse(filename, layout_ini_handler, &Model);
+#ifdef STRICT_MODEL_INPUTS
+    if (parse_result || model_load_error[0]) {
+        if (!model_load_error[0])
+            snprintf(model_load_error, sizeof(model_load_error), "Cannot load: %.50s", filename);
+        Model.pagecfg2 = previous;
+        return 0;
+    }
+#else
+    if (parse_result) {
         printf("Failed to parse Layout file: %s\n", filename);
         return 0;
     }
+#endif
     return 1;
 }
 

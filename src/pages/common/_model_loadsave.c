@@ -200,8 +200,8 @@ static void press_cb(guiObject_t *obj, s8 press_type, const void *data)
         }
     } else if (mp->menu_type == SAVE_MODEL) {
         /* Save Model */
-        CONFIG_WriteModel(selected);
-        CONFIG_ReadModel(selected);  //Reload the model after saving to switch (for future saves)
+        if (CONFIG_WriteModel(selected))
+            CONFIG_ReadModel(selected);  // Switch slots only after a successful save
     } else if (mp->menu_type == LOAD_TEMPLATE) {
         /* Load Template */
         get_idx_filename(tempstring, "template", ".ini", selected-1, "");
@@ -221,6 +221,10 @@ static void press_cb(guiObject_t *obj, s8 press_type, const void *data)
         CONFIG_ReadLayout(tempstring);
     }
     PAGE_Pop();
+#ifdef STRICT_MODEL_INPUTS
+    if (CONFIG_ModelLoadError()[0])
+        PAGE_ShowWarning("Model load failed", CONFIG_ModelLoadError());
+#endif
 }
 
 static int get_scroll_count(enum loadSaveType p)

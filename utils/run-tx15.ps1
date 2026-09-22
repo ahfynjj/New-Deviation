@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot -Parent
 $exe = Join-Path $repo 'src\emu_tx15.exe'
-$runtime = Join-Path $repo 'local\tx15'
+$runtime = Join-Path $repo 'local\tx15-native'
 if (!(Test-Path -LiteralPath $exe)) {
     throw 'Build first: .\utils\build-msys2.ps1 -Target emu_tx15'
 }
@@ -18,7 +18,7 @@ $oldFilesystem = $env:DEVIATION_EMU_FILESYSTEM
 $oldCapture = $env:DEVIATION_EMU_CAPTURE
 try {
     $env:PATH = "$NativeRoot\bin;$oldPath"
-    $env:DEVIATION_EMU_FILESYSTEM = '../local/tx15'
+    $env:DEVIATION_EMU_FILESYSTEM = '../local/tx15-native'
     Remove-Item Env:DEVIATION_EMU_CAPTURE -ErrorAction SilentlyContinue
     # This launcher is explicitly for the user's interactive simulator window.
     Start-Process -FilePath $exe -WorkingDirectory (Join-Path $repo 'src') -Wait

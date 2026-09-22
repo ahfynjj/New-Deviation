@@ -54,20 +54,14 @@
 #define NUM_TRIMS 10
 #define MAX_POINTS 13
 #define NUM_MIXERS ((NUM_OUT_CHANNELS + NUM_VIRT_CHANNELS) * 4)
-#define INP_HAS_CALIBRATION 4
+#define INP_HAS_CALIBRATION 6
+#define EMU_TARGET_INPUTS 1
+#define STRICT_MODEL_INPUTS 1
+#define STDMIXER_LAST_SWITCH INP_SWF0
 #define CHANTEST_BUTTON_PLACEMENT { \
     {51, 120}, {51, 105}, {-229, 120}, {-229, 105}, \
     {-106, 135}, {21, 135}, {-259, 135}, {174, 135}, \
-    {30, 71}, {30, 56}, {-250, 71}, {-250, 56}, \
     {185, 220}, {185, 200}, {-95, 220}, {-95, 200}, {200, 180}, {-80, 180}, \
 }
-/* Virtual switch values consumed by emu/channels.c; zeroes are unused. */
-#define SWITCHES \
-    TWO_WAY(INP_RUD_DR, 0, 0) \
-    TWO_WAY(INP_ELE_DR, 0, 0) \
-    TWO_WAY(INP_AIL_DR, 0, 0) \
-    TWO_WAY(INP_GEAR, 0, 0) \
-    THREE_WAY(INP_MIX, 0, 0, 0) \
-    THREE_WAY(INP_FMOD, 0, 0, 0)
 
 #endif

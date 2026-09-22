@@ -102,7 +102,13 @@ public:
         const char *k;
         switch(event) {
         case FL_FOCUS:
+            return 1;
         case FL_UNFOCUS:
+#ifdef EMU_TARGET_INPUTS
+            EMU_ReleaseTargetKeys();
+            gui.buttons = 0;
+            gui.mouse = 0;
+#endif
             return 1;
         case FL_KEYDOWN:
         //case FL_SHORTCUT:
@@ -119,6 +125,10 @@ public:
                 gui.powerdown = 1;
                 return 1;
             }
+#ifdef EMU_TARGET_INPUTS
+            if (EMU_HandleTargetKey(Fl::event_key(), 1))
+                return 1;
+#endif
             switch(Fl::event_key()) {
             case '\'':
             case '\\':
@@ -250,6 +260,10 @@ public:
 #endif
             }
         case FL_KEYUP:
+#ifdef EMU_TARGET_INPUTS
+            if (EMU_HandleTargetKey(Fl::event_key(), 0))
+                return 1;
+#endif
             k = Fl::event_text();
             key = get_button(k[0]);
             if(key < 0)
