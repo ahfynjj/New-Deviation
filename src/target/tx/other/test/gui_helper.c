@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "emu.h"
@@ -36,8 +37,11 @@ void AssertScreenshot(CuTest* t, const char* filename)
 
     if (png_open_file_read(&png, filepath) != PNG_NO_ERROR)
     {
-        printf("Missing expected screenshot. Please add %s to git repo.\n", filepath);
+        char message[160];
+        snprintf(message, sizeof(message), "Missing or unreadable screenshot baseline: %s", filepath);
+        snprintf(filepath, sizeof(filepath), "%s.png", filename);
         WriteScreen(filepath);
+        CuFail(t, message);
     }
     else
     {
@@ -60,3 +64,5 @@ void AssertScreenshot(CuTest* t, const char* filename)
     }
 }
 
+#define TESTNAME screenshot
+#include "tests.h"

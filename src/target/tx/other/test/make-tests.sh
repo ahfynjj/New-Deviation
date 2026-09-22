@@ -43,9 +43,10 @@ echo \
     CuSuiteSummary(suite, output);
     CuSuiteDetails(suite, output);
     printf("%s\\n", output->buffer);
+    int failCount = suite->failCount;
     CuStringDelete(output);
     CuSuiteDelete(suite);
-    return suite->failCount;
+    return failCount;
 }
 
 int main(void)

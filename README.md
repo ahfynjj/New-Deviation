@@ -18,7 +18,7 @@ EdgeTX 仅作为硬件定义与底层实现参考；本项目不在 EdgeTX 应�
 
 当前处于 P0：源码基线、开发环境和硬件接口审计阶段。
 
-已完成开发计划及初步源码检查。**尚未实现 TX15 目标，尚未完成本地构建或实机验证，没有可刷写的 TX15 固件。** 仓库中的既有机型支持来自上游，不代表 New Deviation 已重新验证这些机型。
+已建立 Windows 构建环境，通过 79 项主机测试和 8 项工具回归，完成原 DEVO8 固件及模拟器编译，并记录 TX15 首轮硬件接口审计。**尚未实现 TX15 目标，没有可刷写的 TX15 固件，也未进行实机验证。**
 
 ## 开发入口
 
@@ -26,6 +26,9 @@ EdgeTX 仅作为硬件定义与底层实现参考；本项目不在 EdgeTX 应�
 - [分阶段开发计划](docs/superpowers/plans/2026-09-21-tx15-native-plan.md)
 - [工作状态与下一步](TODO.md)
 - [源码及环境基线](docs/tx15/baseline.md)
+- [Windows 构建命令](docs/tx15/build.md)
+- [TX15 硬件映射](docs/tx15/hardware-map.md)
+- [启动与内存审计](docs/tx15/boot-memory.md)
 
 计划顺序：原版构建与测试 → 彩屏模拟目标 → H7/TX15 底层 → ELRS 闭环 → 首版完善。
 
@@ -38,7 +41,7 @@ git clone --recurse-submodules https://github.com/ahfynjj/New-Deviation.git
 cd New-Deviation
 ```
 
-当前构建环境尚未验证完成。依赖、原版测试入口和环境缺口见开发计划及基线文档；不能把原 DEVO 固件刷入 TX15。
+已验证的构建入口和依赖见 [构建说明](docs/tx15/build.md)；不能把原 DEVO 固件刷入 TX15。
 
 上游资料：[官网](https://www.deviationtx.com/)、[开发文档](https://www.deviationtx.com/wiki/development)、[Docker 构建说明](https://www.deviationtx.com/wiki/development/docker)。这些属于上游参考资料，不是本项目已验证的构建环境。
 

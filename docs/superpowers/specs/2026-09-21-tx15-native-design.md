@@ -1,6 +1,6 @@
 # New Deviation — 原生 TX15 适配设计
 
-日期：2026-09-21。状态：根据已确认方向形成的设计稿；实现细节尚未通过构建或实机验证。
+日期：2026-09-21。状态：设计已确认；2026-09-22 已完成原 DEVO8 构建与主机测试基线，TX15 实现及实机验证尚未完成。
 
 项目名称：New Deviation。项目仓库：https://github.com/ahfynjj/New-Deviation 。
 
@@ -21,7 +21,7 @@
 
 固定提交：`330193b9a4185f6a2cdc3af90d654169cd210094`。
 
-libopencm3 gitlink：`d55bbafddb9768228748f48a82967f91a910806e`，尚未取回。
+libopencm3 gitlink：`d55bbafddb9768228748f48a82967f91a910806e`，已取回并固定。
 
 源码含 `src/mixer.c`、`src/config/`、`src/pages/320x240x16/`、`src/protocol/crsf_uart.c`，以及 `src/tests/test_mixer.c`、`test_model.c` 和页面测试。当前 STM32 专用 MCU 子目录是 f1/f2，不能由旧目标直接推导 H7 支持。
 

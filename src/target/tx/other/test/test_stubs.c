@@ -12,10 +12,14 @@
     You should have received a copy of the GNU General Public License
     along with Deviation.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <unistd.h>
+
 #include "common.h"
 #include "mixer.h"
 #include "config/tx.h"
 #include "emu.h"
+
+struct Gui gui;
 
 void start_event_loop()
 {
@@ -63,6 +67,12 @@ void SPITouch_Calibrate(s32 xscale, s32 yscale, s32 xoff, s32 yoff)
 void CLOCK_Init()
 {
 }
+
+void CLOCK_RunOnce(void (*cb)(void))
+{
+    cb();
+}
+
 void CLOCK_StartTimer(unsigned us, u16 (*cb)(void))
 {
     (void)us;
@@ -93,6 +103,7 @@ void PWR_Sleep()
 {
 }
 
+#undef usleep
 void _usleep(u32 usec) {
     usleep(usec);
 }
@@ -203,3 +214,6 @@ void MCU_SerialNumber(u8 *var, int len)
 void PWR_JumpToProgrammer() {}
 
 void LED_Init() {}
+
+#define TESTNAME stubclock
+#include "tests.h"

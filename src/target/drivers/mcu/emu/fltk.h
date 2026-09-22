@@ -64,7 +64,7 @@ struct Gui {
     u8 scaled_img[SCREEN_X*SCREEN_Y*3];
 #endif
     u8 init;
-} gui;
+};
 
 extern struct Gui gui;
 void set_stick_positions();

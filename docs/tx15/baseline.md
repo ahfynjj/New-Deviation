@@ -1,48 +1,30 @@
-# 2026-09-21 原生 TX15 基线检查
+# 2026-09-22 构建及验证基线
 
-## 已执行
+上游固定为 `330193b9a4185f6a2cdc3af90d654169cd210094`；libopencm3 已取回并固定为 `d55bbafddb9768228748f48a82967f91a910806e`。命令、依赖和日志位置见 [构建说明](build.md)。
 
-- `git clone https://github.com/DeviationTX/deviation.git deviation`：成功。
-- `git rev-parse HEAD`：`330193b9a4185f6a2cdc3af90d654169cd210094`。
-- `git log -1`：2026-02-23，Improve VTX telemetry support (#1062)。
-- 文档添加前 `git status --short`：空，未改上游代码。
-- `git ls-tree HEAD src/libopencm3`：gitlink `d55bbafddb9768228748f48a82967f91a910806e`。
-- 查到现有 CuTest、混控、模型和页面测试；原构建入口为 `make test`、`./test.elf`、`make emu_devo8`、`make devo8`。
-- 未找到适用于当前目录的 AGENTS.md。
-
-## 环境观察
-
-当前 shell：Windows PowerShell，工作目录 `D:\DEVI移植`。
-
-PATH 可找到 Git、CMake、Ninja、Python 和 wsl.exe；未找到 make、arm-none-eabi-gcc、docker。只说明当前命令环境未就绪，不宣称机器其他目录一定没有这些工具。
-
-`wsl --list --verbose` 返回安装帮助，没有得到可用发行版清单；WSL 构建环境未证实。
-
-`git submodule status` 失败：Git 的 shell 启动路径中 basename/sed 无法执行，随后找不到 git-sh-setup。主仓库 clone/rev-parse 可用不代表子模块操作正常。
-
-## 验证状态
-
-|项目|状态|
+|项目|本次证据|
 |---|---|
-|源码取回和版本检查|完成|
-|子模块取回|未完成|
-|原版单元测试|未运行|
-|原版模拟器构建/运行|未运行|
-|原版硬件固件构建|未运行|
-|TX15 新目标|未创建|
-|TX15 型号/板卡/固件版本核对|未完成|
-|刷写、启动、射频、恢复|未执行|
+|主机编译|MSYS GCC 15.3.0 编译通过|
+|CuTest|79 项通过，进程退出 0|
+|工具回归|8 项通过，覆盖 runner 退出码、lint 分支基准、单行 diff、缺少模块和 no-fail|
+|DEVO8 固件|Arm GCC 8.2.1 编译链接通过；bin 242352 字节；ROM 236.67 KiB、RAM 28.66 KiB；中文目录强制完整构建|
+|模拟器|Windows 原生 DEVO8 模拟器编译链接通过；隐藏启动后存活 10 秒；交互验收未完成|
+|TX15 目标|未创建|
+|硬件|用户确认 TX15 MAX + ST-Link；精确 EdgeTX 版本、主板修订未读取|
+|刷写/射频/恢复|未执行|
 
-## 需要特别核实的测试基础问题
+## 为建立可信测试所做的修复
 
-`src/target/tx/other/test/make-tests.sh` 生成代码中，先调用 `CuSuiteDelete(suite)`，再读取 `suite->failCount`。需检查释放行为并验证失败退出码；目前只作静态观察，尚未修复或执行动态验证。
+- runner 在释放 suite 后读取失败数：改为释放前保存，使用真实 CuTest 和销毁桩验证成功/失败退出码。
+- 头文件重复定义 GUI 全局变量：改成单一源文件定义，兼容现代 GCC 的 `-fno-common`；修复 GUI 测试传错指针类型。
+- 补齐同步 `CLOCK_RunOnce` 测试桩；修复 `_usleep` 被宏递归替换导致的崩溃。
+- 缺少截图基准原先会自动创建并通过：现在保存实际图到测试输出并报错，不写参考目录。缺失的 XN297 Dump 参考图已单独目视检查后纳入版本控制。
+- lint 原来固定 master 且漏报退出状态：支持 main/master/显式基准和单行 diff，违规和工具启动失败正确返回失败。
 
-## 复核命令
+这是基线修复后的结果，不能称为“未经修改的上游全部测试已通过”。混控算法、模型格式和 CRSF 产品逻辑未改动。
 
-```powershell
-Set-Location 'D:\DEVI移植\deviation'
-git rev-parse HEAD
-git ls-tree HEAD src/libopencm3
-git status --short
-git diff --check
-```
+## 覆盖与缺口
+
+原有 `TestApplyMixerSimple`、`TestApplyMixerDelay`、`TestApplyLimits`、`TestCalcChannels`、`TestSetMixerDepends`、`TestSetMixerLoop` 等覆盖混控运算、延时、限幅及依赖；模型测试覆盖加载/保存，页面截图覆盖原 320×240 页面。尚需 P1 的 TX15 输入映射、旧模型样本、480×320 触摸/焦点和通道轨迹对照测试。
+
+原生模拟器编译存在上游 64 位 Windows 指针/整数转换警告；尚未完成交互验收，不能据此宣布 UI 可用。实机启动、内存、输入、射频时序均无验证结果。

@@ -115,6 +115,7 @@ def main():
     violations = run_lint(paths, changed, path_delta)
     if GITHUB_TOKEN and TRAVIS_PULL_REQUEST and not args.skip_github:
         update_github_status(violations)
+    sys.exit(ERROR_EXIT_STATUS if violations else 0)
 
 
 def get_changed_lines_from_pr():
@@ -126,9 +127,16 @@ def get_changed_lines_from_pr():
 
 
 def get_changed_lines_from_git():
-    """Compute diff from current vs master and determine line-numbers that have changed"""
-    master = "master"
-    base = system(["git", "merge-base", "HEAD", master]).rstrip()
+    """Compare with an explicit base, main, master, or HEAD (in that order)."""
+    reference = os.environ.get("DEVIATION_LINT_BASE")
+    if not reference:
+        reference = "HEAD"
+        for candidate in ("main", "master"):
+            if subprocess.call(["git", "rev-parse", "--verify", candidate],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL) == 0:
+                reference = candidate
+                break
+    base = system(["git", "merge-base", "HEAD", reference]).rstrip()
     diff = system(["git", "diff", base]).rstrip().split("\n")
     return get_changed_lines_from_diff(diff)
 
@@ -148,7 +156,7 @@ def get_changed_lines_from_diff(diff):
         if any(line.startswith(pat) for pat in ["index", "---", "+++"]):
             continue
         if line.startswith("@@"):
-            match = re.search(r" \+(\d+),(\d+) @@", line)
+            match = re.search(r" \+(\d+)(?:,(\d+))? @@", line)
             if match:
                 file_pos = int(match.group(1))
             else:
@@ -207,6 +215,7 @@ def run_lint(paths, changed, path_delta):
     violations = {}
     count = {}
     errors = {}
+    saw_diagnostic = False
 
     cmd = 'find {} -name "*.[ch]"'.format(" ".join(paths))
     if EXCLUDE_PATHS:
@@ -218,6 +227,7 @@ def run_lint(paths, changed, path_delta):
         line = line.decode('utf-8').rstrip()
         match = re.search(r"(\S+):(\d+):\s+(.*\S)\s+\[(\S+)\]\s\[\d\]$", line)
         if match:
+            saw_diagnostic = True
             filename = match.group(1)
             linenum = int(match.group(2))
             errstr = match.group(3)
@@ -225,7 +235,7 @@ def run_lint(paths, changed, path_delta):
             if err_class in POST_FILTER and errstr in POST_FILTER[err_class]:
                 # Ignore this error
                 continue
-            if not changed or linenum not in changed[filename]:
+            if changed and linenum not in changed.get(filename, {}):
                 continue
             print(cleanup_line(line, path_delta))
             if filename not in errors:
@@ -239,6 +249,13 @@ def run_lint(paths, changed, path_delta):
             if linenum not in violations[filename]:
                 violations[filename][linenum] = []
             violations[filename][linenum].append(line)
+        elif line and not line.startswith(("Done processing", "Total errors found")):
+            print(line, file=sys.stderr)
+
+    status = _p.wait()
+    if status and not saw_diagnostic:
+        print("cpplint failed to execute (status {}).".format(status), file=sys.stderr)
+        sys.exit(ERROR_EXIT_STATUS)
 
     if count:
         print("\nSummary\n-------")
@@ -484,4 +501,5 @@ def system(cmd):
     return subprocess.check_output(cmd, shell=True).decode('utf-8')
 
 
-main()
+if __name__ == "__main__":
+    main()

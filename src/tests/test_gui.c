@@ -20,6 +20,6 @@ void TestLabel(CuTest* t)
     GUI_CreateLabelBox(&label, 10, 10, LCD_WIDTH, 15, &DEFAULT_FONT,
         NULL, NULL, "TestLabel");
 
-    GUI_DrawObject(&label);
+    GUI_DrawObject(&label.header);
     AssertScreenshot(t, "label");
 }

@@ -23,6 +23,8 @@
 #include "config/tx.h"
 #include "fltk.h"
 
+struct Gui gui;
+
 #undef usleep
 void _usleep(u32 usec) {
     usleep(usec);
