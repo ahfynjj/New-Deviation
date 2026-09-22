@@ -1,6 +1,6 @@
 # Windows 构建基线（2026-09-22）
 
-本页是已执行的 Deviation DEVO8/主机基线。没有 TX15 编译目标；生成的 DEVO8 固件不能刷入 TX15。
+本页是已执行的 Deviation DEVO8/主机基线。现已加入 emu_tx15 电脑模拟器，见 [运行说明](simulator.md)。没有 TX15 硬件编译目标；生成的 DEVO8 固件不能刷入 TX15。
 
 ## 工具布局与安装
 
@@ -40,6 +40,7 @@ Set-Location 'D:\DEVI移植\deviation'
 .\utils\build-msys2.ps1 -Target runner
 .\utils\build-msys2.ps1 -Target test
 .\utils\build-msys2.ps1 -Target emu_devo8
+.\utils\build-msys2.ps1 -Target emu_tx15
 .\utils\build-msys2.ps1 -Target devo8
 .\utils\build-msys2.ps1 -Target lint
 ```
@@ -48,7 +49,7 @@ Set-Location 'D:\DEVI移植\deviation'
 
 Arm 工具链原先在中文路径下首次编译通过，但其依赖文件记录了损坏的系统头文件路径，导致增量构建失败。因此 Arm 也使用 ASCII 副本。GCC 8 还会把部分项目头文件转成损坏的绝对路径：**当前中文源码目录下只支持完整 Arm 构建**。包装脚本检测到非 ASCII 源码路径时，自动删除仅属于 DEVO8 和其 F1 库的生成依赖（`src/objs/devo8/*.P`、`src/libopencm3/lib/stm32/f1/*.d`），并强制重编译全部对象，避免复用依赖不完整的缓存。ASCII 源码目录保留原 Make 行为，本次未验证该路径下的增量构建。
 
-日志保存于 `local/logs/<目标>.log`，不纳入 Git。`runner` 运行 8 项工具回归；`test` 构建后以 60 秒超时运行 79 项 CuTest。缺失模块、循环依赖等诊断来自相应用例，以汇总和退出码联合判定。
+日志保存于 `local/logs/<目标>.log`，不纳入 Git。`runner` 当前运行 10 项工具回归；`test` 构建后以 60 秒超时运行 79 项 CuTest。缺失模块、循环依赖等诊断来自相应用例，以汇总和退出码联合判定。
 
 `lint` 仅检查相对 main/master 的修改行，`DEVIATION_LINT_BASE` 可指定基准，无这些分支时退回 HEAD。未跟踪文件应先加入索引；`--no-fail` 供原 Makefile 非阻断检查，独立 lint 目标会返回失败。cpplint 1.3.0 有 `sre_compile` 弃用警告，不影响本次检查。
 

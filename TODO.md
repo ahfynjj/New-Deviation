@@ -1,11 +1,11 @@
 # New Deviation — TX15 原生移植工作状态
 
 更新：2026-09-22。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
-`origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-p0`，主分支 `main`。
+`origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-simulator`，主分支 `main`。
 
 ## 方向
 
-以 Deviation 为主工程，新增 TX15 MAX 原生适配，保留复杂混控及操作体系，优先内置 ELRS 和彩屏。EdgeTX 仅作硬件参考。
+以 Deviation 为主工程，新增 TX15 MAX 原生适配，保留复杂混控及操作体系，优先内置 ELRS 和彩屏。按用户最新要求，开发不再考虑 EdgeTX；除非用户明确提出需要。
 
 ## 已完成
 
@@ -17,23 +17,32 @@
 - [x] 原 DEVO8 固件及 Windows 模拟器编译通过。
 - [x] 完成当前代码评审并修复发现的 lint 问题。
 - [x] 记录 TX15 首轮硬件、内存和 Deviation 接口差距。
+- [x] 新增独立 480×320 emu_tx15 主机目标；采用 Deviation 自有宽屏页面。
+- [x] 修复 Windows 64 位配置指针截断；主界面、混控列表及曲线画面捕获通过。
+- [x] 提供启动脚本，日常模型保存在 local/tx15，独立于构建模板。
+- [x] 79 项 CuTest、10 项工具回归及 lint 通过；旧模拟器构建/画面捕获通过。
 
 ## 下一步
 
 - [ ] 完成模拟器主界面、复杂混控、曲线和模型保存/加载的交互检查。
 - [ ] 补齐 TX15 输入表、ADC/开关和启动装载流程审计。
-- [ ] 核实实机 EdgeTX 精确版本、主板修订及恢复路径，制作恢复操作卡。
-- [ ] 固定 P1 输入映射与旧模型兼容行为，细化 480×320 模拟目标计划。
-- [ ] 开发 P1 模拟器；H7/TX15 和 ELRS 台架验证随后逐步实施。
+- [ ] 实机阶段核实主板修订、调试接口及恢复路径；当前主机开发不以原固件信息为前提。
+- [x] 细化 480×320 模拟目标首批计划。
+- [ ] 完成物理输入映射与旧模型兼容规则。
+- [ ] 在已有模拟器上实现实际 TX15 输入映射、完整交互和旧模型兼容验证；H7/TX15 与 ELRS 随后实施。
 
-P0 仍未全部完成，没有 TX15 固件，没有执行设备写入。
+P1 第一批模拟器已实现。P0 的实机核实项暂留实机阶段处理，不阻塞主机开发。没有 TX15 固件，没有执行设备写入。
 
 ## 继续工作入口
 
 [构建命令](docs/tx15/build.md) · [验证记录](docs/tx15/baseline.md) · [开发计划](docs/superpowers/plans/2026-09-21-tx15-native-plan.md) · [硬件映射](docs/tx15/hardware-map.md) · [启动内存](docs/tx15/boot-memory.md) · [接口差距](docs/tx15/porting-map.md) · [来源许可](docs/tx15/source-provenance.md)
 
+[TX15 模拟器运行说明与截图](docs/tx15/simulator.md) · [当前实现计划](docs/superpowers/plans/2026-09-22-tx15-simulator.md)
+
 ```powershell
 Set-Location 'D:\DEVI移植\deviation'
+.\utils\build-msys2.ps1 -Target emu_tx15
+.\utils\run-tx15.ps1
 .\utils\build-msys2.ps1 -Target runner
 .\utils\build-msys2.ps1 -Target test
 .\utils\build-msys2.ps1 -Target emu_devo8

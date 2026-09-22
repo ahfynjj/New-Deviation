@@ -46,9 +46,9 @@ run_target() {
             # backslash under Make 4.4; override the result without modifying it.
             make -C src "${flags[@]}" devo8 SRCLIBDIR="$root/src/libopencm3/lib"
             ;;
-        emu_devo8)
+        emu_devo8|emu_tx15)
             export PATH="$native/bin:$PATH"
-            make -C src "${flags[@]}" win_emu_devo8 \
+            make -C src "${flags[@]}" "win_$target" \
                 FLTK_DIR="$native" PORTAUDIO_DIR="$native" \
                 EXTRA_CFLAGS="-isystem $native/include"
             ;;

@@ -106,8 +106,10 @@ void fempty(FILE *fh)
 }
 
 int FS_Init() {
-    printf("Changing directory to: '%s'\n", FILESYSTEM_DIR);
-    return !chdir(FILESYSTEM_DIR);
+    const char *directory = getenv("DEVIATION_EMU_FILESYSTEM");
+    if (!directory || !directory[0]) directory = FILESYSTEM_DIR;
+    printf("Changing directory to: '%s'\n", directory);
+    return !chdir(directory);
 }
 
 int FS_Mount(void *FAT, const char *drive) {

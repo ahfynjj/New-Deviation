@@ -34,6 +34,7 @@
 #include <FL/fl_draw.H>
 #include <FL/fl_ask.H>
 #include "fltk_resample.h"
+#include "touch.h"
 
 bool changed = false;
 static bool singlethread = false;
@@ -49,6 +50,7 @@ extern "C" {
 #include "mixer.h"
 #include "config/tx.h"
 #include "buttonmap.h"
+#include "capture.h"
 }
 
 #ifdef LCD_EMU_LOWLEVEL
@@ -259,16 +261,12 @@ public:
         case FL_PUSH:
         case FL_DRAG:
           {
-            int x = Fl::event_x();
-            int y = Fl::event_y() - image_ypos;
-            if (x < 0)
-                x = 0;
-            if (x >= SCREEN_X)
-                x = SCREEN_X -1;
-            if (y < 0)
-                y = 0;
-            if (y >= SCREEN_Y)
-                y = SCREEN_Y -1;
+            unsigned x, y;
+            if (!EMU_MapTouch(Fl::event_x(), Fl::event_y(), image_ypos,
+                             SCREEN_X, SCREEN_Y, LCD_WIDTH, LCD_HEIGHT, &x, &y)) {
+                gui.mouse = 0;
+                return WINDOW::handle(event);
+            }
             gui.mouse = 1;
             gui.mousex = calibration.xscale * x / 0x10000 + calibration.xoffset;
             gui.mousey = calibration.yscale * y / 0x10000 + calibration.yoffset;
@@ -364,6 +362,19 @@ void close_window(Fl_Widget *widget, void *param)
     exit(0);
 }
 
+/* Explicit test mode: capture the actual framebuffer, then exit without saving. */
+static void capture_framebuffer(void *)
+{
+    const char *path = getenv("DEVIATION_EMU_CAPTURE");
+    if (!EMU_PrepareCapturePage(getenv("DEVIATION_EMU_CAPTURE_PAGE"))) exit(2);
+    FILE *file = fopen(path, "wb");
+    if (!file) exit(2);
+    int ok = fprintf(file, "P6\n%d %d\n255\n", IMAGE_X, IMAGE_Y) > 0;
+    ok = (fwrite(gui.image, 1, sizeof(gui.image), file) == sizeof(gui.image)) && ok;
+    ok = (fclose(file) == 0) && ok;
+    exit(ok ? 0 : 2);
+}
+
 extern void _lcd_init();
 
 void LCD_Init()
@@ -377,6 +388,7 @@ void LCD_Init()
   int height = (lcdScreenHeight > INP_LAST + (INP_LAST - 1) * 10 + 85) ?
                 lcdScreenHeight : INP_LAST + (INP_LAST - 1) * 10 + 85;
   main_window = new mywin(lcdScreenWidth + 320,height);
+  main_window->label(EMU_STRING);
   image_ypos = (height - lcdScreenHeight) / 2;
   image = new image_box(0, image_ypos, lcdScreenWidth, lcdScreenHeight);
   //fl_font(fl_font(), 5);
@@ -411,6 +423,8 @@ void LCD_Init()
   //Fl_Box box(320, 0, 320, 240);
   //Fl_Output out(320, 0, 30, 10);
   main_window->end();
+  const char *capture = getenv("DEVIATION_EMU_CAPTURE");
+  if (capture && capture[0]) Fl::add_timeout(6.0, capture_framebuffer);
   main_window->show();
   main_window->callback(close_window);
   //Fl::add_handler(&handler);

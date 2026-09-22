@@ -149,10 +149,10 @@ static int handle_label(struct LabelDesc *label, const char *name, const char *v
 
 struct struct_map {const char *str;  u16 offset;};
 #define MAPSIZE(x)  (sizeof(x) / sizeof(struct struct_map))
-#define OFFSET(s,v) (((long)(&s.v) - (long)(&s)) | ((sizeof(s.v)-1) << 13))
-#define OFFSETS(s,v) (((long)(&s.v) - (long)(&s)) | ((sizeof(s.v)+3) << 13))
-#define OFFSET_COL(s,v) (((long)(&s.v) - (long)(&s)) | (2 << 13))
-#define OFFSET_FON(s,v) (((long)(&s.v) - (long)(&s)) | (6 << 13))
+#define OFFSET(s, v) (((uintptr_t)(&s.v) - (uintptr_t)(&s)) | ((sizeof(s.v)-1) << 13))
+#define OFFSETS(s, v) (((uintptr_t)(&s.v) - (uintptr_t)(&s)) | ((sizeof(s.v)+3) << 13))
+#define OFFSET_COL(s, v) (((uintptr_t)(&s.v) - (uintptr_t)(&s)) | (2 << 13))
+#define OFFSET_FON(s, v) (((uintptr_t)(&s.v) - (uintptr_t)(&s)) | (6 << 13))
 static const struct struct_map _secgeneral[] =
 {
     {"header_height",        OFFSET(Display.metrics, header_height)},
@@ -229,15 +229,15 @@ static int ini_handler(void* user, const char* section, const char* name, const 
                 int offset = map[i].offset & 0x1FFF;
                 switch(size) {
                     case 0:
-                        *((u8 *)((long)ptr + offset)) = value_int; break;
+                        *((u8 *)((u8 *)ptr + offset)) = value_int; break;
                     case 1:
-                        *((u16 *)((long)ptr + offset)) = value_int; break;
+                        *((u16 *)((u8 *)ptr + offset)) = value_int; break;
                     case 2:
-                        *((u16 *)((long)ptr + offset)) = get_color(value); break;
+                        *((u16 *)((u8 *)ptr + offset)) = get_color(value); break;
                     case 3:
-                        *((u32 *)((long)ptr + offset)) = value_int; break;
+                        *((u32 *)((u8 *)ptr + offset)) = value_int; break;
                     case 6:
-                        *((u8 *)((long)ptr + offset)) = FONT_GetFromString(value);
+                        *((u8 *)((u8 *)ptr + offset)) = FONT_GetFromString(value);
                 }
                 return 1;
             }

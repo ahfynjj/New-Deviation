@@ -568,10 +568,10 @@ static int layout_ini_handler(void* user, const char* section, const char* name,
 
 struct struct_map {const char *str;  u16 offset; u16 defval;};
 #define MAPSIZE(x)  (sizeof(x) / sizeof(struct struct_map))
-#define OFFSET(s,v) (((long)(&s.v) - (long)(&s)) | ((sizeof(s.v)-1) << 13))
-#define OFFSETS(s,v) (((long)(&s.v) - (long)(&s)) | ((sizeof(s.v)+3) << 13))
-#define OFFSET_SRC(s,v) (((long)(&s.v) - (long)(&s)) | (2 << 13))
-#define OFFSET_BUT(s,v) (((long)(&s.v) - (long)(&s)) | (6 << 13))
+#define OFFSET(s, v) (((uintptr_t)(&s.v) - (uintptr_t)(&s)) | ((sizeof(s.v)-1) << 13))
+#define OFFSETS(s, v) (((uintptr_t)(&s.v) - (uintptr_t)(&s)) | ((sizeof(s.v)+3) << 13))
+#define OFFSET_SRC(s, v) (((uintptr_t)(&s.v) - (uintptr_t)(&s)) | (2 << 13))
+#define OFFSET_BUT(s, v) (((uintptr_t)(&s.v) - (uintptr_t)(&s)) | (6 << 13))
 #if HAS_PERMANENT_TIMER
 static const struct struct_map _secnone[] =
 {
@@ -640,21 +640,21 @@ int assign_int(void* ptr, const struct struct_map *map, int map_size)
             int offset = map[i].offset & 0x1FFF;
             switch(size) {
                 case 0:
-                    *((u8 *)((long)ptr + offset)) = value_int; break;
+                    *((u8 *)((u8 *)ptr + offset)) = value_int; break;
                 case 1:
-                    *((u16 *)((long)ptr + offset)) = value_int; break;
+                    *((u16 *)((u8 *)ptr + offset)) = value_int; break;
                 case 2:
-                    *((u8 *)((long)ptr + offset)) = get_source(section, value); break;
+                    *((u8 *)((u8 *)ptr + offset)) = get_source(section, value); break;
                 case 3:
-                    *((u32 *)((long)ptr + offset)) = value_int; break;
+                    *((u32 *)((u8 *)ptr + offset)) = value_int; break;
                 case 4:
-                    *((s8 *)((long)ptr + offset)) = value_int; break;
+                    *((s8 *)((u8 *)ptr + offset)) = value_int; break;
                 case 5:
-                    *((s16 *)((long)ptr + offset)) = value_int; break;
+                    *((s16 *)((u8 *)ptr + offset)) = value_int; break;
                 case 6:
-                    *((u8 *)((long)ptr + offset)) = get_button(section, value); break;
+                    *((u8 *)((u8 *)ptr + offset)) = get_button(section, value); break;
                 case 7:
-                    *((s32 *)((long)ptr + offset)) = value_int; break;
+                    *((s32 *)((u8 *)ptr + offset)) = value_int; break;
             }
             return 1;
         }
@@ -1151,12 +1151,12 @@ static void write_int(FILE *fh, void* ptr, const struct struct_map *map, int map
             case 0:
             case 2: //SRC
             case 6: //BUTTON
-                    value = *((u8 *)((long)ptr + offset)); break;
-            case 1: value = *((u16 *)((long)ptr + offset)); break;
-            case 3: value = *((u32 *)((long)ptr + offset)); break;
-            case 4: value = *((s8 *)((long)ptr + offset)); break;
-            case 5: value = *((s16 *)((long)ptr + offset)); break;
-            case 7: value = *((s32 *)((long)ptr + offset)); break;
+                    value = *((u8 *)((u8 *)ptr + offset)); break;
+            case 1: value = *((u16 *)((u8 *)ptr + offset)); break;
+            case 3: value = *((u32 *)((u8 *)ptr + offset)); break;
+            case 4: value = *((s8 *)((u8 *)ptr + offset)); break;
+            case 5: value = *((s16 *)((u8 *)ptr + offset)); break;
+            case 7: value = *((s32 *)((u8 *)ptr + offset)); break;
             default: continue;
         }
         if(WRITE_FULL_MODEL || value != map[i].defval) {

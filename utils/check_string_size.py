@@ -146,7 +146,12 @@ def parse_v1_file(lines):
 
 def get_language(target):
     """Get language values from Makefile"""
-    path = glob.glob(os.path.join("target", "tx", "*", target, "Makefile.inc"))[0]
+    paths = glob.glob(os.path.join("target", "tx", "*", target, "Makefile.inc"))
+    if not paths:
+        paths = glob.glob(os.path.join("target", "tx", "*", "emu_" + target, "Makefile.inc"))
+    if len(paths) != 1:
+        raise ValueError("Expected one target definition for " + target)
+    path = paths[0]
     with open(path, "r") as _fh:
         for line in _fh:
             _m = re.search(r'^\s*LANGUAGE\s+:?=\s*(.*\S)', line)
@@ -214,4 +219,5 @@ def system(cmd):
         return subprocess.check_output(cmd).decode('utf-8').rstrip()
     return subprocess.check_output(cmd, shell=True).decode('utf-8').rstrip()
 
-sys.exit(0 if main() else 1)
+if __name__ == "__main__":
+    sys.exit(0 if main() else 1)
