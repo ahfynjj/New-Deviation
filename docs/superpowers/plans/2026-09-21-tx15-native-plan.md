@@ -1,10 +1,12 @@
 # New Deviation TX15 Native Implementation Plan
 
+2026-09-23 当前执行顺序：按用户要求停止电脑模拟器开发，直接推进 TX15 MAX 实机底层。早期模拟器人工验收不再是前置条件；具体执行见 [实机计划](../plans/2026-09-23-tx15-hardware-bringup.md)。
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox syntax for tracking. Execute locally in sequence; no automatic parallel agent dispatch.
 
 **Goal:** 建立可复现的 Deviation 原版基线和 TX15 原生移植依据，随后按 P1～P4 分步开发。
 
-**Architecture:** Deviation 为唯一应用主体。新增 H7/TX15 目标，通过其平台接口连接原有混控、页面、模型及 CRSF；EdgeTX 仅提供底层参考。
+**Architecture:** Deviation 为唯一应用主体。新增 H7/TX15 目标，通过其平台接口连接原有混控、页面、模型及 CRSF；底层依据芯片官方资料与本机硬件验证独立实现。
 
 **Tech Stack:** C/C++、GNU Make、GNU Arm Embedded、原项目 libopencm3、CuTest、FLTK 模拟器；H7 外设库在 P0 审计后选定。
 
@@ -14,7 +16,7 @@
 
 - 主工程和应用运行逻辑必须是 Deviation。
 - 不把 Deviation 嵌入 EdgeTX 应用框架，不引入 EdgeTX 混控或模型作为主实现。
-- EdgeTX 只作为 TX15 硬件定义、启动和外设驱动参考；任何代码复用记录来源、版本、许可及依赖。
+- 按用户要求，不再考虑 EdgeTX，除非用户明确提出；早期参考记录仅作历史留档。任何第三方代码复用仍须记录来源和许可。
 - 首版使用内置 ELRS/CRSF；传统直连射频、多协议外置模块和完整 Lua 生态不属于首版验收范围。
 - 原 Deviation 目标保持可构建；新的 H7 适配不得用全局替换方式破坏 F1/F2。
 - 编译、模拟器、板上启动、射频链路、异常验证分别记录，不互相替代。

@@ -1,7 +1,7 @@
 # New Deviation — TX15 原生移植工作状态
 
 更新：2026-09-23。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
-`origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-inputs`，主分支 `main`。
+`origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
 ## 方向
 
@@ -25,35 +25,33 @@
 - [x] 本批 79 项 CuTest、12 项工具测试、真实模型/六段复杂混控集成测试通过。
 - [x] 本批 TX15 三页面捕获、DEVO8 模拟器/固件回归和 lint 通过；独立评审问题已修复。
 
+## 当前实机开发增量
+
+- [x] 停止模拟器功能开发和人工界面验收排期，已有成果保留。
+- [x] 新增 STM32H750 RAM 诊断：向量/启动、局部内存检查、SysTick/主循环、异常寄存器记录。
+- [x] 新增独立 Cortex-M7 构建、ELF 地址/向量/保留区检查和双快照解码工具。
+- [x] Arm 交叉编译通过；9 项硬件工具/判断逻辑测试通过，完成独立代码评审。
+- [ ] ST-Link 板上识别、冷启动 RAM 装载与运行验证。当前未枚举到探针，未访问设备。
+
 ## 下一步
 
-- [ ] 完成模拟器主界面、复杂混控、曲线和模型保存/加载的交互检查。
-- [ ] 补齐 TX15 输入表、ADC/开关和启动装载流程审计。
-- [ ] 实机阶段核实主板修订、调试接口及恢复路径；当前主机开发不以原固件信息为前提。
-- [x] 细化 480×320 模拟目标首批计划。
-- [x] 完成出厂控件的主机逻辑映射与旧输入名称拒绝规则；实机 GPIO/ADC 方向仍待确认。
-- [x] 新增独立 local/tx15-native 模型目录，保留旧目录；严格加载失败恢复与保存保护。
-- [x] 接入 28 个输入、键盘长按去重和 SF 松手/失焦复位；六段按键供高级混控使用。
-- [ ] 完成整个界面的人工交互验收、六段主页控件和实体功能键导航；H7/TX15 与 ELRS 随后实施。
+1. 核对 TX15 MAX 主板修订、MCU 标记、SWD 接点和复位期间供电。
+2. 只读识别芯片，确认 reset-halt 状态与调试器 SRAM/ECC 装载方式。
+3. 装入 RAM 诊断，保存两次现场计数器、异常和探针记录。
+4. 实现并验证电源保持、时钟、外部存储和内存，然后接入 LCD/触摸、ADC/开关。
+5. 接入 Deviation 应用与 CRSF/ELRS，逐步进行端到端验证。
 
-P1 模拟器及出厂输入配置已实现。P0 的实机核实项暂留实机阶段处理，不阻塞主机开发。没有 TX15 固件，没有执行设备写入。
+持久写入前完成原始 Flash/用户数据备份和恢复路径验证。当前产物是临时 RAM 诊断，不能通过 SD 卡固件更新，也不能代表完整遥控器固件。
 
 ## 继续工作入口
 
-[构建命令](docs/tx15/build.md) · [验证记录](docs/tx15/baseline.md) · [开发计划](docs/superpowers/plans/2026-09-21-tx15-native-plan.md) · [硬件映射](docs/tx15/hardware-map.md) · [启动内存](docs/tx15/boot-memory.md) · [接口差距](docs/tx15/porting-map.md) · [来源许可](docs/tx15/source-provenance.md)
-
-[TX15 模拟器运行说明与截图](docs/tx15/simulator.md) · [当前实现计划](docs/superpowers/plans/2026-09-22-tx15-inputs.md)
+[实机联调说明](docs/tx15/hardware-bringup.md) · [当前实现计划](docs/superpowers/plans/2026-09-23-tx15-hardware-bringup.md) · [接口差距](docs/tx15/porting-map.md) · [总体设计](docs/superpowers/specs/2026-09-21-tx15-native-design.md)
 
 ```powershell
 Set-Location 'D:\DEVI移植\deviation'
-.\utils\build-msys2.ps1 -Target emu_tx15
-.\utils\run-tx15.ps1
-.\utils\build-msys2.ps1 -Target tx15-test
-.\utils\build-msys2.ps1 -Target runner
-.\utils\build-msys2.ps1 -Target test
-.\utils\build-msys2.ps1 -Target emu_devo8
-.\utils\build-msys2.ps1 -Target devo8
-.\utils\build-msys2.ps1 -Target lint
+.\utils\build-tx15-hardware.ps1
+python -m unittest discover -s utils/hardware/tests -v
 ```
 
-逐条执行并检查退出码，日志位于 `local/logs`。DEVO8 产物仅是交叉编译基线，不能刷入 TX15。
+逐条检查退出码。产物位于 `local/tx15-hardware/ram-probe`；构建和测试不访问设备。
+已完成的主机工作及命令见 [历史构建说明](docs/tx15/build.md) 和 [输入阶段计划](docs/superpowers/plans/2026-09-22-tx15-inputs.md)。DEVO8 产物仅是旧平台交叉编译基线，不能刷入 TX15。

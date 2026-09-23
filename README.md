@@ -16,9 +16,11 @@
 
 ## 当前状态
 
-当前进入 P1：电脑端 480×320 模拟器；实机适配仍待后续开发。
+已停止电脑模拟器功能开发，当前专注 **TX15 MAX 实机底层联调**。
 
-已新增 `emu_tx15` 主机模拟目标，显示原生 Deviation 主界面、混控列表与曲线页面。79 项主机测试、10 项工具回归及 lint 通过。**输入仍为电脑测试配置，尚无 TX15 硬件目标或可刷写固件，未进行实机验证。**
+已提供独立的 Cortex-M7 RAM 启动诊断程序和构建/校验工具，用于后续通过 ST-Link 验证芯片执行、局部 RAM 和 SysTick。**只完成交叉编译和自动检查，尚未在板上运行；目前没有完整 TX15 可刷写固件，屏幕、ADC 和 ELRS 实机驱动仍待开发。**
+
+首次联调入口：[RAM 诊断与实机步骤](docs/tx15/hardware-bringup.md)。既有模拟器保留为历史产物，不作为继续实机开发的前置验收。
 
 ## 开发入口
 
@@ -27,11 +29,11 @@
 - [工作状态与下一步](TODO.md)
 - [源码及环境基线](docs/tx15/baseline.md)
 - [Windows 构建命令](docs/tx15/build.md)
-- [TX15 模拟器启动与实际画面](docs/tx15/simulator.md)
+- [实机开发入口](docs/tx15/hardware-bringup.md)
 - [TX15 硬件映射](docs/tx15/hardware-map.md)
 - [启动与内存审计](docs/tx15/boot-memory.md)
 
-计划顺序：原版构建与测试 → 彩屏模拟目标 → H7/TX15 底层 → ELRS 闭环 → 首版完善。
+当前顺序：SWD 识别与 RAM 运行 → 电源/时钟/存储 → 屏幕/触摸/输入 → Deviation 应用 → ELRS 闭环。
 
 ## 源码与构建
 

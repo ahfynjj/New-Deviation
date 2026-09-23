@@ -1,5 +1,7 @@
 # Deviation → TX15 接口差距（首轮）
 
+2026-09-23：当前执行入口是 [实机 RAM 诊断](hardware-bringup.md)。下文 P1 为历史阶段，模拟器功能与交互验收停止排期，不阻塞实机开发；GPIO、ADC 和 UART 实际接线待本机确认。
+
 ## 已有核心及接入点
 
 |模块|现有文件/接口|移植工作|
@@ -10,9 +12,9 @@
 |页面|`src/pages/320x240x16/`、`src/pages/common/`|复用操作流程，先运行原页面，后扩展 480×320 布局|
 |输入|`src/target.h`、各目标 `capabilities.h`|TX15 通道/按钮枚举；校准和缺失输入行为需样本验证|
 |计时|`CLOCK_StartTimer(unsigned us, u16 (*cb)(void))`|保持微秒单位和回调返回间隔约定，审查中断优先级|
-|串口|`UART_SetDataRate(u32 bps)`、`UART_SetDuplex(uart_duplex duplex)`|USART6+DMA 全双工，保持现有调用契约|
+|串口|`UART_SetDataRate(u32 bps)`、`UART_SetDuplex(uart_duplex duplex)`|待实机确认 UART 接线后实现 DMA/双工，保持现有调用契约|
 |CRSF|`src/protocol/crsf_uart.c`|复用帧/参数逻辑，测试部分帧、CRC、超时和模块重启|
-|模拟器|`src/target/drivers/mcu/emu/`|建立主机编译基线后再添加 TX15 模拟目标|
+|模拟器|`src/target/drivers/mcu/emu/`|已有历史目标，停止继续开发|
 
 `crsf_uart.c` 已有 `Full (Int)` 选项、ELRS 相关设置和 `CLOCK_StartTimer` 调度，但不由此推断当前 ELRS 版本全部功能已经兼容。
 
