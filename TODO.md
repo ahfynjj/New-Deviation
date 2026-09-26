@@ -1,11 +1,11 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-09-23。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-09-26。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
 ## 方向
 
-以 Deviation 为主工程，新增 TX15 MAX 原生适配，保留复杂混控及操作体系，优先内置 ELRS 和彩屏。按用户最新要求，开发不再考虑 EdgeTX；除非用户明确提出需要。
+以 Deviation 为主工程，新增 TX15 MAX 原生适配，保留复杂混控及操作体系，优先内置 ELRS 和彩屏。2026-09-26 用户明确提出参考 EdgeTX 的 TX15 适配：可以查阅其板级引脚、驱动和启动顺序，应用、模型与混控仍保持原生 Deviation。
 
 ## 已完成
 
@@ -34,6 +34,8 @@
 - [x] 2026-09-26：PWLINK2 Lite / CMSIS-DAP 以 100 kHz 成功读取板上 Cortex-M7、DBGMCU 和运行状态，未暂停/复位或写入程序。见 [实机记录](docs/tx15/bench-2026-09-26.md)。
 - [x] 电子容量为 128 KiB，与 H750 配置相符；内部 Flash 两次只读备份一致，保存在本地。无需为基础联调拆板拍 MCU。
 - [ ] 验证 NRST 控制与复位供电保持；冷启动 RAM 装载与运行尚未验证，完整恢复方案仍待补齐。
+- [ ] 首次 NRST 脉冲后，用户确认屏幕熄灭且 3V3 掉电；先验证复位供电保持，未装载 RAM。
+- [x] EdgeTX TX15 源码给出 PH12 电源保持、PA4 电源按钮；19:32 实机只读核对 PH12 为推挽输出、高电平，PA4 为输入、高电平。尚未验证按键能维持复位期间供电。
 
 ## 下一步
 
