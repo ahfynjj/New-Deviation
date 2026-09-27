@@ -26,6 +26,10 @@ button configuration and current pressed state. It avoids unclocked GPIO reads.
 Only call after verifying board identity; an STM32 family ID alone is insufficient.
 Button state is raw, not debounced. There is no automatic shutdown, long-press
 policy, power-off API, battery management or RF power change in this increment.
-The debugger still supplies power hold during image loading. Native take-over
-needs a separate test starting with PH12 output disabled while the button powers
-the board. Cold power-on/bootloader integration remains a separate milestone.
+The debugger still supplies power hold during image loading. On 2026-09-27 a
+separate test disabled PH12 output and cleared its latch while the button powered
+the board, then started this native driver: status was 0x1F while pressed and
+0x0F in two advancing snapshots after release. Original boot was restored and
+the user confirmed normal display. See the native-power evidence under
+docs/tx15/evidence/2026-09-27/. This proves this board's warm-reset native takeover;
+cold power-on/bootloader integration remains a separate milestone.
