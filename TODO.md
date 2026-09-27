@@ -1,6 +1,6 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-09-26。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-09-27。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
 ## 方向
@@ -36,6 +36,8 @@
 - [ ] 验证 NRST 控制与复位供电保持；冷启动 RAM 装载与运行尚未验证，完整恢复方案仍待补齐。
 - [ ] 首次 NRST 脉冲后，用户确认屏幕熄灭且 3V3 掉电；先验证复位供电保持，未装载 RAM。
 - [x] EdgeTX TX15 源码给出 PH12 电源保持、PA4 电源按钮；19:32 实机只读核对 PH12 为推挽输出、高电平，PA4 为输入、高电平。尚未验证按键能维持复位期间供电。
+- [x] 09-26 后续实测 PA4 短按低电平约 0.531 秒；按住按钮时 NRST 拉低期间仍可读 CPUID，释放复位后原固件运行。
+- [ ] 09-27 复位捕获/PH12 接管：复位期间访问 DBGMCU 外设寄存器发生 FAULT，已恢复原固件且用户确认屏幕正常；调整访问顺序后的测试等待超时，尚未实测。见 [09-27 实机记录](docs/tx15/bench-2026-09-27.md)。
 
 ## 下一步
 
