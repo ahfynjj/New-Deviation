@@ -4,7 +4,7 @@
 #include <stdint.h>
 
 #define PROBE_MAGIC 0x4e445631u
-#define PROBE_VERSION 2u
+#define PROBE_VERSION 3u
 #define PROBE_RAM_WORDS 512u
 enum probe_state { PROBE_INIT = 1, PROBE_RAM_OK, PROBE_RUNNING, PROBE_ERROR, PROBE_FAULT };
 enum probe_error { BAD_CORE = 1, BAD_DEVICE = 2, BAD_CLOCK = 4, BAD_CPU_STATE = 8, BAD_RAM = 16, BAD_POWER = 32 };

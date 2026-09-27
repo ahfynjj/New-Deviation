@@ -12,9 +12,9 @@ def decode(data):
     if len(data) != 80:
         raise ValueError("Expected exactly 80 bytes from 0x2400e000..0x2400e050")
     values = dict(zip(FIELDS, struct.unpack("<20I", data)))
-    if values["magic"] != 0x4E445631 or values["version"] not in (1, 2):
+    if values["magic"] != 0x4E445631 or values["version"] not in (1, 2, 3):
         raise ValueError("Unrecognized mailbox magic/version; do not treat stale RAM as execution")
-    if values["version"] == 2:
+    if values["version"] >= 2:
         values["power_status"] = values.pop("reserved")
     return values
 
@@ -27,7 +27,10 @@ def is_live(current, previous):
     for report in (current, previous):
         if report["state"] != 3 or report["error"] or report["ram_words"] != 512:
             return False
-        if report["version"] == 2 and report["power_status"] & 15 != 15:
+        if report["version"] >= 2 and report["power_status"] & 15 != 15:
+            return False
+        if report["version"] == 3 and (report["rcc_cr"] & 0x30000 != 0x30000
+                or report["rcc_cfgr"] & 0x3f != 0x12 or report["rcc_d1cfgr"] & 0xf0f):
             return False
     if any(current[key] != previous[key] for key in ("cpuid", "device_id")):
         return False

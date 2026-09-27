@@ -36,6 +36,17 @@ class ProbeReportTests(unittest.TestCase):
         self.assertEqual(result["ticks"], 10)
         self.assertFalse(self.report.is_live(result, None))
 
+    def test_v3_requires_hse_ready_and_selected_in_both_snapshots(self):
+        before = self.report.decode(self.dump(version=3, power=15))
+        after = self.report.decode(self.dump(20, 200, version=3, power=15))
+        for r in (before, after):
+            r.update(rcc_cr=0x34025, rcc_cfgr=0x12)
+        self.assertTrue(self.report.is_live(after, before))
+        for field, value in [('rcc_cr', 0x14025), ('rcc_cfgr', 2),
+                             ('rcc_cfgr', 0x10), ('rcc_d1cfgr', 8), ('power_status', 7)]:
+            self.assertFalse(self.report.is_live(dict(after, **{field: value}), before))
+            self.assertFalse(self.report.is_live(after, dict(before, **{field: value})))
+
     def test_both_interrupt_and_main_must_advance(self):
         before = self.report.decode(self.dump())
         self.assertTrue(self.report.is_live(self.report.decode(self.dump(20, 200)), before))
@@ -52,7 +63,7 @@ class ProbeReportTests(unittest.TestCase):
 
     def test_rejects_wrong_length_magic_and_version(self):
         for data in [b"", self.dump()[:-1], self.dump() + b"\x00", b"oops" + self.dump()[4:],
-                     self.dump()[:4] + struct.pack("<I", 3) + self.dump()[8:]]:
+                     self.dump()[:4] + struct.pack("<I", 4) + self.dump()[8:]]:
             with self.assertRaises(ValueError):
                 self.report.decode(data)
 

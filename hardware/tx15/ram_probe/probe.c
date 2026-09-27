@@ -1,6 +1,7 @@
 /* New Deviation hardware bring-up; GPL-3.0-or-later. */
 #include "probe.h"
 #include "../board/power.h"
+#include "../board/clock.h"
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 #define SYST_CSR REG32(0xe000e010u)
@@ -65,6 +66,16 @@ void Probe_Main(void)
         stop();
     }
 
+    enum tx15_clock_result clock_result = tx15_clock_hse_init(1000000u);
+    probe_report.rcc_cr = REG32(0x58024400u);
+    probe_report.rcc_cfgr = REG32(0x58024410u);
+    probe_report.rcc_d1cfgr = REG32(0x58024418u);
+    if (clock_result != TX15_CLOCK_OK) {
+        probe_report.error = BAD_CLOCK;
+        probe_report.state = PROBE_ERROR;
+        stop();
+    }
+
     /* Only this owned 2 KiB scratch area is tested, not all internal/external RAM. */
     for (unsigned pass = 0; pass < 2; pass++) {
         for (unsigned i = 0; i < PROBE_RAM_WORDS; i++)
@@ -80,9 +91,9 @@ void Probe_Main(void)
     }
     probe_report.ram_words = PROBE_RAM_WORDS;
     probe_report.state = PROBE_RAM_OK;
-    /* Reset-state HSI64, no prescalers, Cortex processor clock, nominal 1 ms. */
+    /* Confirmed direct HSE48, no core/AHB prescalers, nominal 1 ms. */
     SYST_CSR = 0;
-    SYST_RVR = 64000u - 1u;
+    SYST_RVR = TX15_CORE_HZ / 1000u - 1u;
     SYST_CVR = 0;
     REG32(0xe000ed04u) = (1u << 25) | (1u << 27); /* clear pending SysTick/PendSV */
     probe_report.state = PROBE_RUNNING;
