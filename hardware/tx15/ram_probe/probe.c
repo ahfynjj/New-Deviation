@@ -67,6 +67,8 @@ void Probe_Main(void)
     }
 
     enum tx15_clock_result clock_result = tx15_clock_hse_init(1000000u);
+    if (clock_result == TX15_CLOCK_OK)
+        clock_result = tx15_clock_pll128_init(1000000u);
     probe_report.rcc_cr = REG32(0x58024400u);
     probe_report.rcc_cfgr = REG32(0x58024410u);
     probe_report.rcc_d1cfgr = REG32(0x58024418u);
@@ -91,9 +93,9 @@ void Probe_Main(void)
     }
     probe_report.ram_words = PROBE_RAM_WORDS;
     probe_report.state = PROBE_RAM_OK;
-    /* Confirmed direct HSE48, no core/AHB prescalers, nominal 1 ms. */
+    /* Confirmed PLL128 processor clock, nominal 1 ms. */
     SYST_CSR = 0;
-    SYST_RVR = TX15_CORE_HZ / 1000u - 1u;
+    SYST_RVR = TX15_PLL_CORE_HZ / 1000u - 1u;
     SYST_CVR = 0;
     REG32(0xe000ed04u) = (1u << 25) | (1u << 27); /* clear pending SysTick/PendSV */
     probe_report.state = PROBE_RUNNING;

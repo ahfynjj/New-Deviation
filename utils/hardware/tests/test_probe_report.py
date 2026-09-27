@@ -47,6 +47,17 @@ class ProbeReportTests(unittest.TestCase):
             self.assertFalse(self.report.is_live(dict(after, **{field: value}), before))
             self.assertFalse(self.report.is_live(after, dict(before, **{field: value})))
 
+    def test_v4_requires_pll_selected_and_ahb_divided(self):
+        before = self.report.decode(self.dump(version=4, power=15))
+        after = self.report.decode(self.dump(20, 200, version=4, power=15))
+        for r in (before, after):
+            r.update(rcc_cr=0x3034025, rcc_cfgr=0x1b, rcc_d1cfgr=0x48)
+        self.assertTrue(self.report.is_live(after, before))
+        for field, value in [('rcc_cr', 0x1034025), ('rcc_cfgr', 0x13),
+                             ('rcc_d1cfgr', 0x40), ('power_status', 7)]:
+            self.assertFalse(self.report.is_live(dict(after, **{field: value}), before))
+            self.assertFalse(self.report.is_live(after, dict(before, **{field: value})))
+
     def test_both_interrupt_and_main_must_advance(self):
         before = self.report.decode(self.dump())
         self.assertTrue(self.report.is_live(self.report.decode(self.dump(20, 200)), before))
@@ -63,7 +74,7 @@ class ProbeReportTests(unittest.TestCase):
 
     def test_rejects_wrong_length_magic_and_version(self):
         for data in [b"", self.dump()[:-1], self.dump() + b"\x00", b"oops" + self.dump()[4:],
-                     self.dump()[:4] + struct.pack("<I", 4) + self.dump()[8:]]:
+                     self.dump()[:4] + struct.pack("<I", 5) + self.dump()[8:]]:
             with self.assertRaises(ValueError):
                 self.report.decode(data)
 
