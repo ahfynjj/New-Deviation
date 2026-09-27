@@ -14,10 +14,22 @@ class ProbeReportTests(unittest.TestCase):
         self.report = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(self.report)
 
-    def dump(self, ticks=10, loops=100, state=3, error=0):
+    def dump(self, ticks=10, loops=100, state=3, error=0, version=1, power=0):
         # magic, version, state, error, chip/core, clocks, CPU state, counters, fault evidence
-        return struct.pack("<20I", 0x4E445631, 1, state, error, 0x411FC271, 0x20036450,
-                           5, 0, 0, 0, 0, ticks, loops, 512, 0, 0, 0, 0, 0, 0)
+        return struct.pack("<20I", 0x4E445631, version, state, error, 0x411FC271, 0x20036450,
+                           5, 0, 0, 0, 0, ticks, loops, 512, 0, 0, 0, 0, 0, power)
+
+    def test_v2_requires_confirmed_hold_and_button_configuration(self):
+        before = self.report.decode(self.dump(version=2, power=15))
+        after = self.report.decode(self.dump(20, 200, version=2, power=31))
+        self.assertEqual(after['power_status'], 31)
+        self.assertTrue(self.report.is_live(after, before))
+        for missing in (1, 2, 4, 8):
+            bad = self.report.decode(self.dump(20, 200, version=2, power=15 ^ missing))
+            self.assertFalse(self.report.is_live(bad, before))
+            bad_before = self.report.decode(self.dump(version=2, power=15 ^ missing))
+            self.assertFalse(self.report.is_live(after, bad_before))
+        self.assertFalse(self.report.is_live(after, self.report.decode(self.dump())))
 
     def test_valid_dump_is_only_a_snapshot(self):
         result = self.report.decode(self.dump())
@@ -40,7 +52,7 @@ class ProbeReportTests(unittest.TestCase):
 
     def test_rejects_wrong_length_magic_and_version(self):
         for data in [b"", self.dump()[:-1], self.dump() + b"\x00", b"oops" + self.dump()[4:],
-                     self.dump()[:4] + struct.pack("<I", 2) + self.dump()[8:]]:
+                     self.dump()[:4] + struct.pack("<I", 3) + self.dump()[8:]]:
             with self.assertRaises(ValueError):
                 self.report.decode(data)
 

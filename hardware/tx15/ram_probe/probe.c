@@ -1,5 +1,6 @@
 /* New Deviation hardware bring-up; GPL-3.0-or-later. */
 #include "probe.h"
+#include "../board/power.h"
 
 #define REG32(addr) (*(volatile uint32_t *)(addr))
 #define SYST_CSR REG32(0xe000e010u)
@@ -56,6 +57,14 @@ void Probe_Main(void)
         stop();
     }
 
+    tx15_power_init();
+    probe_report.power_status = tx15_power_status();
+    if ((probe_report.power_status & TX15_POWER_READY) != TX15_POWER_READY) {
+        probe_report.error = BAD_POWER;
+        probe_report.state = PROBE_ERROR;
+        stop();
+    }
+
     /* Only this owned 2 KiB scratch area is tested, not all internal/external RAM. */
     for (unsigned pass = 0; pass < 2; pass++) {
         for (unsigned i = 0; i < PROBE_RAM_WORDS; i++)
@@ -79,5 +88,8 @@ void Probe_Main(void)
     probe_report.state = PROBE_RUNNING;
     SYST_CSR = 7;
     __asm volatile("dsb\nisb\ncpsie i" ::: "memory");
-    for (;;) probe_report.loops++;
+    for (;;) {
+        probe_report.loops++;
+        probe_report.power_status = tx15_power_status();
+    }
 }

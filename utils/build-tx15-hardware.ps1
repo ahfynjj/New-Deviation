@@ -23,8 +23,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Startup assembly failed' }
     & $gcc @flags -c "$source/probe.c" -o "$out/probe.o"
     if ($LASTEXITCODE -ne 0) { throw 'Probe compilation failed' }
+    & $gcc @flags -c 'hardware/tx15/board/power.c' -o "$out/power.o"
+    if ($LASTEXITCODE -ne 0) { throw 'Power driver compilation failed' }
     & $gcc @flags -nostdlib '-Wl,--gc-sections' "-Wl,-Map,$out/ram-probe.map" `
-        -T "$source/ram.ld" "$out/startup.o" "$out/probe.o" -o "$out/ram-probe.elf"
+        -T "$source/ram.ld" "$out/startup.o" "$out/probe.o" "$out/power.o" -o "$out/ram-probe.elf"
     if ($LASTEXITCODE -ne 0) { throw 'RAM link failed' }
     & $Python utils/hardware/check_ram_elf.py "$out/ram-probe.elf"
     if ($LASTEXITCODE -ne 0) { throw 'ELF validation failed' }
