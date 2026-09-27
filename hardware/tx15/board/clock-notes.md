@@ -27,7 +27,14 @@ Its caller must halt the core first, disable SysTick, keep PH12 high, wait for H
 select HSI, wait for SWS, disable HSE and confirm shutdown. Failed recovery must
 leave the core halted and prohibit original-firmware resume.
 
-Status: cross-build and 16 hardware-tool tests pass; V3 board execution pending.
+Status: cross-build and 16 hardware-tool tests passed during implementation.
 The earlier V2 native-power board evidence remains valid for that image only.
 The 2026-09-27 15:58 bench attempt timed out waiting for the button; no reset or
 target writes occurred. Do not interpret the compiled V3 image as board proof.
+
+At 16:08 a new V3 board run succeeded: RCC_CR=0x34025, RCC_CFGR=0x12,
+D1CFGR=0; ticks 263->588 and loops 80830->180053, power_status=15 and no
+reported faults. Recovery read back HSI CR=0x4025/CFGR=0/D1CFGR=0 before
+restoring CPU context. Original firmware resumed and the user confirmed the
+screen normal. See `docs/tx15/evidence/2026-09-27/hse-clock/`. This verifies
+direct HSE execution on this board, not calibrated frequency or PLL operation.
