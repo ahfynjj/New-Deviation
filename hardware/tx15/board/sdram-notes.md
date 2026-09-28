@@ -49,8 +49,21 @@ handler must initialize them afresh. Any recovery failure prevents resume.
 Status on 2026-09-28: 24 host checks passed; ELF/BIN hash guard passed.
 Independent review completed after fixing capture clock-restoration failure
 handling: attempt both clocks independently, verify readback and prohibit CPU
-resume on any cleanup failure. V5 board execution remains pending.
+resume on any cleanup failure. V5 first-64-KiB board execution passed at 20:30,
+as detailed below.
 The 2026-09-28 20:29 attempt timed out waiting for the button: no reset or target
 writes were attempted (`local/reset-halt-power-20260928-202900.json`).
 ELF SHA256 `dbbe54a38985867976f004e3a093d0b7f4a598431ee8db1bb0f121b8eab080f2`.
 BIN SHA256 `528c0920510f913a38594210406248d1a2ee2cf0af7b0e2b5c1ba9c78415f494`.
+
+## 2026-09-28 20:30 board result
+
+A fresh button-assisted run passed: all 32800 comparisons over the bounded
+64 KiB test completed, sdram_state=3/error=0/words=16384. Two V5 mailboxes show
+ticks 221->570 and loops 121603->312231, power_status=15 and no recorded faults.
+SDCR1=0x1ad0, SDCR2=0x1d4, SDTR1=0xf3f7fff, SDTR2=0x3050371, SDRTR=460.
+FMC/GPIO and PLL/CPU recovery succeeded with no errors; PWR/Flash configuration
+was unchanged. The user confirmed the original screen restored normally.
+Evidence: `docs/tx15/evidence/2026-09-28/sdram64k/`.
+This supersedes the earlier pending-run status only for the first 64 KiB test.
+Full 8 MiB address coverage, retention and cold-start behavior remain unverified.
