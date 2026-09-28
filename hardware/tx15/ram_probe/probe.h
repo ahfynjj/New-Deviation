@@ -2,18 +2,20 @@
 #ifndef NEW_DEVIATION_RAM_PROBE_H
 #define NEW_DEVIATION_RAM_PROBE_H
 #include <stdint.h>
+#include "../board/sdram.h"
 
 #define PROBE_MAGIC 0x4e445631u
-#define PROBE_VERSION 4u
+#define PROBE_VERSION 5u
 #define PROBE_RAM_WORDS 512u
 enum probe_state { PROBE_INIT = 1, PROBE_RAM_OK, PROBE_RUNNING, PROBE_ERROR, PROBE_FAULT };
-enum probe_error { BAD_CORE = 1, BAD_DEVICE = 2, BAD_CLOCK = 4, BAD_CPU_STATE = 8, BAD_RAM = 16, BAD_POWER = 32 };
+enum probe_error { BAD_CORE = 1, BAD_DEVICE = 2, BAD_CLOCK = 4, BAD_CPU_STATE = 8, BAD_RAM = 16, BAD_POWER = 32, BAD_SDRAM = 64 };
 
 struct probe_report {
     uint32_t magic, version, state, error;
     uint32_t cpuid, device_id, rcc_cr, rcc_cfgr, rcc_d1cfgr, scb_ccr, mpu_ctrl;
     uint32_t ticks, loops, ram_words;
     uint32_t fault_exception, cfsr, hfsr, mmfar, bfar, power_status;
+    struct tx15_sdram_report sdram;
 };
 
 /* Require reset-like clock/CPU conditions; never silently assume a timer frequency. */

@@ -31,7 +31,7 @@ def check(data):
     if not segments:
         raise ValueError("No loadable RAM segments")
     # Check the linked reservations, rather than reporting assumed addresses.
-    for address, size in ((0x2400E000, 80), (0x2400F000, 4096)):
+    for address, size in ((0x2400E000, 128), (0x2400F000, 4096)):
         if not any(s[2] == address and s[4] == 0 and s[5] == size
                    and s[6] == 6 for s in segments):
             raise ValueError("Missing/moved mailbox or stack reservation")

@@ -58,6 +58,18 @@ class ProbeReportTests(unittest.TestCase):
             self.assertFalse(self.report.is_live(dict(after, **{field: value}), before))
             self.assertFalse(self.report.is_live(after, dict(before, **{field: value})))
 
+    def test_v5_requires_complete_sdram_test_and_extended_mailbox(self):
+        def dump(ticks, loops):
+            base = bytearray(self.dump(ticks, loops, version=5, power=15))
+            struct.pack_into('<3I', base, 24, 0x3034025, 0x1b, 0x48)
+            return bytes(base)+struct.pack('<12I',3,0,16384,32800,0,0,0,0x1ad0,0x1d4,0xf3f7fff,0x3050371,460)
+        before=self.report.decode(dump(10,100))
+        after=self.report.decode(dump(20,200))
+        self.assertTrue(self.report.is_live(after,before))
+        for field,value in [('sdram_state',2),('sdram_words',1),('sdram_error',3),('sdram_checks',32)]:
+            self.assertFalse(self.report.is_live(dict(after,**{field:value}),before))
+        with self.assertRaises(ValueError): self.report.decode(dump(10,100)[:80])
+
     def test_both_interrupt_and_main_must_advance(self):
         before = self.report.decode(self.dump())
         self.assertTrue(self.report.is_live(self.report.decode(self.dump(20, 200)), before))
@@ -74,7 +86,7 @@ class ProbeReportTests(unittest.TestCase):
 
     def test_rejects_wrong_length_magic_and_version(self):
         for data in [b"", self.dump()[:-1], self.dump() + b"\x00", b"oops" + self.dump()[4:],
-                     self.dump()[:4] + struct.pack("<I", 5) + self.dump()[8:]]:
+                     self.dump()[:4] + struct.pack("<I", 6) + self.dump()[8:]]:
             with self.assertRaises(ValueError):
                 self.report.decode(data)
 

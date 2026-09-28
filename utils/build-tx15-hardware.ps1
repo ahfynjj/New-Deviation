@@ -29,8 +29,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Clock driver compilation failed' }
     & $gcc @flags -c 'hardware/tx15/board/pll.c' -o "$out/pll.o"
     if ($LASTEXITCODE -ne 0) { throw 'PLL driver compilation failed' }
+    & $gcc @flags -c 'hardware/tx15/board/sdram.c' -o "$out/sdram.o"
+    if ($LASTEXITCODE -ne 0) { throw 'SDRAM driver compilation failed' }
     & $gcc @flags -nostdlib '-Wl,--gc-sections' "-Wl,-Map,$out/ram-probe.map" `
-        -T "$source/ram.ld" "$out/startup.o" "$out/probe.o" "$out/power.o" "$out/clock.o" "$out/pll.o" -o "$out/ram-probe.elf"
+        -T "$source/ram.ld" "$out/startup.o" "$out/probe.o" "$out/power.o" "$out/clock.o" "$out/pll.o" "$out/sdram.o" -o "$out/ram-probe.elf"
     if ($LASTEXITCODE -ne 0) { throw 'RAM link failed' }
     & $Python utils/hardware/check_ram_elf.py "$out/ram-probe.elf"
     if ($LASTEXITCODE -ne 0) { throw 'ELF validation failed' }

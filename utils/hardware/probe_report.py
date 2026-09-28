@@ -1,4 +1,4 @@
-"""Decode an 80-byte RAM probe mailbox read through a real debugger."""
+"""Decode historical 80-byte or V5 128-byte RAM diagnostic mailboxes."""
 import argparse
 import json
 from pathlib import Path
@@ -6,14 +6,20 @@ import struct
 
 FIELDS = ("magic version state error cpuid device_id rcc_cr rcc_cfgr rcc_d1cfgr "
           "scb_ccr mpu_ctrl ticks loops ram_words fault_exception cfsr hfsr mmfar bfar reserved").split()
+SDRAM_FIELDS = ("sdram_state sdram_error sdram_words sdram_checks sdram_bad_address "
+                "sdram_expected sdram_actual sdcr1 sdcr2 sdtr1 sdtr2 sdrtr").split()
 
 
 def decode(data):
-    if len(data) != 80:
-        raise ValueError("Expected exactly 80 bytes from 0x2400e000..0x2400e050")
-    values = dict(zip(FIELDS, struct.unpack("<20I", data)))
-    if values["magic"] != 0x4E445631 or values["version"] not in (1, 2, 3, 4):
+    if len(data) not in (80, 128):
+        raise ValueError("Expected 80 (V1..4) or 128 (V5) bytes from 0x2400e000")
+    values = dict(zip(FIELDS, struct.unpack("<20I", data[:80])))
+    if values["magic"] != 0x4E445631 or values["version"] not in (1, 2, 3, 4, 5):
         raise ValueError("Unrecognized mailbox magic/version; do not treat stale RAM as execution")
+    if len(data) != (128 if values['version'] == 5 else 80):
+        raise ValueError('Mailbox size does not match version')
+    if values['version'] == 5:
+        values.update(zip(SDRAM_FIELDS, struct.unpack('<12I', data[80:])))
     if values["version"] >= 2:
         values["power_status"] = values.pop("reserved")
     return values
@@ -32,8 +38,11 @@ def is_live(current, previous):
         if report["version"] == 3 and (report["rcc_cr"] & 0x30000 != 0x30000
                 or report["rcc_cfgr"] & 0x3f != 0x12 or report["rcc_d1cfgr"] & 0xf0f):
             return False
-        if report["version"] == 4 and (report["rcc_cr"] & 0x3f0f001d != 0x3030005
+        if report["version"] >= 4 and (report["rcc_cr"] & 0x3f0f001d != 0x3030005
                 or report["rcc_cfgr"] & 0x3f != 0x1b or report["rcc_d1cfgr"] & 0xf7f != 0x48):
+            return False
+        if report['version'] == 5 and (report['sdram_state'] != 3 or report['sdram_error']
+                or report['sdram_words'] != 16384 or report['sdram_checks'] != 32800):
             return False
     if any(current[key] != previous[key] for key in ("cpuid", "device_id")):
         return False

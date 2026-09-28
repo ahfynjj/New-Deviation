@@ -10,7 +10,7 @@
 
 volatile struct probe_report probe_report __attribute__((section(".mailbox"), aligned(8)));
 static volatile uint32_t scratch[PROBE_RAM_WORDS] __attribute__((aligned(8)));
-_Static_assert(sizeof(struct probe_report) == 80, "mailbox ABI must match host decoder");
+_Static_assert(sizeof(struct probe_report) == 128, "mailbox ABI must match host decoder");
 
 static void stop(void) __attribute__((noreturn));
 static void stop(void)
@@ -93,6 +93,11 @@ void Probe_Main(void)
     }
     probe_report.ram_words = PROBE_RAM_WORDS;
     probe_report.state = PROBE_RAM_OK;
+    if (tx15_sdram_test(&probe_report.sdram)) {
+        probe_report.error = BAD_SDRAM;
+        probe_report.state = PROBE_ERROR;
+        stop();
+    }
     /* Confirmed PLL128 processor clock, nominal 1 ms. */
     SYST_CSR = 0;
     SYST_RVR = TX15_PLL_CORE_HZ / 1000u - 1u;

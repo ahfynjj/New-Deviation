@@ -24,7 +24,7 @@ SECTIONS {
 }
 ASSERT(ADDR(.isr_vector) == 0x24000000, "vector base moved")
 ASSERT(SIZEOF(.isr_vector) == 704, "unexpected vector count")
-ASSERT(SIZEOF(.mailbox) == 80, "mailbox ABI changed")
+ASSERT(SIZEOF(.mailbox) == 128, "mailbox ABI changed")
 ASSERT((_bss_start % 8) == 0 && (_bss_end % 8) == 0, "BSS ECC alignment")
 ASSERT((_mailbox_start % 8) == 0 && (_mailbox_end % 8) == 0, "mailbox ECC alignment")
 ASSERT(_bss_end <= ORIGIN(MAILBOX), "code/data overlap mailbox")
