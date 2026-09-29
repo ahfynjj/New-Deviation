@@ -36,7 +36,7 @@ static int check(volatile struct tx15_sdram_report *r, uint32_t a, uint32_t expe
     r->checks++;
     return 0;
 }
-int tx15_sdram_test(volatile struct tx15_sdram_report *r) {
+int tx15_sdram_init(volatile struct tx15_sdram_report *r) {
     r->state=1;
     if ((TX15_READ32(0x58024400u)&0x3f0f001du)!=0x3030005u
         || (TX15_READ32(0x58024410u)&0x3fu)!=0x1bu
@@ -91,6 +91,10 @@ int tx15_sdram_test(volatile struct tx15_sdram_report *r) {
     r->sdrtr=TX15_READ32(REFRESH);
     if(r->sdrtr!=460u || (TX15_READ32(STATUS)&0x19u)) { r->error=2; return 1; }
     r->state=2;
+    return 0;
+}
+int tx15_sdram_test(volatile struct tx15_sdram_report *r) {
+    if (tx15_sdram_init(r)) return 1;
     for(unsigned bit=0;bit<32;bit++) {
         TX15_WRITE32(0xd0000000u,1u<<bit); TX15_SDRAM_BARRIER();
         if(check(r,0xd0000000u,1u<<bit)) return 1;

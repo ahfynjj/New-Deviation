@@ -10,5 +10,6 @@ struct tx15_sdram_report {
  * Requires reviewed TX15 pins, PLL128/AHB64, caches/MPU off, FMC reset/clock off.
  * Caller owns recovery. Never use while the original application is running.
  */
+int tx15_sdram_init(volatile struct tx15_sdram_report *r);
 int tx15_sdram_test(volatile struct tx15_sdram_report *r);
 #endif

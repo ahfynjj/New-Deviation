@@ -1,7 +1,14 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-09-27。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-09-29。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
+
+## P0 当前进度（2026-09-29）
+
+- 已完成：显示 RAM 演示程序及构建脚本，单缓冲 480×320 RGB565，文字/色块/计数；编译与 ELF 检查通过，28 项相关检查通过，集中恢复路径审查通过。
+- 当前阻塞：实机图像、方向/颜色、计数更新与原固件恢复尚待验收；首次按键等待超时，无复位或主板写入，不能据编译通过判定 P0 完成。
+- 下一动作：按钮辅助运行显示演示，观察 20 秒后恢复；验收通过后进入 P1 按键/滚轮输入。
+- 构建：`powershell -File utils/build-tx15-display.ps1 -Python D:/DEVI移植/tools/pyocd-venv/Scripts/python.exe`。镜像位于 `local/tx15-hardware/display-demo/`，仅限现有受控 RAM 装载流程，不是可刷入固件。
 
 ## 方向
 
