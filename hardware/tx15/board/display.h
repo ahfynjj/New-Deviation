@@ -6,9 +6,10 @@
 #define TX15_LCD_HEIGHT 320u
 #define TX15_LCD_BYTES (TX15_LCD_WIDTH * TX15_LCD_HEIGHT * 2u)
 #define TX15_LCD_FB 0xd0000000u
-/* Native landscape coordinates mapped to the panel's portrait scan. */
+/* ST7365 MADCTL=0xe8 already selects landscape address order. The LTDC
+ * 320x480 scan timing does not require a second software rotation. */
 static inline uint32_t tx15_display_offset(unsigned x, unsigned y) {
-    return x * TX15_LCD_HEIGHT + (TX15_LCD_HEIGHT - 1u - y);
+    return y * TX15_LCD_WIDTH + x;
 }
 /* Requires PLL128, initialized SDRAM, caches/MPU off and reset LTDC/PLL3.
  * Caller owns reset-context recovery. No persistent writes. */

@@ -1,6 +1,6 @@
 /* New Deviation TX15; GPL-3.0-or-later.
  * Panel command values/pins/timings reference EdgeTX rm-h750 lcd_driver_480.cpp
- * (GPL-2.0-or-later), commit 19b50d967e6e579ac5a1b3bdb014b148a6b47491.
+ * (GPL-2.0-only), commit 19b50d967e6e579ac5a1b3bdb014b148a6b47491.
  * Independent bare-metal driver; no EdgeTX application/runtime dependency.
  */
 #include "display.h"

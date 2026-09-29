@@ -22,8 +22,10 @@ int main(void) {
   unsigned i=tx15_display_offset(x,y); assert(i<153600); assert(!seen[i]); seen[i]=1;
  }
  for(unsigned i=0;i<153600;i++) assert(seen[i]);
- assert(tx15_display_offset(0,0)==319);
- assert(tx15_display_offset(479,319)==153280);
+ assert(tx15_display_offset(0,0)==0);
+ assert(tx15_display_offset(1,0)==1);
+ assert(tx15_display_offset(0,1)==480);
+ assert(tx15_display_offset(479,319)==153599);
 }
 ''')
             env=dict(os.environ, PATH=str(gcc.parent)+os.pathsep+os.environ.get('PATH',''))
