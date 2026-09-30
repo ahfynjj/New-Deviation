@@ -1,6 +1,9 @@
 /* New Deviation hardware bring-up; GPL-3.0-or-later. */
 #include "../ram_probe/probe.h"
 #include "../board/display.h"
+#ifdef TX15_INPUT_DEMO
+#include "../board/inputs.h"
+#endif
 #include "../board/power.h"
 #include "../board/clock.h"
 
@@ -38,10 +41,13 @@ void Probe_Fault(void)
 void SysTick_Handler(void)
 {
     probe_report.ticks++;
+#ifdef TX15_INPUT_DEMO
+    tx15_inputs_tick();
+#endif
 }
 
 /* Compact, purpose-built 5x7 glyphs for this bench image. */
-static const char glyph_chars[]="NEW DEVIATION0123456789";
+static const char glyph_chars[]="NEW DEVIATION0123456789MRX";
 static const uint8_t glyphs[][5]={
  {127,2,4,8,127},{127,73,73,73,65},{127,32,24,32,127},{0,0,0,0,0},
  {127,65,65,34,28},{127,73,73,73,65},{31,32,64,32,31},
@@ -49,7 +55,7 @@ static const uint8_t glyphs[][5]={
  {62,65,65,65,62},{127,2,4,8,127},
  {62,81,73,69,62},{0,66,127,64,0},{66,97,81,73,70},{33,65,69,75,49},
  {24,20,18,127,16},{39,69,69,69,57},{60,74,73,73,48},
- {1,113,9,5,3},{54,73,73,73,54},{6,73,73,41,30}};
+ {1,113,9,5,3},{54,73,73,73,54},{6,73,73,41,30},{127,2,12,2,127},{127,9,25,41,70},{99,20,8,20,99}};
 static void rect(unsigned x,unsigned y,unsigned w,unsigned h,uint16_t c) {
     for(unsigned j=0;j<h;j++) for(unsigned i=0;i<w;i++) tx15_display_pixel(x+i,y+j,c);
 }
@@ -76,6 +82,38 @@ static void draw_screen(void) {
     rect(8,8,16,16,0xf800); rect(456,288,16,24,0x001f);
     draw_number(0);
 }
+
+#ifdef TX15_INPUT_DEMO
+static unsigned selected, inside;
+static void text(unsigned x,unsigned y,const char *s,unsigned scale,uint16_t color) {
+    while(*s) { letter(x,y,*s++,scale,color); x+=6*scale; }
+}
+static void draw_menu(void) {
+    rect(6,90,468,220,0x0841);
+    if(inside) {
+        text(70,135,"ENTER",5,0x07e0); letter(270,135,'1'+selected,5,0xffff);
+        text(150,220,"EXIT",4,0xffff);
+    } else for(unsigned i=0;i<3;i++) {
+        unsigned y=96+i*55; uint16_t color=(i==selected)?0xffe0:0x4208;
+        rect(45,y,390,44,color); text(110,y+7,"ITEM",4,0);
+        letter(300,y+7,'1'+i,4,0);
+    }
+}
+static void input_update(void) {
+    struct tx15_input_event e=tx15_inputs_take();
+    if(!e.pressed && !e.rotation) return;
+    if(e.pressed&TX15_EXIT) inside=0;
+    else if(!inside) {
+        int delta=e.rotation;
+        if(e.pressed&TX15_PREV) delta--;
+        if(e.pressed&TX15_NEXT) delta++;
+        int next=(int)selected+delta; if(next<0) next=0; if(next>2) next=2;
+        selected=(unsigned)next;
+        if(e.pressed&TX15_ENTER) inside=1;
+    }
+    draw_menu();
+}
+#endif
 
 void Probe_Main(void)
 {
@@ -139,6 +177,9 @@ void Probe_Main(void)
         probe_report.error=128u | (display_error<<8); probe_report.state=PROBE_ERROR; stop();
     }
     probe_report.rcc_cr=REG32(0x58024400u);
+#ifdef TX15_INPUT_DEMO
+    tx15_inputs_init(); draw_menu();
+#endif
     /* Confirmed PLL128 processor clock, nominal 1 ms. */
     SYST_CSR = 0;
     SYST_RVR = TX15_PLL_CORE_HZ / 1000u - 1u;
@@ -150,7 +191,17 @@ void Probe_Main(void)
     unsigned last=0;
     for (;;) {
         unsigned seconds=probe_report.ticks/1000;
+#ifdef TX15_INPUT_DEMO
+        input_update();
+        if(seconds!=last) {
+            last=seconds; probe_report.loops++;
+            rect(360,280,90,24,0x0841);
+            letter(360,280,'0'+(seconds/10)%10,3,0xffff);
+            letter(384,280,'0'+seconds%10,3,0xffff);
+        }
+#else
         if(seconds!=last) { last=seconds; draw_number(seconds); probe_report.loops++; }
+#endif
         probe_report.power_status = tx15_power_status();
     }
 }

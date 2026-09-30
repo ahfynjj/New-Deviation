@@ -1,7 +1,14 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-09-29。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-09-30。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
+
+## P1 当前进度（2026-09-30）
+
+- 已完成：独立输入驱动、20ms 按键消抖、滚轮解码，最小 ITEM 选择/进入/返回页；输入版构建和 29 项相关检查通过，P0 独立构建保留。
+- 实机：输入版运行45秒，ticks 53→45106、心跳45次，无异常，恢复流程成功；日志 `local/reset-halt-power-20260930-222352.json`。
+- 当前阻塞：等待用户确认滚轮每格步数、ENTER/EXIT/PAGE 手感及恢复界面，未将程序存活等同于输入验收。
+- 下一动作：完成操作验收后接入 P2 原生 Deviation 页面。构建输入版：`utils/build-tx15-display.ps1 -InputDemo`。
 
 ## P0 当前进度（2026-09-29）
 
