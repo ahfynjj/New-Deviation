@@ -3,6 +3,13 @@
 更新：2026-09-30。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
+## P2 当前进度（2026-09-30，未完成）
+
+- 已完成：新增原生应用目标 `src/target/tx/radiomaster/tx15/`、LCD 绘制适配和只读内嵌资源接口；原始 Deviation GUI、主/混控页面、模型及混控代码共63个 ARM 对象编译并完成可重定位合并，未替换为自画页面。
+- 检查：原始字体解码经内嵌资源读取成功；LCD 正/反向像素顺序、读取边界及拒绝写入检查通过。构建命令 `python utils/build-tx15-app.py`，输出 `local/tx15-hardware/app/`。
+- 当前缺口：这只是集成对象，不是可执行镜像，尚无 P2 实机验收。运行时未解析接口记录在输出目录 `unresolved.txt`。59项资源共433629字节，超过现有56KiB装载区。
+- 下一动作：补齐原生应用运行时与 Deviation 按钮转换；将已验证引导和较大的应用/资源分开装载，完成最终链接及恢复检查后才上板。模型改动先只存在RAM，不承诺保存。
+
 ## P1 当前进度（2026-09-30）
 
 - 已完成：独立输入驱动、20ms 按键消抖、滚轮解码，最小 ITEM 选择/进入/返回页；输入版构建和 29 项相关检查通过，P0 独立构建保留。
