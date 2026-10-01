@@ -12,7 +12,7 @@ flags=['-isystem',str(root.parent/'tools/arm8/lib/gcc/arm-none-eabi/8.2.1/includ
  '-isystem',str(root.parent/'tools/arm8/arm-none-eabi/include'),'-mcpu=cortex-m7','-mthumb','-mfloat-abi=soft','-std=gnu99','-Os','-g',
  '-ffunction-sections','-fdata-sections','-ffreestanding','-fno-common',
  '-Wall','-Wextra','-Werror=implicit-function-declaration','-Werror=undef',
- '-DBUILD_TYPE=0','-DSTATUS_SCREEN','-DHGVERSION="New Deviation TX15 RAM"']
+ '-DTX15_INPUT_TRACE=1','-DBUILD_TYPE=0','-DSTATUS_SCREEN','-DHGVERSION="New Deviation TX15 RAM"']
 for d in ('src','src/target/tx/radiomaster/tx15','src/target/drivers/filesystems',
  'src/gui/320x240x16','src/pages/320x240x16'):
  flags+=['-I',str(root/d)]

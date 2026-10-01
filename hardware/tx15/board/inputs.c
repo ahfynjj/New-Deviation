@@ -7,6 +7,11 @@
 static struct tx15_input_filter filter;
 static volatile unsigned pending;
 static volatile int movement;
+#ifdef TX15_INPUT_TRACE
+/* RAM bench counters: valid edges, skipped states, positive/negative events.
+ * Read-only to the debugger; never changes decoder thresholds. */
+volatile uint32_t tx15_encoder_trace[4];
+#endif
 static void input(unsigned p,unsigned pin) {
     uint32_t b=0x58020000u+p*0x400u,s=pin*2;
     R(b+12)=(R(b+12)&~(3u<<s))|(1u<<s);
@@ -26,7 +31,17 @@ void tx15_inputs_init(void) {
     pending=0; movement=0; tx15_input_filter_init(&filter,keys(),phase());
 }
 void tx15_inputs_tick(void) {
-    struct tx15_input_event e=tx15_input_filter_step(&filter,keys(),phase());
+    unsigned current_phase=phase();
+#ifdef TX15_INPUT_TRACE
+    unsigned diff=filter.phase^current_phase;
+    if(diff==1 || diff==2) tx15_encoder_trace[0]++;
+    if(diff==3) tx15_encoder_trace[1]++;
+#endif
+    struct tx15_input_event e=tx15_input_filter_step(&filter,keys(),current_phase);
+#ifdef TX15_INPUT_TRACE
+    if(e.rotation>0) tx15_encoder_trace[2]++;
+    if(e.rotation<0) tx15_encoder_trace[3]++;
+#endif
     pending|=e.pressed;
     if((e.rotation>0 && movement<32)||(e.rotation<0 && movement>-32)) movement+=e.rotation;
 }

@@ -13,7 +13,18 @@ class AdapterTests(unittest.TestCase):
 #include "common.h"
 #include "screen/font.h"
 #include "romfs.h"
+#include "buttons.h"
 #include "hardware/tx15/board/inputs.h"
+static unsigned up_releases, down_releases;
+void AUTODIMMER_Check(void) {}
+static unsigned count_action(u32 button,unsigned flags,void *data) {
+ (void)data;
+ if(flags & BUTTON_RELEASE) {
+  if(button==CHAN_ButtonMask(BUT_UP)) up_releases++;
+  if(button==CHAN_ButtonMask(BUT_DOWN)) down_releases++;
+ }
+ return 1;
+}
 static u32 test_ms; static int rotation;
 u32 CLOCK_getms(void) { return test_ms; }
 unsigned tx15_inputs_state(void) { return 0; }
@@ -30,6 +41,17 @@ int main(void) {
  test_ms=100; assert(ScanButtons()==0);
  test_ms=200; rotation=-1; assert(ScanButtons()==CHAN_ButtonMask(BUT_UP));
  test_ms=300; assert(ScanButtons()==0);
+ buttonAction_t action={0};
+ BUTTON_RegisterCallback(&action,CHAN_ButtonMask(BUT_UP)|CHAN_ButtonMask(BUT_DOWN),
+   BUTTON_PRESS|BUTTON_RELEASE,count_action,0);
+ /* Feed ten detent events each way through the real Deviation debounce and
+  * callback dispatcher. GUI navigation consumes the release, not the press. */
+ for(test_ms=500;test_ms<6500;test_ms+=5) {
+  if(test_ms>=1000 && test_ms<3500 && (test_ms-1000)%250==0) rotation=-1;
+  if(test_ms>=3500 && test_ms<6000 && (test_ms-3500)%250==0) rotation=1;
+  BUTTON_Handler();
+ }
+ assert(up_releases==10 && down_releases==10);
  LCD_DrawStart(4,5,5,6,DRAW_NWSE);
  for(int i=0;i<5;i++) LCD_DrawPixel(1);
  assert(n==4 && px[0]==4 && py[0]==5 && px[3]==5 && py[3]==6);
@@ -57,7 +79,7 @@ int main(void) {
    for d in ('src','src/target/tx/radiomaster/tx15','src/target/drivers/filesystems','src/gui/320x240x16','src/pages/320x240x16'):
     includes+=['-I',str(ROOT/d)]
    env=dict(os.environ,PATH=str(gcc.parent)+os.pathsep+os.environ.get('PATH',''))
-   cmd=[str(gcc),'-DUSE_OWN_PRINTF=0',*includes,str(src),str(ROOT/'src/target/tx/radiomaster/tx15/lcd.c'),str(ROOT/'src/target/tx/radiomaster/tx15/romfs.c'),str(ROOT/'src/screen/font.c'),'-o',str(exe)]
+   cmd=[str(gcc),'-DUSE_OWN_PRINTF=0',*includes,str(src),str(ROOT/'src/target/tx/radiomaster/tx15/lcd.c'),str(ROOT/'src/target/tx/radiomaster/tx15/romfs.c'),str(ROOT/'src/screen/font.c'),str(ROOT/'src/buttons.c'),'-o',str(exe)]
    r=subprocess.run(cmd,capture_output=True,text=True,encoding="utf-8",errors="replace",env=env)
    self.assertEqual(r.returncode,0,r.stdout+r.stderr)
    subprocess.run([str(exe)],check=True,env=env)
