@@ -14,6 +14,10 @@ class AdapterTests(unittest.TestCase):
 #include "screen/font.h"
 #include "romfs.h"
 #include "buttons.h"
+#include "config/tx.h"
+struct Transmitter Transmitter;
+volatile uint16_t tx15_analog_raw[6];
+volatile uint32_t tx15_analog_status,tx15_analog_frames;
 #include "hardware/tx15/board/inputs.h"
 static unsigned up_releases, down_releases;
 void AUTODIMMER_Check(void) {}
@@ -37,6 +41,20 @@ const size_t tx15_resource_count=1;
 static unsigned px[8],py[8],n;
 void tx15_display_pixel(unsigned x,unsigned y,uint16_t c) { (void)c; assert(n<8);px[n]=x;py[n++]=y; }
 int main(void) {
+ tx15_analog_status=4;
+ tx15_analog_raw[0]=100;tx15_analog_raw[1]=200;tx15_analog_raw[2]=300;
+ tx15_analog_raw[3]=400;tx15_analog_raw[4]=500;tx15_analog_raw[5]=600;
+ assert(CHAN_ReadRawInput(INP_AILERON)==3695);
+ assert(CHAN_ReadRawInput(INP_ELEVATOR)==3895); /* physical LV; Mode 2 swaps in mixer */
+ assert(CHAN_ReadRawInput(INP_THROTTLE)==300);  /* physical RV */
+ assert(CHAN_ReadRawInput(INP_RUDDER)==100);
+ assert(CHAN_ReadRawInput(INP_S1)==3595 && CHAN_ReadRawInput(INP_S2)==3495);
+ Transmitter.calibration[3]=(struct StickCalibration){3000,1000,2000};
+ tx15_analog_raw[0]=1000;assert(CHAN_ReadInput(INP_RUDDER)==-10000);
+ tx15_analog_raw[0]=2000;assert(CHAN_ReadInput(INP_RUDDER)==0);
+ tx15_analog_raw[0]=4095;assert(CHAN_ReadInput(INP_RUDDER)==10000);
+ tx15_analog_status=6;assert(CHAN_ReadInput(INP_THROTTLE)==-10000);
+ assert(CHAN_ReadInput(INP_AILERON)==0);
  rotation=1; assert(ScanButtons()==CHAN_ButtonMask(BUT_DOWN));
  test_ms=100; assert(ScanButtons()==0);
  test_ms=200; rotation=-1; assert(ScanButtons()==CHAN_ButtonMask(BUT_UP));
@@ -79,7 +97,7 @@ int main(void) {
    for d in ('src','src/target/tx/radiomaster/tx15','src/target/drivers/filesystems','src/gui/320x240x16','src/pages/320x240x16'):
     includes+=['-I',str(ROOT/d)]
    env=dict(os.environ,PATH=str(gcc.parent)+os.pathsep+os.environ.get('PATH',''))
-   cmd=[str(gcc),'-DUSE_OWN_PRINTF=0',*includes,str(src),str(ROOT/'src/target/tx/radiomaster/tx15/lcd.c'),str(ROOT/'src/target/tx/radiomaster/tx15/romfs.c'),str(ROOT/'src/screen/font.c'),str(ROOT/'src/buttons.c'),'-o',str(exe)]
+   cmd=[str(gcc),'-DUSE_OWN_PRINTF=0',*includes,str(src),str(ROOT/'src/target/tx/radiomaster/tx15/lcd.c'),str(ROOT/'src/target/tx/radiomaster/tx15/romfs.c'),str(ROOT/'src/screen/font.c'),str(ROOT/'src/buttons.c'),str(ROOT/'src/target/tx/radiomaster/tx15/analog.c'),'-o',str(exe)]
    r=subprocess.run(cmd,capture_output=True,text=True,encoding="utf-8",errors="replace",env=env)
    self.assertEqual(r.returncode,0,r.stdout+r.stderr)
    subprocess.run([str(exe)],check=True,env=env)

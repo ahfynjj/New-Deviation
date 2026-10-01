@@ -17,6 +17,6 @@ Encoder/key events feed Deviation buttons. Fonts and icons use original file
 decoders through a read-only resource adapter; SDRAM reads explicitly use bytes
 because this stage leaves the MPU disabled. Model edits are RAM-only.
 
-This is a bench application: RF is disabled, sticks use fixed test values,
+This is a bench application: RF is disabled; the P3 build now includes ADC1 polling (not yet board-verified),
 battery voltage is unmeasured, and audio/USB/storage writes are unavailable.
 It must not be used for model control. Real ADC/ELRS/storage are later milestones.

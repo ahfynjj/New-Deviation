@@ -25,7 +25,7 @@ sources=[s for s in sources if s.name not in ('datalog_page.c','scanner_page.c',
 sources += [root/'src'/n for n in ('buttons.c','mixer.c','curves.c','inputs.c','mixer_standard.c','remap_channels.c','timer.c','telemetry.c','autodimmer.c')]
 from tx15_resources import generate
 sources.append(generate(root,out))
-sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c')]
+sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c','analog.c')]
 sources.append(root/'hardware/tx15/app/startup.S')
 objects=[]
 with (out/'compile.log').open('w',encoding='utf-8') as log:

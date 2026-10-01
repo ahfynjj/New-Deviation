@@ -1,6 +1,6 @@
 /* Explicit P2 bench-only services; GPL-3.0-or-later.
- * RF/USB/trainer/audio/ADC are unavailable; no peripheral writes here.
- * This is not a flight-capable build. Real inputs and ELRS follow in P3/P4.
+ * RF/USB/trainer/audio are unavailable; no peripheral writes here.
+ * This is not a flight-capable build. Analog inputs are implemented separately; ELRS follows in P4.
  */
 #include "common.h"
 #include "mixer.h"
@@ -14,8 +14,6 @@ const u8 EATRG0[PROTO_MAP_LEN]={INP_ELEVATOR,INP_AILERON,INP_THROTTLE,INP_RUDDER
 const u8 *CurrentProtocolChannelMap=EATRG0;
 void MCU_InitModules(void) { memset(Transmitter.module_enable,0,sizeof(Transmitter.module_enable)); }
 int MCU_SetPin(struct mcu_pin *p,const char *name) { (void)p;(void)name;return 0; }
-s32 CHAN_ReadInput(int ch) { return ch==INP_THROTTLE?CHAN_MIN_VALUE:0; }
-s32 CHAN_ReadRawInput(int ch) { return CHAN_ReadInput(ch); }
 unsigned PWR_ReadVoltage(void) { return 0; } /* Unmeasured, not a fabricated battery voltage. */
 int PWR_CheckPowerSwitch(void) { return 0; }
 void PWR_Shutdown(void) { for(;;) __asm volatile("nop"); }
