@@ -15,7 +15,8 @@ u32 ScanButtons(void) {
         else phase=0;
     }
     if(!phase && queued) {
-        pulse=CHAN_ButtonMask(queued>0?BUT_DOWN:BUT_UP);
+        /* CHAN_ButtonMask does not parenthesize its argument internally. */
+        pulse=queued>0 ? CHAN_ButtonMask(BUT_DOWN) : CHAN_ButtonMask(BUT_UP);
         queued+=(queued>0)?-1:1; phase=1; until=now+100;
     }
     unsigned raw=tx15_inputs_state();
