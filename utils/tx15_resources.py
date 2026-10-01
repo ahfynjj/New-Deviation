@@ -19,7 +19,7 @@ def generate(root,out):
         files['media/'+name+'.fon']=dst.read_bytes()
     files['media/config.ini']=(root/'src/fs/320x240x16/media/config.ini').read_bytes().replace(b'drawn_background=0',b'drawn_background=1')
     files['layout/default.ini']=(root/'src/fs/tx15/layout/default.ini').read_bytes()
-    files['models/model1.ini']=b'name=TX15 RAM Test\nmixermode=Advanced\n[radio]\nprotocol=None\nnum_channels=4\n[mixer]\nsrc=AIL\ndest=Ch1\n[mixer]\nsrc=ELE\ndest=Ch2\n[mixer]\nsrc=THR\ndest=Ch3\n[mixer]\nsrc=RUD\ndest=Ch4\n'
+    files['models/model1.ini']=(root/'hardware/tx15/app/model.ini').read_bytes()
     total=sum(map(len,files.values()))
     if total>512*1024: raise ValueError('Embedded resources exceed 512 KiB limit')
     dst=out/'resources.c'

@@ -33,3 +33,20 @@ class AppImageTests(unittest.TestCase):
             self.assertLessEqual(a%1024+len(b),1024)
             self.assertTrue(allowed(a,len(b)))
         with self.assertRaises(ValueError): list(transfer_chunks(0x2407bff8,bytes(9)))
+
+class BenchModelTests(unittest.TestCase):
+ def test_every_mixer_destination_has_enabled_template(self):
+  from pathlib import Path
+  root=Path(__file__).resolve().parents[3]
+  sections=[]
+  for line in (root/'hardware/tx15/app/model.ini').read_text().splitlines():
+   if line.startswith('['): sections.append((line[1:-1].lower(),{}))
+   elif '=' in line and sections:
+    k,v=line.split('=',1);sections[-1][1][k]=v
+  channels={name:values for name,values in sections if name.startswith('channel')}
+  mixers=[values for name,values in sections if name=='mixer']
+  self.assertEqual(len(mixers),4)
+  self.assertEqual([m['src'] for m in mixers],['AIL','ELE','THR','RUD'])
+  for m in mixers:
+   channel='channel'+m['dest'][2:]
+   self.assertEqual(channels.get(channel,{}).get('template'),'simple')
