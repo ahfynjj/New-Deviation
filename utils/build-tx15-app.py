@@ -1,7 +1,8 @@
 """Cross-compile original Deviation GUI/pages for native TX15 (no emulator).
-This integration archive is NOT a loadable image. Runtime/link stage follows.
+Builds a RAM-only ELF; hardware acceptance is a separate step.
 """
 import os, subprocess, sys
+sys.stdout.reconfigure(encoding="utf-8",errors="replace")
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 out=root/'local/tx15-hardware/app'; out.mkdir(parents=True,exist_ok=True)
@@ -20,12 +21,14 @@ for pattern in ('src/gui/*.c','src/screen/*.c','src/screen/320x240x16/*.c',
  'src/pages/320x240x16/*.c','src/pages/320x240x16/advanced/*.c',
  'src/config/*.c','src/misc/*.c','src/target/tx/radiomaster/tx15/*.c'):
  sources+=sorted(root.glob(pattern))
-sources=[s for s in sources if s.name not in ('telemtest_page.c','telemconfig_page.c','datalog_page.c','scanner_page.c','fgets.c')]
-sources += [root/'src'/n for n in ('buttons.c','mixer.c','curves.c')]
+sources=[s for s in sources if s.name not in ('datalog_page.c','scanner_page.c','fgets.c')]
+sources += [root/'src'/n for n in ('buttons.c','mixer.c','curves.c','inputs.c','mixer_standard.c','remap_channels.c','timer.c','telemetry.c','autodimmer.c')]
 from tx15_resources import generate
 sources.append(generate(root,out))
+sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c')]
+sources.append(root/'hardware/tx15/app/startup.S')
 objects=[]
-with (out/'compile.log').open('w') as log:
+with (out/'compile.log').open('w',encoding='utf-8') as log:
  for src in sources:
   obj=out/('_'.join(src.relative_to(root).parts)+'.o')
   r=subprocess.run([str(arm/'arm-none-eabi-gcc.exe'),*flags,'-c',str(src),'-o',str(obj)],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding="utf-8",errors="replace")
@@ -46,4 +49,19 @@ nm=root.parent/'tools/arm8/bin/arm-none-eabi-nm.exe'
 missing=subprocess.check_output([str(nm),'-u',str(combined)],text=True)
 (out/'unresolved.txt').write_text(missing)
 print('Unresolved runtime interfaces written to',out/'unresolved.txt')
-print('Compile integration only; not linked or loadable; no device accessed.')
+
+
+elf=out/'tx15-app.elf'
+lib=root.parent/'tools/arm8/arm-none-eabi/lib/thumb/v7e-m/nofp'
+gcc_lib=root.parent/'tools/arm8/lib/gcc/arm-none-eabi/8.2.1/thumb/v7e-m/nofp/libgcc.a'
+command=[str(ld),'--gc-sections','-T',str(root/'hardware/tx15/app/app.ld'),
+ '-Map='+str(out/'tx15-app.map'),'-o',str(elf),'--start-group',*objects,
+ str(lib/'libc.a'),str(lib/'libm.a'),str(gcc_lib),'--end-group']
+r=subprocess.run(command,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace')
+(out/'link.log').write_text(r.stdout,encoding='utf-8')
+if r.returncode:
+ print(r.stdout[-16000:]);sys.exit(r.returncode)
+from hardware.app_image import parse
+entry,segments=parse(elf.read_bytes())
+print('Linked and checked RAM load map:',elf,'entry',hex(entry))
+print('No device accessed; hardware acceptance remains pending.')

@@ -1,0 +1,47 @@
+/* Native application runtime on the already initialized RAM bootstrap. */
+#include "common.h"
+#include "../../../../../hardware/tx15/board/inputs.h"
+#define REPORT ((volatile uint32_t *)0x2400e000u)
+u32 CLOCK_getms(void) { return REPORT[11]; }
+u32 ScanButtons(void) {
+    static int queued;
+    static u32 until, pulse;
+    static unsigned phase;
+    struct tx15_input_event e=tx15_inputs_take();
+    queued+=e.rotation; if(queued>8) queued=8; if(queued<-8) queued=-8;
+    u32 now=CLOCK_getms();
+    if(phase && (s32)(now-until)>=0) {
+        if(phase==1) { pulse=0; phase=2; until=now+100; }
+        else phase=0;
+    }
+    if(!phase && queued) {
+        pulse=CHAN_ButtonMask(queued>0?BUT_DOWN:BUT_UP);
+        queued+=(queued>0)?-1:1; phase=1; until=now+100;
+    }
+    unsigned raw=tx15_inputs_state();
+    return pulse | ((raw&TX15_ENTER)?CHAN_ButtonMask(BUT_ENTER):0)
+        | ((raw&TX15_EXIT)?CHAN_ButtonMask(BUT_EXIT):0)
+        | ((raw&TX15_PREV)?CHAN_ButtonMask(BUT_LEFT):0)
+        | ((raw&TX15_NEXT)?CHAN_ButtonMask(BUT_RIGHT):0);
+}
+void SysTick_Handler(void) { REPORT[11]++; tx15_inputs_tick(); }
+void App_Fault(void) {
+    unsigned ipsr; __asm volatile("mrs %0, ipsr":"=r"(ipsr));
+    REPORT[14]=ipsr;REPORT[15]=*(volatile u32 *)0xe000ed28u;
+    REPORT[16]=*(volatile u32 *)0xe000ed2cu;REPORT[2]=5;
+    __asm volatile("cpsid i"); for(;;) __asm volatile("nop");
+}
+void tx15_app_main(void);
+void App_Main(void) {
+    /* The host validates bootstrap state before entry. No clocks/SDRAM reset. */
+    if(REPORT[0]!=0x4e445631 || REPORT[1]!=6 || REPORT[2]!=3) App_Fault();
+    REPORT[1]=7; REPORT[2]=1; REPORT[12]=0;
+    tx15_inputs_init();
+    *(volatile u32 *)0xe000e010u=0;
+    *(volatile u32 *)0xe000e014u=127999;
+    *(volatile u32 *)0xe000e018u=0;
+    *(volatile u32 *)0xe000ed04u=(1u<<25)|(1u<<27);
+    *(volatile u32 *)0xe000e010u=7;
+    __asm volatile("dsb\nisb\ncpsie i":::"memory");
+    tx15_app_main();
+}

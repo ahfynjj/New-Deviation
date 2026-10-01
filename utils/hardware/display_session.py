@@ -66,11 +66,12 @@ def restore(read, write, saved, budget=100):
 def decode(data):
     if len(data)!=128: raise ValueError('Expected 128-byte display mailbox')
     r=dict(zip(FIELDS+SDRAM_FIELDS,struct.unpack('<32I',data)))
-    if r['magic']!=0x4e445631 or r['version']!=6: raise ValueError('Not display V6')
+    if r['magic']!=0x4e445631 or r['version'] not in (6,7): raise ValueError('Not display V6')
     r['power_status']=r.pop('reserved')
     return r
 
 def is_live(current, previous):
+    if current['version']!=previous['version']: return False
     for r in (current,previous):
         if (r['state']!=3 or r['error'] or r['power_status']&15!=15
             or r['ram_words']!=76800 or r['sdram_state']!=3 or r['sdram_error']

@@ -26,7 +26,7 @@ def generate(root,out):
     with dst.open('w') as f:
         f.write('#include "romfs.h"\n')
         for i,(name,data) in enumerate(files.items()):
-            f.write('static const uint8_t asset%d[]={%s};\n'%(i,','.join(str(b) for b in data)))
+            f.write('static const uint8_t asset%d[] __attribute__((section(".resources")))={%s};\n'%(i,','.join(str(b) for b in data)))
         f.write('const struct tx15_resource tx15_resources[]={\n')
         for i,(name,data) in enumerate(files.items()):
             f.write('{"%s",asset%d,sizeof(asset%d)},\n'%(name,i,i))

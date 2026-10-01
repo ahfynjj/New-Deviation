@@ -36,3 +36,5 @@ struct tx15_input_event tx15_inputs_take(void) {
     __asm volatile("msr primask, %0"::"r"(mask):"memory");
     return e;
 }
+
+unsigned tx15_inputs_state(void) { return filter.stable; }

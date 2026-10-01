@@ -10,6 +10,7 @@ struct tx15_input_filter {
 };
 void tx15_input_filter_init(struct tx15_input_filter *f,unsigned keys,unsigned phase);
 struct tx15_input_event tx15_input_filter_step(struct tx15_input_filter *f,unsigned keys,unsigned phase);
+unsigned tx15_inputs_state(void);
 void tx15_inputs_init(void);
 void tx15_inputs_tick(void); /* Called once per millisecond, no drawing. */
 struct tx15_input_event tx15_inputs_take(void); /* Main loop, IRQ-safe. */

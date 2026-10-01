@@ -1,21 +1,22 @@
-# Native TX15 application integration (P2 in progress)
+# Native TX15 RAM application (P2)
 
-Build on the existing Windows toolchain with `python utils/build-tx15-app.py`
-from the repository root. This builds original Deviation GUI, main/mixer pages,
-model/mixer code and the native LCD/read-only resource adapters for Cortex-M7.
-It is not an emulator and creates no flashable or loadable firmware yet.
+Build with `python utils/build-tx15-app.py` from the repository root using the
+existing Windows toolchain. The output `local/tx15-hardware/app/tx15-app.elf`
+is a finally linked ARM executable, with its load map automatically checked.
+Hardware acceptance remains a separate step. No Flash installer is provided.
 
-`local/tx15-hardware/app/` contains the integration archive, relocatable object,
-compile log and `unresolved.txt`. The latter is the explicit remaining runtime
-interface inventory; an archive/relocatable link is not a successful application
-link. The current app entry is not included in any existing bench-load profile.
+The proven RAM bootstrap initializes power, clocks, SDRAM and the display.
+A second stage loads application code at 0x24010000 and read-only resources at
+0xD0080000, checks each block by readback, then enters the application in Thread
+mode. The 16 KiB stack ends at 0x24080000. Bootstrap, mailbox and framebuffer
+are excluded from application load ranges. Existing recovery restores the
+original firmware after the temporary session, including failure paths.
 
-Resources are regenerated from tracked files; 15normal/23bold are ASCII font
-subsets for the first hardware page pass. File reads use the original Deviation
-font/image decoders. Writes fail, so this build must not advertise model saving.
-The fixed test model is not a user's existing model file.
+Original Deviation main/mixer pages, GUI and model/mixer code are compiled.
+Encoder/key events feed Deviation buttons. Fonts and icons use original file
+decoders through a read-only resource adapter; SDRAM reads explicitly use bytes
+because this stage leaves the MPU disabled. Model edits are RAM-only.
 
-Before board execution: finish runtime services/button translation, final link
-and memory map; separate the already-proven RAM bootstrap from the larger
-application/resources; verify owned write ranges and the original recovery path.
-P0/P1 builds remain the hardware-verified targets until then.
+This is a bench application: RF is disabled, sticks use fixed test values,
+battery voltage is unmeasured, and audio/USB/storage writes are unavailable.
+It must not be used for model control. Real ADC/ELRS/storage are later milestones.

@@ -16,11 +16,12 @@ void tx15_app_main(void) {
     LCD_SetFont(DEFAULT_FONT.font); LCD_SetFontColor(DEFAULT_FONT.font_color);
     GUI_HandleButtons(1); MIXER_Init(); PAGE_Init(); PAGE_ChangeByID(PAGEID_MAIN,0);
     GUI_DrawScreen();
+    ((volatile u32 *)0x2400e000u)[2]=3;
     u32 previous=0;
     for(;;) {
         u32 now=CLOCK_getms();
         if(now-previous>=5) {
-            previous=now; BUTTON_Handler(); MIXER_CalcChannels(); PAGE_Event(); GUI_RefreshScreen();
+            previous=now; ((volatile u32 *)0x2400e000u)[12]++; BUTTON_Handler(); MIXER_CalcChannels(); PAGE_Event(); GUI_RefreshScreen();
         }
     }
 }
