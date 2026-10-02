@@ -12,7 +12,11 @@ app_vectors:
  .word App_Fault
  .endr
  .word SysTick_Handler
- .rept 160
+ .rept 71
+ .word App_Fault
+ .endr
+ .word USART6_IRQHandler
+ .rept 88
  .word App_Fault
  .endr
 .section .text.App_Reset,"ax",%progbits

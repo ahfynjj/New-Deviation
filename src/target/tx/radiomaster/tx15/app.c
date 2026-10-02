@@ -9,6 +9,7 @@
 #include "config/model.h"
 #include "config/tx.h"
 #include "config/display.h"
+#include "rf.h"
 #include "../../../../../hardware/tx15/board/analog.h"
 const char DeviationVersion[33]="New Deviation TX15 RAM";
 void tx15_app_main(void) {
@@ -18,6 +19,9 @@ void tx15_app_main(void) {
     LCD_SetFont(DEFAULT_FONT.font); LCD_SetFontColor(DEFAULT_FONT.font_color);
     GUI_HandleButtons(1); MIXER_Init(); PAGE_Init(); PAGE_ChangeByID(PAGEID_MAIN,0);
     GUI_DrawScreen();
+#ifdef TX15_ELRS_DISCOVERY
+    tx15_rf_discovery_init(CLOCK_getms());
+#endif
     ((volatile u32 *)0x2400e000u)[2]=3;
     u32 previous=0;
     for(;;) {

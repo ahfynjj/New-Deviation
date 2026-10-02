@@ -13,6 +13,8 @@ flags=['-isystem',str(root.parent/'tools/arm8/lib/gcc/arm-none-eabi/8.2.1/includ
  '-ffunction-sections','-fdata-sections','-ffreestanding','-fno-common',
  '-Wall','-Wextra','-Werror=implicit-function-declaration','-Werror=undef',
  '-DTX15_INPUT_TRACE=1','-DBUILD_TYPE=0','-DSTATUS_SCREEN','-DHGVERSION="New Deviation TX15 RAM"']
+if os.environ.get('TX15_ELRS_DISCOVERY') == '1':
+ flags.append('-DTX15_ELRS_DISCOVERY=1')
 for d in ('src','src/target/tx/radiomaster/tx15','src/target/drivers/filesystems',
  'src/gui/320x240x16','src/pages/320x240x16'):
  flags+=['-I',str(root/d)]
@@ -23,12 +25,13 @@ for pattern in ('src/gui/*.c','src/screen/*.c','src/screen/320x240x16/*.c',
  sources+=sorted(root.glob(pattern))
 sources=[s for s in sources if s.name not in ('datalog_page.c','scanner_page.c','fgets.c')]
 sources += [root/'src'/n for n in ('buttons.c','mixer.c','curves.c','inputs.c','mixer_standard.c','remap_channels.c','timer.c','telemetry.c','autodimmer.c')]
-# Portable CRSF core is compiled for H7 now; hardware activation is a later
-# stage. Linker GC removes it until the TX15 RF adapter references it.
+# Portable CRSF core is used by the opt-in discovery build. Default builds
+# leave module power off and linker GC removes unused discovery code.
 sources.append(root/'src/protocol/transport/crsf_link.c')
+sources.append(root/'src/protocol/transport/crsf_stream.c')
 from tx15_resources import generate
 sources.append(generate(root,out))
-sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c','analog.c')]
+sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c','analog.c','rf_uart.c')]
 sources.append(root/'hardware/tx15/app/startup.S')
 objects=[]
 with (out/'compile.log').open('w',encoding='utf-8') as log:

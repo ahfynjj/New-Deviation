@@ -9,7 +9,17 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class CrsfLinkTests(unittest.TestCase):
+    def test_readonly_discovery(self):
+        self.run_c('rf_discovery_test.c', ['crsf_link.c','crsf_stream.c'],
+                   ['src/target/tx/radiomaster/tx15/rf.c'])
+
+    def test_stream_and_device_info(self):
+        self.run_c('crsf_stream_test.c', ['crsf_link.c','crsf_stream.c'])
+
     def test_frames_routing_and_backpressure(self):
+        self.run_c('crsf_link_test.c', ['crsf_link.c'])
+
+    def run_c(self, test, sources, extra=()):
         gcc = Path(tempfile.gettempdir()) / 'new-deviation-ucrt64/bin/gcc.exe'
         with tempfile.TemporaryDirectory(prefix='crsf-link-') as tmp:
             exe = Path(tmp) / 'test.exe'
@@ -17,8 +27,10 @@ class CrsfLinkTests(unittest.TestCase):
             cmd = [str(gcc), '-std=c99', '-Wall', '-Wextra', '-Werror',
                    '-I', str(ROOT.parent/'tools/msys64/ucrt64/include'),
                    '-I', str(ROOT/'src/protocol/transport'),
-                   str(ROOT/'utils/hardware/tests/crsf_link_test.c'),
-                   str(ROOT/'src/protocol/transport/crsf_link.c'), '-o', str(exe)]
+                   '-I', str(ROOT/'src'), '-I', str(ROOT),
+                   str(ROOT/'utils/hardware/tests'/test),
+                   *[str(ROOT/'src/protocol/transport'/s) for s in sources],
+                   *[str(ROOT/s) for s in extra], '-o', str(exe)]
             result = subprocess.run(cmd, capture_output=True, text=True,
                                     encoding='utf-8', errors='replace', env=env)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
