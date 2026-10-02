@@ -14,10 +14,14 @@ class AdapterTests(unittest.TestCase):
 #include "screen/font.h"
 #include "romfs.h"
 #include "buttons.h"
+#include "runtime.h"
 #include "config/tx.h"
 struct Transmitter Transmitter;
 volatile uint16_t tx15_analog_raw[6];
 volatile uint32_t tx15_analog_status,tx15_analog_frames;
+volatile u8 priority_ready;
+static unsigned sample_calls;
+int tx15_analog_sample(void) { sample_calls++; return 0; }
 #include "hardware/tx15/board/inputs.h"
 static unsigned up_releases, down_releases;
 void AUTODIMMER_Check(void) {}
@@ -41,6 +45,15 @@ const size_t tx15_resource_count=1;
 static unsigned px[8],py[8],n;
 void tx15_display_pixel(unsigned x,unsigned y,uint16_t c) { (void)c; assert(n<8);px[n]=x;py[n++]=y; }
 int main(void) {
+ /* Exercise the service from a blocking page, without the app main loop. */
+ for(unsigned ms=0;ms<=105;ms++) {
+  int ran=tx15_runtime_poll(ms);
+  assert(ran==(ms && ms%5==0));
+  if(ran) assert(priority_ready&(1u<<MEDIUM_PRIORITY));
+  assert(!!(priority_ready&(1u<<LOW_PRIORITY))==(ms==100));
+  priority_ready=0;
+ }
+ assert(sample_calls==21);
  tx15_analog_status=4;
  tx15_analog_raw[0]=100;tx15_analog_raw[1]=200;tx15_analog_raw[2]=300;
  tx15_analog_raw[3]=400;tx15_analog_raw[4]=500;tx15_analog_raw[5]=600;
@@ -97,7 +110,7 @@ int main(void) {
    for d in ('src','src/target/tx/radiomaster/tx15','src/target/drivers/filesystems','src/gui/320x240x16','src/pages/320x240x16'):
     includes+=['-I',str(ROOT/d)]
    env=dict(os.environ,PATH=str(gcc.parent)+os.pathsep+os.environ.get('PATH',''))
-   cmd=[str(gcc),'-DUSE_OWN_PRINTF=0',*includes,str(src),str(ROOT/'src/target/tx/radiomaster/tx15/lcd.c'),str(ROOT/'src/target/tx/radiomaster/tx15/romfs.c'),str(ROOT/'src/screen/font.c'),str(ROOT/'src/buttons.c'),str(ROOT/'src/target/tx/radiomaster/tx15/analog.c'),'-o',str(exe)]
+   cmd=[str(gcc),'-DUSE_OWN_PRINTF=0',*includes,str(src),str(ROOT/'src/target/tx/radiomaster/tx15/lcd.c'),str(ROOT/'src/target/tx/radiomaster/tx15/romfs.c'),str(ROOT/'src/screen/font.c'),str(ROOT/'src/buttons.c'),str(ROOT/'src/target/tx/radiomaster/tx15/analog.c'),str(ROOT/'src/target/tx/radiomaster/tx15/runtime.c'),'-o',str(exe)]
    r=subprocess.run(cmd,capture_output=True,text=True,encoding="utf-8",errors="replace",env=env)
    self.assertEqual(r.returncode,0,r.stdout+r.stderr)
    subprocess.run([str(exe)],check=True,env=env)

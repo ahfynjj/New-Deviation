@@ -1,8 +1,14 @@
 /* Native application runtime on the already initialized RAM bootstrap. */
 #include "common.h"
+#include "runtime.h"
 #include "../../../../../hardware/tx15/board/inputs.h"
 #define REPORT ((volatile uint32_t *)0x2400e000u)
 u32 CLOCK_getms(void) { return REPORT[11]; }
+void CLOCK_ResetWatchdog(void) {
+    /* RAM bootstrap does not start IWDG. Keep sampling/heartbeat alive while
+     * original Deviation pages run their own cooperative wait loops. */
+    if(tx15_runtime_poll(CLOCK_getms())) REPORT[12]++;
+}
 u32 ScanButtons(void) {
     static int queued;
     static u32 until, pulse;

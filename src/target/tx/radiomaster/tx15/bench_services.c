@@ -18,7 +18,6 @@ unsigned PWR_ReadVoltage(void) { return 0; } /* Unmeasured, not a fabricated bat
 int PWR_CheckPowerSwitch(void) { return 0; }
 void PWR_Shutdown(void) { for(;;) __asm volatile("nop"); }
 int SPITouch_IRQ(void) { return 0; }
-void CLOCK_ResetWatchdog(void) {}
 void BACKLIGHT_Brightness(unsigned b) { (void)b; } /* bootstrap owns backlight */
 void PPMin_Start(void) {} void PPMin_Stop(void) {}
 void MSC_Enable(void) {} void MSC_Disable(void) {}

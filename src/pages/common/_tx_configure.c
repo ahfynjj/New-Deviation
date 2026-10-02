@@ -118,6 +118,7 @@ static unsigned _action_cb_calibrate(u32 button, unsigned flags, void *data)
 void PAGE_CalibInit(int page)
 {
     (void)page;
+    calibrate_state = CALI_CENTER;
     PROTOCOL_DeInit();
     PAGE_SetActionCB(_action_cb_calibrate);
     tempstring_cpy(_tr("Center all \nsticks and knobs\nthen press ENT"));

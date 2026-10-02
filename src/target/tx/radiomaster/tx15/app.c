@@ -21,9 +21,10 @@ void tx15_app_main(void) {
     ((volatile u32 *)0x2400e000u)[2]=3;
     u32 previous=0;
     for(;;) {
+        CLOCK_ResetWatchdog();
         u32 now=CLOCK_getms();
         if(now-previous>=5) {
-            previous=now; ((volatile u32 *)0x2400e000u)[12]++; BUTTON_Handler(); tx15_analog_sample(); MIXER_CalcChannels(); PAGE_Event(); GUI_RefreshScreen();
+            previous=now; BUTTON_Handler(); MIXER_CalcChannels(); PAGE_Event(); GUI_RefreshScreen();
         }
     }
 }
