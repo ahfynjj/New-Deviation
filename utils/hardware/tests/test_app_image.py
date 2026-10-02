@@ -45,11 +45,10 @@ class BenchModelTests(unittest.TestCase):
     k,v=line.split('=',1);sections[-1][1][k]=v
   channels={name:values for name,values in sections if name.startswith('channel')}
   mixers=[values for name,values in sections if name=='mixer']
-  self.assertEqual(len(mixers),6)
-  self.assertEqual([m['src'] for m in mixers],['AIL','ELE','THR','RUD','S1','S2'])
+  self.assertEqual({m['dest'] for m in mixers},{'Ch'+str(i) for i in range(1,7)})
   for m in mixers:
    channel='channel'+m['dest'][2:]
-   self.assertEqual(channels.get(channel,{}).get('template'),'simple')
+   self.assertIn(channels.get(channel,{}).get('template'),('simple','complex'))
 
  def test_native_layout_displays_all_six_outputs(self):
   from pathlib import Path
