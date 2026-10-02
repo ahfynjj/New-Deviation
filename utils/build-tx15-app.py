@@ -23,6 +23,9 @@ for pattern in ('src/gui/*.c','src/screen/*.c','src/screen/320x240x16/*.c',
  sources+=sorted(root.glob(pattern))
 sources=[s for s in sources if s.name not in ('datalog_page.c','scanner_page.c','fgets.c')]
 sources += [root/'src'/n for n in ('buttons.c','mixer.c','curves.c','inputs.c','mixer_standard.c','remap_channels.c','timer.c','telemetry.c','autodimmer.c')]
+# Portable CRSF core is compiled for H7 now; hardware activation is a later
+# stage. Linker GC removes it until the TX15 RF adapter references it.
+sources.append(root/'src/protocol/transport/crsf_link.c')
 from tx15_resources import generate
 sources.append(generate(root,out))
 sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c','analog.c')]

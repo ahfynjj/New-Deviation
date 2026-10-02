@@ -3,6 +3,13 @@
 更新：2026-10-02。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
+## P4 当前进度（2026-10-02，内外置ELRS与Lua兼容）
+
+- 用户确认原生Deviation运行官方ELRS Lua脚本，同时支持内置/外置模块；首期选择一个模块启用。当前只有内置模块，外置硬件验收后补。
+- [设计](docs/superpowers/specs/2026-10-02-tx15-elrs-lua-design.md)和[分期计划](docs/superpowers/plans/2026-10-02-tx15-elrs-lua.md)已记录。首批CRSF帧/路由核心完成：16通道打包、CRC校验、有界参数队列、忙时保留、通道优先、槽位切换清空及过期会话拒收。
+- 39项工具/适配检查、81对象ARM编译和ELF检查通过；核心ARM代码810字节，每个路由结构912字节。尚未接入UART/Lua或启用RF，不能据此宣称ELRS可用。
+- 下一步核对内置UART与恢复流程，完成设备发现；再接模型模块选择与官方Lua运行。当前模型CH5用于混控测试，接入RF前必须换成明确未解锁的验收模型。
+
 ## P3 当前进度（2026-10-02，六路输入与校准实机通过）
 
 - 最新验收：四轴和S1/S2的置中、全行程、Calibration done及退出均由用户确认正常。原生阻塞校准页面现在通过运行服务持续采样并派发刷新标志，重新进入校准时重置流程状态。
