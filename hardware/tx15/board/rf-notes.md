@@ -26,3 +26,12 @@ USART6复位 → 清pending、恢复priority与APB2 → 原有GPIO/显示/SDRAM/
 
 本版本是设备发现诊断，不是实时通道驱动：持续高频收发、UART错误原因分类、
 飞行调度、模块选择UI和ELRS解锁通道仍需后续开发。
+
+## 参数读取扩展
+
+`TX15_ELRS_PARAMETERS=1` 自动开启发现及只读参数抓取：发现后按1..N发0x2C，
+按chunks-remaining顺序重组0x2B，每项最多512字节、最多64项。单chunk等500ms，
+最多3次请求，整轮最多45秒；失败标明参数ID并关电。全部读取后关电。
+禁止发送0x2D参数写入。`tx15_rf_parameters`保留原始字段，主机工具
+`utils/hardware/crsf_parameters.py`仅用于验收解码，不替代未来官方Lua界面。
+新增报告字段把设备识别后的UART错误/丢字节与启动阶段分开统计。

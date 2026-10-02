@@ -7,6 +7,9 @@ volatile struct tx15_rf_uart_stats tx15_rf_uart_stats;
 static int init_ok=1,stopped;
 static unsigned sent,at,available;
 static uint8_t received[64];
+#ifdef TX15_ELRS_PARAMETERS
+static unsigned reads,reply_to_reads=1;
+#endif
 int tx15_rf_uart_init(void) {return init_ok;}
 void tx15_rf_uart_stop(void) {stopped++;}
 int tx15_rf_uart_read(uint8_t *byte) {
@@ -14,6 +17,19 @@ int tx15_rf_uart_read(uint8_t *byte) {
     *byte=received[at++];return 1;
 }
 int tx15_rf_uart_send(const uint8_t *p,unsigned size) {
+#ifdef TX15_ELRS_PARAMETERS
+    if(p[2]==0x2c) {
+        assert(size==8 && p[3]==0xee && p[4]==0xea && p[5]>=1 && p[5]<=2);
+        reads++;
+        if(reply_to_reads) {
+            uint8_t data[]={0xea,0xee,p[5],(p[5]==1 && p[6]==0)?1:0,0,11,'F',0};
+            struct crsf_frame frame;
+            assert(crsf_frame_build(&frame,0xea,0x2b,data,sizeof(data)));
+            memcpy(received,frame.bytes,frame.size);available=frame.size;at=0;
+        }
+        return 1;
+    }
+#endif
     assert(size==6 && p[0]==0xee && p[2]==0x28 && p[3]==0 && p[4]==0xea);
     sent++;return 1;
 }
@@ -25,14 +41,27 @@ int main(void) {
     assert(tx15_rf_report.state==3 && stopped==1 && sent==14);
     tx15_rf_discovery_poll(16000);assert(sent==14);
     tx15_rf_discovery_init(20000);tx15_rf_discovery_poll(21000);
-    uint8_t data[]={0xea,0xee,'E','L','R','S',0,0x45,0x4c,0x52,0x53,0,0,0,1,0,0,0,2,9,0};
+    uint8_t data[]={0xea,0xee,'E','L','R','S',0,0x45,0x4c,0x52,0x53,0,0,0,1,0,0,0,2,2,0};
     struct crsf_frame frame;
     assert(crsf_frame_build(&frame,0xea,0x29,data,sizeof(data)));
     memcpy(received,frame.bytes,frame.size);available=frame.size;
     tx15_rf_discovery_poll(21005);
+#ifdef TX15_ELRS_PARAMETERS
+    assert(tx15_rf_report.state==5);
+    for(unsigned ms=21006;ms<21015;ms++)tx15_rf_discovery_poll(ms);
+    assert(tx15_rf_report.completed==2 && reads==3 && tx15_rf_report.requests==3);
+#endif
     assert(tx15_rf_report.state==2 && stopped==2);
     assert(!strcmp((const char *)tx15_rf_report.device.name,"ELRS"));
-    assert(tx15_rf_report.device.serial==0x454c5253 && tx15_rf_report.device.fields==9);
+    assert(tx15_rf_report.device.serial==0x454c5253 && tx15_rf_report.device.fields==2);
     assert(sent==15);tx15_rf_discovery_poll(90000);assert(sent==15);
+#ifdef TX15_ELRS_PARAMETERS
+    reply_to_reads=0;reads=0;tx15_rf_discovery_init(100000);
+    memcpy(received,frame.bytes,frame.size);available=frame.size;at=0;
+    tx15_rf_discovery_poll(100100);
+    for(unsigned ms=100101;ms<102000;ms++)tx15_rf_discovery_poll(ms);
+    assert(tx15_rf_report.state==3 && reads==3 && tx15_rf_report.failed_id==1);
+    assert(tx15_rf_report.completed==0 && tx15_rf_report.retries==2);
+#endif
     puts("Discovery sends only ping, decodes response, powers off on completion/timeout PASS");
 }

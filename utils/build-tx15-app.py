@@ -15,6 +15,8 @@ flags=['-isystem',str(root.parent/'tools/arm8/lib/gcc/arm-none-eabi/8.2.1/includ
  '-DTX15_INPUT_TRACE=1','-DBUILD_TYPE=0','-DSTATUS_SCREEN','-DHGVERSION="New Deviation TX15 RAM"']
 if os.environ.get('TX15_ELRS_DISCOVERY') == '1':
  flags.append('-DTX15_ELRS_DISCOVERY=1')
+if os.environ.get('TX15_ELRS_PARAMETERS') == '1':
+ flags+=['-DTX15_ELRS_DISCOVERY=1','-DTX15_ELRS_PARAMETERS=1']
 for d in ('src','src/target/tx/radiomaster/tx15','src/target/drivers/filesystems',
  'src/gui/320x240x16','src/pages/320x240x16'):
  flags+=['-I',str(root/d)]
@@ -29,6 +31,7 @@ sources += [root/'src'/n for n in ('buttons.c','mixer.c','curves.c','inputs.c','
 # leave module power off and linker GC removes unused discovery code.
 sources.append(root/'src/protocol/transport/crsf_link.c')
 sources.append(root/'src/protocol/transport/crsf_stream.c')
+sources.append(root/'src/protocol/transport/crsf_params.c')
 from tx15_resources import generate
 sources.append(generate(root,out))
 sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c','analog.c','rf_uart.c')]

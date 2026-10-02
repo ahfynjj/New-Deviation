@@ -9,6 +9,12 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class CrsfLinkTests(unittest.TestCase):
+    def test_parameter_session(self):
+        self.run_c('rf_discovery_test.c', ['crsf_link.c','crsf_stream.c','crsf_params.c'],
+                   ['src/target/tx/radiomaster/tx15/rf.c'], ['-DTX15_ELRS_PARAMETERS=1'])
+    def test_parameter_chunks(self):
+        self.run_c('crsf_params_test.c', ['crsf_params.c'])
+
     def test_readonly_discovery(self):
         self.run_c('rf_discovery_test.c', ['crsf_link.c','crsf_stream.c'],
                    ['src/target/tx/radiomaster/tx15/rf.c'])
@@ -19,12 +25,12 @@ class CrsfLinkTests(unittest.TestCase):
     def test_frames_routing_and_backpressure(self):
         self.run_c('crsf_link_test.c', ['crsf_link.c'])
 
-    def run_c(self, test, sources, extra=()):
+    def run_c(self, test, sources, extra=(), flags=()):
         gcc = Path(tempfile.gettempdir()) / 'new-deviation-ucrt64/bin/gcc.exe'
         with tempfile.TemporaryDirectory(prefix='crsf-link-') as tmp:
             exe = Path(tmp) / 'test.exe'
             env = dict(os.environ, PATH=str(gcc.parent) + os.pathsep + os.environ.get('PATH', ''))
-            cmd = [str(gcc), '-std=c99', '-Wall', '-Wextra', '-Werror',
+            cmd = [str(gcc), '-std=c99', '-Wall', '-Wextra', '-Werror', *flags,
                    '-I', str(ROOT.parent/'tools/msys64/ucrt64/include'),
                    '-I', str(ROOT/'src/protocol/transport'),
                    '-I', str(ROOT/'src'), '-I', str(ROOT),
