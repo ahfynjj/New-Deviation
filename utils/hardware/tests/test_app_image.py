@@ -45,8 +45,18 @@ class BenchModelTests(unittest.TestCase):
     k,v=line.split('=',1);sections[-1][1][k]=v
   channels={name:values for name,values in sections if name.startswith('channel')}
   mixers=[values for name,values in sections if name=='mixer']
-  self.assertEqual(len(mixers),4)
-  self.assertEqual([m['src'] for m in mixers],['AIL','ELE','THR','RUD'])
+  self.assertEqual(len(mixers),6)
+  self.assertEqual([m['src'] for m in mixers],['AIL','ELE','THR','RUD','S1','S2'])
   for m in mixers:
    channel='channel'+m['dest'][2:]
    self.assertEqual(channels.get(channel,{}).get('template'),'simple')
+
+ def test_native_layout_displays_all_six_outputs(self):
+  from pathlib import Path
+  root=Path(__file__).resolve().parents[3]
+  layout=(root/'hardware/tx15/app/layout.ini').read_text()
+  self.assertIn('[gui-480x320]',layout)
+  bars=[line.split('=',1)[1].split(',') for line in layout.splitlines() if line.startswith('Bargraph=')]
+  self.assertEqual([bar[2] for bar in bars],['Ch1','Ch2','Ch3','Ch4','Ch5','Ch6'])
+  for x,y,source in bars:
+   self.assertTrue(0<=int(x)<=460 and 32<=int(y)<=240)

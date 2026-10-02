@@ -1,6 +1,6 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-09-30。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-02。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
 ## P3 当前进度（2026-10-01，真实输入与直通输出已运行）
@@ -10,6 +10,8 @@
 - 当前镜像仍为调试器临时RAM应用，不能直接刷入；USB更新/日志、持久安装与独立启动尚未实现。按已核对镜像哈希装载，ADC12恢复验证成功。
 
 - 首轮发现测试模型未启用通道模板，原混控清理逻辑删除了条目，导致输出全零。已补齐四个simple模板并加入回归；修正后实机Ch1～Ch4均有正负变化，混控编辑后输出符号有变化。日志 `local/reset-halt-power-20261001-223731.json`；运行90秒，无Fault并恢复原固件。等待用户确认画面、方向及具体修改效果，随后校准/限幅/复杂混控。
+
+- 2026-10-02：S1/S2已映射至Ch5/Ch6，主页面改为六条输出条（最右两条S1/S2）。用户确认全部正常，四轴保持正常。38项检查及最终链接通过；实机90秒无Fault、恢复原固件成功，日志 `local/reset-halt-power-20261002-093823.json`。下一步为六路校准、端点/限幅与条件混控验证；射频仍关闭，尚未独立刷入。
 
 ## P2 当前状态（2026-10-01，交互可用，参数修改验收并入P3）
 

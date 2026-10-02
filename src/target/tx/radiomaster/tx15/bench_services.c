@@ -35,8 +35,8 @@ void PROTOCOL_ChangedID(void) {}
 u64 PROTOCOL_CheckSafe(void) { return 0; }
 u32 PROTOCOL_CurrentID(void) { return 0; }
 u32 PROTOCOL_MaximumID(void) { return 0; }
-int PROTOCOL_DefaultNumChannels(void) { return 4; }
-int PROTOCOL_NumChannels(void) { return 4; }
+int PROTOCOL_DefaultNumChannels(void) { return 6; }
+int PROTOCOL_NumChannels(void) { return 6; }
 const char *PROTOCOL_GetName(u16 p) { return p?"Unavailable":"None"; }
 const char *PROTOCOL_Name(void) { return "None"; }
 const char **PROTOCOL_GetOptions(void) { return NULL; }

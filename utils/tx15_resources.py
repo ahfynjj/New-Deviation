@@ -18,7 +18,7 @@ def generate(root,out):
         subprocess.run(command,check=True,stdout=subprocess.DEVNULL)
         files['media/'+name+'.fon']=dst.read_bytes()
     files['media/config.ini']=(root/'src/fs/320x240x16/media/config.ini').read_bytes().replace(b'drawn_background=0',b'drawn_background=1')
-    files['layout/default.ini']=(root/'src/fs/tx15/layout/default.ini').read_bytes()
+    files['layout/default.ini']=(root/'hardware/tx15/app/layout.ini').read_bytes()
     files['models/model1.ini']=(root/'hardware/tx15/app/model.ini').read_bytes()
     total=sum(map(len,files.values()))
     if total>512*1024: raise ValueError('Embedded resources exceed 512 KiB limit')
