@@ -3,6 +3,14 @@
 更新：2026-10-03。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
+## 当前优先里程碑（2026-10-03调整）
+
+完成当前实机台架收尾/恢复后，优先最小正式安装和原生独立冷启动，
+不再等待全部ELRS接收端/外置/触摸功能完善。首次可刷独立启动版初估
+3–7工程工作日；USB日常更新/日志再2–4、模型/校准断电保存再1–3，
+这是工程量估计而非交付日期。具体步骤见[快速计划](docs/superpowers/plans/2026-09-28-tx15-fast-visible-progress.md)。
+当前尚无可直接刷入固件，持久写入前须补齐所涉本机存储备份和恢复验证。
+
 ## P4 当前进度（2026-10-02，内外置ELRS与Lua兼容）
 
 - 最新持续RC批：已接原生模型的CRSF→Module选项（Off默认／Internal／Ext pending关闭），独立4ms UART发送、Lua/主页面共享链路、长按PAGE打开Lua和长按EXIT返回。专用AETR模型，CH5固定低、S1/S2在CH6/CH7，串口CH5/CH14强制低；样本超过100ms停止RC，整次台架180秒后关闭RF。61项检查（含33项真实参数回放）、120对象RC ARM与92对象默认ARM、严格RAM范围通过；独立审查的UART关闭后无法重开已复现并修复。尚未上板，不宣称4ms实测或接收机通道通过。
