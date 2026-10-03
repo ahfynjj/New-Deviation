@@ -89,4 +89,8 @@ if r.returncode:
 from hardware.app_image import parse
 entry,segments=parse(elf.read_bytes())
 print('Linked and checked RAM load map:',elf,'entry',hex(entry))
+from hardware.boot_image import pack
+payload=out/'tx15-app.nd15'
+payload.write_bytes(pack(elf.read_bytes()))
+print('Checked native boot payload:',payload,'(requires cold-start loader; not directly flashable)')
 print('No device accessed; hardware acceptance remains pending.')
