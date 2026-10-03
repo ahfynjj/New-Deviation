@@ -35,9 +35,18 @@ output. Errors/exit close the module and return to the native GUI.
 
 Lua owns a 160KiB AXI RAM arena, separate from a 16KiB bounded newlib heap for
 numeric formatting. VM count hooks allow 120000 instructions per init/run,
-with a 40ms elapsed check; drawing is limited to 256 calls, text to 256 bytes,
+with separate 1000ms initialization and 250ms read-only tool run checks; drawing is limited to 256 calls, text to 256 bytes,
 source to 64KiB, coordinates to ±1024. Frame queues use existing CRSF bounds.
 Module session generation/slot changes abort the tool.
+
+Initialization includes source parsing and is reported separately from the
+worst run time. Elapsed time is checked again after protected C/Lua calls,
+including a final C drawing call with no subsequent VM instructions.
+
+Last-call counters measure allocator, explicit GC, native drawing and hook
+service time to diagnose repeatable board stalls. GC includes its allocator
+cost; drawing includes text dimensions and any platform polling it performs.
+These overlapping measurements must not be added as disjoint totals.
 
 Base/table/string/math/bit32 are available. OS/io/debug/package/coroutine,
 file/dynamic loading and printing are absent. `pcall`/`xpcall` rethrow budget

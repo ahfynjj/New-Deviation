@@ -6,12 +6,12 @@
 static union { double align; unsigned char bytes[256*1024]; } memory;
 static struct nd_lua runner;
 static struct crsf_link link;
-static unsigned now, texts, clears, names, requests, writes, stops, safe_text;
+static unsigned now, texts, clears, names, requests, writes, stops, safe_text, draw_cost;
 static unsigned char captured[64][512];
 static unsigned captured_sizes[64], captured_count;
 static uint64_t completed_fields;
 static uint32_t clock_ms(void *ctx) { (void)ctx; return now; }
-static void clear(void *ctx) { (void)ctx; clears++; }
+static void clear(void *ctx) { (void)ctx; clears++;now+=draw_cost; }
 static void text(void *ctx,int x,int y,const char *s,unsigned flags,uint16_t color)
 {
     (void)ctx;(void)x;(void)y;(void)flags;(void)color;texts++;
@@ -76,6 +76,12 @@ int main(int argc,char **argv)
     assert(nd_lua_run(&runner,0)==ND_LUA_RUNNING);
     start("return {run=function() lcd.drawText(0,0,string.char(128,192,193,226)); return 0 end}");
     assert(nd_lua_run(&runner,0)==ND_LUA_RUNNING && safe_text==1);
+    start("return {run=function() lcd.clear(); lcd.drawText(0,0,'ok'); return 0 end}");
+    draw_cost=160;assert(nd_lua_run(&runner,0)==ND_LUA_RUNNING && runner.max_ms==160 && runner.draw_ms==160);draw_cost=0;
+    start("return {run=function() collectgarbage('collect'); assert(type(collectgarbage('count'))=='number'); collectgarbage('step',1); return 0 end}");
+    assert(nd_lua_run(&runner,0)==ND_LUA_RUNNING && runner.gc_calls==3 && runner.alloc_calls>0);
+    start("return {run=function() lcd.clear(); return 0 end}");
+    draw_cost=300;assert(nd_lua_run(&runner,0)==ND_LUA_ERROR && strstr(runner.error,"time budget"));draw_cost=0;
     crsf_link_select(&link,CRSF_SLOT_EXTERNAL);
     assert(nd_lua_run(&runner,0)==ND_LUA_ERROR); /* No silent route switch. */
     start("return {run=function() error('intentional') end}");

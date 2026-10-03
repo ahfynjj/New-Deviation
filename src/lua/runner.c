@@ -4,23 +4,35 @@
 #include "vendor/lua-5.2.4/src/lualib.h"
 #include <string.h>
 #define INSTRUCTION_LIMIT 120000u
-#define TIME_LIMIT 40u
+#define RUN_TIME_LIMIT 250u
+#define INIT_TIME_LIMIT 1000u
 static struct nd_lua *owner(lua_State *L)
 { void *ud;lua_getallocf(L,&ud);return ud; }
-static void *allocator(void *ud,void *p,size_t old,size_t size)
-{ return nd_arena_alloc(&((struct nd_lua *)ud)->arena,p,old,size); }
 static uint32_t time_ms(struct nd_lua *r)
 { return r->host.clock_ms?r->host.clock_ms(r->host.context):0; }
+static void *allocator(void *ud,void *p,size_t old,size_t size)
+{
+    struct nd_lua *r=ud;uint32_t started=time_ms(r);
+    void *result=nd_arena_alloc(&r->arena,p,old,size);
+    r->alloc_ms+=time_ms(r)-started;r->alloc_calls++;return result;
+}
+static int collect(lua_State *L)
+{
+    struct nd_lua *r=owner(L);uint32_t started=time_ms(r);
+    int results=r->collector(L);
+    r->gc_ms+=time_ms(r)-started;r->gc_calls++;return results;
+}
 static void budget(lua_State *L,lua_Debug *ar)
 {
     (void)ar;struct nd_lua *r=owner(L);r->instructions+=1000;
-    if (r->instructions>INSTRUCTION_LIMIT || (uint32_t)(time_ms(r)-r->call_started)>TIME_LIMIT)
-        luaL_error(L,"Lua execution budget exceeded");
-    if (r->host.service) r->host.service(r->host.context);
+    if (r->instructions>INSTRUCTION_LIMIT) luaL_error(L,"Lua instruction budget exceeded");
+    if ((uint32_t)(time_ms(r)-r->call_started)>r->time_limit) luaL_error(L,"Lua time budget exceeded");
+    if (r->host.service) {uint32_t started=time_ms(r);r->host.service(r->host.context);r->service_ms+=time_ms(r)-started;}
 }
 static void begin(struct nd_lua *r)
 {
     r->call_started=time_ms(r);r->instructions=r->drawing_ops=0;
+    r->alloc_ms=r->alloc_calls=r->gc_ms=r->gc_calls=r->draw_ms=r->service_ms=0;
     lua_sethook(r->L,budget,LUA_MASKCOUNT,1000);
 }
 /* A tool must not swallow a budget failure with Lua pcall/xpcall. Recheck at
@@ -29,8 +41,8 @@ static void begin(struct nd_lua *r)
 static void check_budget(lua_State *L)
 {
     struct nd_lua *r=owner(L);
-    if(r->instructions>INSTRUCTION_LIMIT || (uint32_t)(time_ms(r)-r->call_started)>TIME_LIMIT)
-        luaL_error(L,"Lua execution budget exceeded");
+    if(r->instructions>INSTRUCTION_LIMIT) luaL_error(L,"Lua instruction budget exceeded");
+    if((uint32_t)(time_ms(r)-r->call_started)>r->time_limit) luaL_error(L,"Lua time budget exceeded");
 }
 static int safe_pcall(lua_State *L)
 {
@@ -76,8 +88,10 @@ static int protected_call(struct nd_lua *r,int args,int results)
 {
     int status=lua_pcall(r->L,args,results,0);
     uint32_t elapsed=time_ms(r)-r->call_started;
-    if (elapsed>r->max_ms) r->max_ms=elapsed;
+    if (r->state==ND_LUA_RUNNING) {if(elapsed>r->max_ms) r->max_ms=elapsed;}
+    else r->init_ms=elapsed;
     if (status!=LUA_OK) {fail(r,lua_tostring(r->L,-1));lua_settop(r->L,0);return 0;}
+    if(elapsed>r->time_limit) {fail(r,"Lua time budget exceeded");lua_settop(r->L,0);return 0;}
     return 1;
 }
 static int get_time(lua_State *L)
@@ -126,8 +140,8 @@ static uint16_t color(struct nd_lua *r,unsigned flags)
 static void draw_budget(lua_State *L)
 {
     struct nd_lua *r=owner(L);
-    if(++r->drawing_ops>256 || (uint32_t)(time_ms(r)-r->call_started)>TIME_LIMIT)
-        luaL_error(L,"Lua drawing budget exceeded");
+    if(++r->drawing_ops>256) luaL_error(L,"Lua drawing budget exceeded");
+    check_budget(L);
 }
 static int coordinate(lua_State *L,int n)
 {
@@ -163,10 +177,10 @@ static const char *bounded_string(lua_State *L,int n,char out[264])
 static void dimensions(struct nd_lua *r,const char *s,unsigned flags,int *w,int *h)
 {
     *w=(int)strlen(s)*10;*h=21;
-    if(r->host.size_text) r->host.size_text(r->host.context,s,flags,w,h);
+    if(r->host.size_text) {uint32_t started=time_ms(r);r->host.size_text(r->host.context,s,flags,w,h);r->draw_ms+=time_ms(r)-started;}
 }
 static int clear(lua_State *L)
-{ struct nd_lua *r=owner(L);draw_budget(L);if(r->host.clear) r->host.clear(r->host.context);return 0; }
+{ struct nd_lua *r=owner(L);draw_budget(L);if(r->host.clear) {uint32_t started=time_ms(r);r->host.clear(r->host.context);r->draw_ms+=time_ms(r)-started;}return 0; }
 static int set_color(lua_State *L)
 { owner(L)->custom_color=(uint16_t)luaL_checkinteger(L,2);return 0; }
 static int text(lua_State *L)
@@ -175,7 +189,7 @@ static int text(lua_State *L)
     char buffer[264];int x=coordinate(L,1),y=coordinate(L,2),w,h;const char *s=bounded_string(L,3,buffer);
     unsigned flags=(unsigned)luaL_optinteger(L,4,0);dimensions(r,s,flags,&w,&h);
     if(flags&ND_CENTER) x-=w/2;else if(flags&ND_RIGHT) x-=w;
-    if(r->host.text) r->host.text(r->host.context,x,y,s,flags,color(r,flags));
+    if(r->host.text) {uint32_t started=time_ms(r);r->host.text(r->host.context,x,y,s,flags,color(r,flags));r->draw_ms+=time_ms(r)-started;}
     r->last_pos=x+w;return 0;
 }
 static int size_text(lua_State *L)
@@ -189,7 +203,7 @@ static int rectangle(lua_State *L,int fill)
     struct nd_lua *r=owner(L);draw_budget(L);
     int x=coordinate(L,1),y=coordinate(L,2),w=coordinate(L,3),h=coordinate(L,4);
     unsigned flags=(unsigned)luaL_optinteger(L,5,0);
-    if(w>0 && h>0 && r->host.rect) r->host.rect(r->host.context,x,y,w,h,color(r,flags),fill);
+    if(w>0 && h>0 && r->host.rect) {uint32_t started=time_ms(r);r->host.rect(r->host.context,x,y,w,h,color(r,flags),fill);r->draw_ms+=time_ms(r)-started;}
     return 0;
 }
 static int rect(lua_State *L) {return rectangle(L,0);}
@@ -198,7 +212,7 @@ static int line(lua_State *L)
 {
     struct nd_lua *r=owner(L);draw_budget(L);
     int x=coordinate(L,1),y=coordinate(L,2),x2=coordinate(L,3),y2=coordinate(L,4);
-    if(r->host.line) r->host.line(r->host.context,x,y,x2,y2,color(r,(unsigned)luaL_optinteger(L,6,0)));
+    if(r->host.line) {uint32_t started=time_ms(r);r->host.line(r->host.context,x,y,x2,y2,color(r,(unsigned)luaL_optinteger(L,6,0)));r->draw_ms+=time_ms(r)-started;}
     return 0;
 }
 static int popup(lua_State *L)
@@ -220,6 +234,8 @@ static int initialize(lua_State *L)
 {
     struct nd_lua *r=owner(L);
     luaL_requiref(L,"_G",luaopen_base,1);lua_pop(L,1);
+    lua_getglobal(L,"collectgarbage");r->collector=lua_tocfunction(L,-1);lua_pop(L,1);
+    global_function(L,"collectgarbage",collect);
     luaL_requiref(L,LUA_TABLIBNAME,luaopen_table,1);lua_pop(L,1);
     luaL_requiref(L,LUA_STRLIBNAME,luaopen_string,1);lua_pop(L,1);
     luaL_requiref(L,LUA_MATHLIBNAME,luaopen_math,1);lua_pop(L,1);
@@ -264,7 +280,7 @@ int nd_lua_start(struct nd_lua *r,void *memory,size_t size,const struct nd_lua_h
     if(!nd_arena_init(&r->arena,memory,size)) {fail(r,"Invalid Lua arena");return 0;}
     r->L=lua_newstate(allocator,r);
     if(!r->L) {fail(r,"Lua memory exhausted");return 0;}
-    begin(r);lua_pushcfunction(r->L,initialize);
+    r->time_limit=INIT_TIME_LIMIT;begin(r);lua_pushcfunction(r->L,initialize);
     if(!protected_call(r,0,0)) return 0;
     r->state=ND_LUA_RUNNING;r->source=NULL;r->source_size=0;return 1;
 }
@@ -281,7 +297,7 @@ int nd_lua_run(struct nd_lua *r,int event)
 {
     if(!r || r->state!=ND_LUA_RUNNING) return r?r->state:ND_LUA_ERROR;
     if(r->link->generation!=r->generation || r->link->slot!=r->slot) {fail(r,"Module session changed");return r->state;}
-    r->event=event;begin(r);lua_pushcfunction(r->L,invoke_run);
+    r->time_limit=RUN_TIME_LIMIT;r->event=event;begin(r);lua_pushcfunction(r->L,invoke_run);
     if(!protected_call(r,0,1)) return r->state;
     int result=(int)lua_tointeger(r->L,-1);lua_settop(r->L,0);r->runs++;
     if(result) {r->state=ND_LUA_EXITED;if(r->host.stop) r->host.stop(r->host.context);}

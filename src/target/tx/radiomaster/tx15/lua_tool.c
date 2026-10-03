@@ -12,7 +12,8 @@
 static union { double align; unsigned char bytes[160*1024]; } heap;
 static struct nd_lua tool;
 /* Address obtained from ELF symbols for host diagnostics, never hard-coded. */
-volatile struct {u32 state,runs,used,peak,max_ms,blocked_writes;char error[160];} tx15_lua_report;
+volatile struct {u32 state,runs,used,peak,max_ms,blocked_writes;char error[160];u32 init_ms;
+    u32 alloc_ms,alloc_calls,gc_ms,gc_calls,draw_ms,service_ms,instructions,drawing_ops;} tx15_lua_report;
 static buttonAction_t action;
 static unsigned events[8],head,count,leave;
 static void service(void *ctx) { (void)ctx;tx15_rf_lua_poll(); }
@@ -107,6 +108,11 @@ void tx15_lua_tool(void)
             tx15_lua_report.used=tool.arena.used;tx15_lua_report.peak=tool.arena.peak;
             tx15_lua_report.max_ms=tool.max_ms;tx15_lua_report.blocked_writes=tool.blocked_writes;
             memcpy((void *)tx15_lua_report.error,tool.error,sizeof(tool.error));
+            tx15_lua_report.init_ms=tool.init_ms;
+            tx15_lua_report.alloc_ms=tool.alloc_ms;tx15_lua_report.alloc_calls=tool.alloc_calls;
+            tx15_lua_report.gc_ms=tool.gc_ms;tx15_lua_report.gc_calls=tool.gc_calls;
+            tx15_lua_report.draw_ms=tool.draw_ms;tx15_lua_report.service_ms=tool.service_ms;
+            tx15_lua_report.instructions=tool.instructions;tx15_lua_report.drawing_ops=tool.drawing_ops;
             if(tool.state==ND_LUA_ERROR) {
                 clear(NULL);text(NULL,5,50,"Lua stopped",ND_BOLD,0);text(NULL,5,90,tool.error,0,0);
                 break;

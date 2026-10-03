@@ -24,7 +24,11 @@ struct nd_lua {
     lua_State *L;
     struct nd_lua_host host;
     struct crsf_link *link;
-    uint32_t generation,call_started,instructions,runs,max_ms,blocked_writes;
+    uint32_t generation,call_started,instructions,runs,max_ms,blocked_writes,init_ms,time_limit;
+    /* Last protected call: GC includes allocator time; drawing includes size
+     * queries. These counters diagnose stalls without relaxing the budget. */
+    uint32_t alloc_ms,alloc_calls,gc_ms,gc_calls,draw_ms,service_ms;
+    int (*collector)(lua_State *);
     int slot,state,script_ref,last_pos,event;
     uint16_t custom_color;
     unsigned drawing_ops,allow_writes;
