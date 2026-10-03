@@ -3,18 +3,21 @@
 #include <string.h>
 #include "rf.h"
 #include "rf_lua.h"
+#ifdef TX15_ELRS_RC
+#include "rf_rc.h"
+#endif
 #include "protocol/transport/crsf_tools.h"
 #include "../../../../../hardware/tx15/board/rf_uart.h"
-static struct crsf_link lua_link;
+static struct crsf_link lua_link={.slot=CRSF_SLOT_OFF};
 static struct crsf_stream lua_stream;
 static struct crsf_tools tools;
 volatile struct crsf_tool_report tx15_rf_write_report;
 static uint32_t errors,dropped;
 static unsigned active;
 extern uint32_t CLOCK_getms(void);
-struct crsf_link *tx15_rf_lua_init(void)
+struct crsf_link *tx15_rf_lua_select(int slot)
 {
-    tx15_rf_lua_stop();
+    tx15_rf_lua_shutdown();
     crsf_link_init(&lua_link);memset(&lua_stream,0,sizeof(lua_stream));
 #ifdef TX15_ELRS_WRITE
     crsf_tools_init(&tools,1);
@@ -23,17 +26,36 @@ struct crsf_link *tx15_rf_lua_init(void)
 #endif
     tx15_rf_write_report=tools.report;
     tx15_rf_report=(struct tx15_rf_report){0};errors=dropped=0;
+    if(slot!=CRSF_SLOT_INTERNAL)return &lua_link;
     active=tx15_rf_uart_init();
     if(active) {crsf_link_select(&lua_link,CRSF_SLOT_INTERNAL);tx15_rf_report.state=7;}
     else tx15_rf_report.state=4;
     return &lua_link;
 }
-void tx15_rf_lua_stop(void)
+struct crsf_link *tx15_rf_lua_init(void)
+{
+#ifdef TX15_ELRS_RC
+    return &lua_link; /* Model owns the session; opening Lua never powers RF. */
+#else
+    return tx15_rf_lua_select(CRSF_SLOT_INTERNAL);
+#endif
+}
+void tx15_rf_lua_shutdown(void)
 {
     if(!active) return;
     tx15_rf_uart_stop();crsf_link_select(&lua_link,CRSF_SLOT_OFF);active=0;
     crsf_tools_cancel(&tools);tx15_rf_write_report=tools.report;
     tx15_rf_report.state=2;
+}
+void tx15_rf_lua_stop(void)
+{
+#ifdef TX15_ELRS_RC
+    if(tx15_rf_rc_enabled()) {
+        crsf_tools_cancel(&tools);tx15_rf_write_report=tools.report;
+        crsf_link_select(&lua_link,CRSF_SLOT_INTERNAL);lua_stream.size=0;return;
+    }
+#endif
+    tx15_rf_lua_shutdown();
 }
 static int send(void *ctx,int slot,uint32_t generation,const uint8_t *data,unsigned size)
 {
@@ -44,7 +66,12 @@ static int send(void *ctx,int slot,uint32_t generation,const uint8_t *data,unsig
      * Busy still returns zero and retains an otherwise authorized frame. */
     if(!kind) {tools.report.denied++;tx15_rf_write_report=tools.report;return 1;}
     if(crsf_tools_defer(&tools,data[2],data+3,size-4,CLOCK_getms()))return 0;
+#ifdef TX15_ELRS_RC
+    /* Only SysTick publishes RC. Router queues stay in the main task. */
+    if(!tx15_rf_rc_send_tool(data,size,CLOCK_getms()))return 0;
+#else
     if(!tx15_rf_uart_send(data,size)) return 0;
+#endif
     crsf_tools_sent(&tools,data[2],data+3,size-4,CLOCK_getms());
     tx15_rf_write_report=tools.report;
     if(kind==CRSF_TOOL_PING)tx15_rf_report.pings++;

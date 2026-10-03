@@ -5,6 +5,9 @@
 #ifdef TX15_ELRS_LUA
 #include "rf_lua.h"
 #endif
+#ifdef TX15_ELRS_RC
+#include "rf_model.h"
+#endif
 #include "../../../../../hardware/tx15/board/analog.h"
 int tx15_runtime_poll(unsigned now) {
 #ifdef TX15_ELRS_LUA
@@ -17,6 +20,9 @@ int tx15_runtime_poll(unsigned now) {
     if((u32)(now-sampled)<MEDIUM_PRIORITY_MSEC) return 0;
     sampled=now;
     tx15_analog_sample();
+#ifdef TX15_ELRS_RC
+    tx15_rf_model_service(now);
+#endif
     priority_ready|=1u<<MEDIUM_PRIORITY;
     if((u32)(now-refreshed)>=LOW_PRIORITY_MSEC) {
         refreshed=now;

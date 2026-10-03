@@ -4,6 +4,8 @@
 #include "protocol/transport/crsf_tools.h"
 extern volatile struct crsf_tool_report tx15_rf_write_report;
 struct crsf_link *tx15_rf_lua_init(void);
+struct crsf_link *tx15_rf_lua_select(int slot);
+void tx15_rf_lua_shutdown(void);
 void tx15_rf_lua_poll(void);
 void tx15_rf_lua_stop(void);
 int tx15_rf_lua_authorize(uint8_t,const uint8_t *,unsigned);

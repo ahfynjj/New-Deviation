@@ -17,6 +17,26 @@ Encoder/key events feed Deviation buttons. Fonts and icons use original file
 decoders through a read-only resource adapter; SDRAM reads explicitly use bytes
 because this stage leaves the MPU disabled. Model edits are RAM-only.
 
-This is a bench application: RF is disabled; the P3 build now includes ADC1 polling (not yet board-verified),
-battery voltage is unmeasured, and audio/USB/storage writes are unavailable.
-It must not be used for model control. Real ADC/ELRS/storage are later milestones.
+This is a bench application: the ordinary build keeps RF disabled; six ADC1
+inputs, calibration and a specific conditional mixer model have passed prior
+board checks. Battery voltage is unmeasured; audio/USB/storage are unavailable.
+It must not be used for flight. See TODO.md and bench records for current
+ADC, mixer and ELRS acceptance; storage/USB/standalone boot remain pending.
+
+The opt-in RC bench uses `TX15_ELRS_LUA=1 TX15_ELRS_RC=1` (and optionally
+`TX15_ELRS_WRITE=1`). It embeds a separate AETR model with Module=Off by
+default. Model setup -> CRSF options -> Module=Internal activates the proven
+internal UART. Off and Ext pending stop RF; external hardware is not enabled.
+Seven main-page bars show AETR, fixed-low CH5, S1 and S2. Wire CH5 and CH14
+are forced low even if the bench model is edited; this is not universal
+receiver/flight-controller arming protection. Long PAGE opens official Lua;
+long EXIT returns to the main page and keeps RC. A 180-second whole-app bench
+limit stops RF; the debug host must still restore original firmware.
+
+SysTick submits the last complete RC snapshot every 4ms, independently of
+Lua. Main-task cooperative services sample/mix/publish; 100ms-old samples
+stop RC submission. This is a handset UART schedule, not the configured
+over-the-air packet rate or receiver failsafe proof. RC and tool frames are
+copied under short interrupt masks; the router is never called in IRQ.
+The tool queue is flushed on script close/error without stopping RC.
+Telemetry interpretation and cold-start storage/independent boot are pending.

@@ -256,7 +256,12 @@ static const char *protoselect_cb(guiObject_t *obj, int dir, void *data)
     (void)obj;
     u8 changed;
     enum Protocols new_protocol;
+#ifdef TX15_ELRS_RC
+    int choice=GUI_TextSelectHelper(Model.protocol==PROTOCOL_CRSF,0,1,dir,1,1,&changed);
+    new_protocol=choice?PROTOCOL_CRSF:PROTOCOL_NONE;
+#else
     new_protocol = GUI_TextSelectHelper(Model.protocol, PROTOCOL_NONE, PROTOCOL_COUNT - SUPPORT_SCANNER - 1, dir, 1, 1, &changed);
+#endif
     if (changed) {
         const u8 *oldmap = CurrentProtocolChannelMap;
     	// DeInit() the old protocol (Model.protocol unchanged)

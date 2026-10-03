@@ -9,6 +9,16 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class CrsfLinkTests(unittest.TestCase):
+    def test_periodic_rc_and_stale_sample(self):
+        self.run_c('crsf_rc_test.c', ['crsf_link.c','crsf_rc.c'])
+    def test_native_rc_session(self):
+        self.run_c('rf_rc_test.c', ['crsf_link.c','crsf_rc.c'],
+                   ['src/target/tx/radiomaster/tx15/rf_rc.c'],
+                   ['-DTX15_ELRS_RC=1','-DTX15_RC_TEST=1'])
+    def test_lua_close_keeps_rc_and_discards_tools(self):
+        self.run_c('rf_rc_lua_test.c', ['crsf_link.c','crsf_rc.c','crsf_stream.c','crsf_tools.c'],
+                   ['src/target/tx/radiomaster/tx15/rf_rc.c','src/target/tx/radiomaster/tx15/rf_lua.c'],
+                   ['-DTX15_ELRS_LUA=1','-DTX15_ELRS_RC=1','-DTX15_RC_TEST=1'])
     def test_tool_write_readback(self):
         self.run_c('crsf_tools_test.c', ['crsf_tools.c'])
     def test_lua_rf_session(self):

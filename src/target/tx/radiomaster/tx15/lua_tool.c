@@ -7,6 +7,7 @@
 #include "config/display.h"
 #include "romfs.h"
 #include "rf_lua.h"
+#include "runtime.h"
 #include "lua/runner.h"
 #include "../../../../../hardware/tx15/board/display.h"
 static union { double align; unsigned char bytes[160*1024]; } heap;
@@ -16,7 +17,7 @@ volatile struct {u32 state,runs,used,peak,max_ms,blocked_writes;char error[160];
     u32 alloc_ms,alloc_calls,gc_ms,gc_calls,draw_ms,service_ms,instructions,drawing_ops;} tx15_lua_report;
 static buttonAction_t action;
 static unsigned events[8],head,count,leave;
-static void service(void *ctx) { (void)ctx;tx15_rf_lua_poll(); }
+static void service(void *ctx) { (void)ctx;tx15_runtime_poll(CLOCK_getms()); }
 static uint32_t now(void *ctx) { (void)ctx;return CLOCK_getms(); }
 static void stop(void *ctx) { (void)ctx;tx15_rf_lua_stop(); }
 static int authorize(void *ctx,uint8_t type,const uint8_t *data,unsigned size)
@@ -38,7 +39,7 @@ static void fill(int x,int y,int w,int h,u16 color)
     for(int row=y;row<bottom;row++) {
         volatile u16 *p=(volatile u16 *)TX15_LCD_FB+row*480+x;
         for(int column=x;column<right;column++) *p++=color;
-        if(!(row&7)) tx15_rf_lua_poll();
+        if(!(row&7)) service(NULL);
     }
 }
 static void clear(void *ctx) { (void)ctx;fill(0,0,480,320,0xffff); }
@@ -67,7 +68,7 @@ static void text(void *ctx,int x,int y,const char *s,unsigned flags,u16 color)
         LCD_SetFontColor(color);LCD_PrintStringXY(x,y,s);
         if(flags&ND_BOLD) LCD_PrintStringXY(x+1,y,s);
     }
-    LCD_SetFont(old);tx15_rf_lua_poll();
+    LCD_SetFont(old);service(NULL);
 }
 static unsigned button(u32 buttons,unsigned flags,void *ctx)
 {
@@ -104,7 +105,11 @@ void tx15_lua_tool(void)
     for(;;) {
         CLOCK_ResetWatchdog();BUTTON_Handler();u32 ms=CLOCK_getms();
         if(ms-previous>=20) {
-            previous=ms;MIXER_CalcChannels();unsigned event=0;
+            previous=ms;
+#ifndef TX15_ELRS_RC
+            MIXER_CalcChannels();
+#endif
+            unsigned event=0;
             if(count) {event=events[head];head=(head+1)%8;count--;}
             nd_lua_run(&tool,event);
             tx15_lua_report.state=tool.state;tx15_lua_report.runs=tool.runs;

@@ -14,6 +14,14 @@
 #ifndef TX15_RF_BARRIER
 #define TX15_RF_BARRIER() __asm volatile("dmb" ::: "memory")
 #endif
+#ifndef TX15_RF_LOCK
+static uint32_t irq_lock(void) {
+    uint32_t old;__asm volatile("mrs %0,primask\ncpsid i":"=r"(old)::"memory");return old;
+}
+static void irq_unlock(uint32_t old) {__asm volatile("msr primask,%0"::"r"(old):"memory");}
+#define TX15_RF_LOCK() irq_lock()
+#define TX15_RF_UNLOCK(old) irq_unlock(old)
+#endif
 #define R(a) TX15_READ32(a)
 #define W(a,v) TX15_WRITE32(a,v)
 #define U 0x40011400u
@@ -45,11 +53,13 @@ static void uart_pin(unsigned pin)
 }
 void tx15_rf_uart_stop(void)
 {
+    uint32_t irq_mask=TX15_RF_LOCK();
+    active=0;
     W(ICER,128); TX15_RF_BARRIER();
-    if (R(EN)&32) W(U,0);
+    if (R(EN)&32) {W(U,0);W(EN,R(EN)&~32u);(void)R(EN);}
     W(ICPR,128);
     W(B+24,1u<<29); /* PB13 power off, do not touch PH12 radio hold */
-    active=0;
+    TX15_RF_UNLOCK(irq_mask);
 }
 int tx15_rf_uart_init(void)
 {
@@ -76,13 +86,19 @@ int tx15_rf_uart_init(void)
     W(B+24,1u<<13); /* enable module after receiver is ready */
     return 1;
 }
-int tx15_rf_uart_send(const uint8_t *data, unsigned size)
+static int send_locked(const uint8_t *data, unsigned size)
 {
     if (!active || !data || !size || size>sizeof(tx) || tx_pos!=tx_size || !(R(U+28)&64)) return 0;
     memcpy(tx,data,size); tx_pos=0; tx_size=size;
     TX15_RF_BARRIER();
     W(U+32,64); W(U,R(U)|128); /* TXE interrupt publishes copied buffer */
     return 1;
+}
+int tx15_rf_uart_send(const uint8_t *data,unsigned size)
+{
+    uint32_t irq_mask=TX15_RF_LOCK();
+    int accepted=send_locked(data,size);
+    TX15_RF_UNLOCK(irq_mask);return accepted;
 }
 int tx15_rf_uart_read(uint8_t *value)
 {

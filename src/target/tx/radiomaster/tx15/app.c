@@ -10,6 +10,16 @@
 #include "config/tx.h"
 #include "config/display.h"
 #include "rf.h"
+#ifdef TX15_ELRS_RC
+#include "rf_model.h"
+static buttonAction_t lua_action;
+static unsigned lua_requested;
+static unsigned request_lua(u32 buttons,unsigned flags,void *data) {
+    (void)buttons;(void)data;
+    if(flags&BUTTON_LONGPRESS) {lua_requested=1;BUTTON_InterruptLongPress();return 1;}
+    return 0;
+}
+#endif
 #include "../../../../../hardware/tx15/board/analog.h"
 const char DeviationVersion[33]="New Deviation TX15 RAM";
 #ifdef TX15_ELRS_LUA
@@ -17,16 +27,24 @@ void tx15_lua_tool(void);
 #endif
 void tx15_app_main(void) {
     CONFIG_LoadTx(); CONFIG_ReadDisplay(); CONFIG_ReadModel(1);
+#ifndef TX15_ELRS_RC
     Model.protocol=PROTOCOL_NONE;
+#endif
     tx15_analog_init();
     LCD_SetFont(DEFAULT_FONT.font); LCD_SetFontColor(DEFAULT_FONT.font_color);
     GUI_HandleButtons(1); MIXER_Init(); PAGE_Init(); PAGE_ChangeByID(PAGEID_MAIN,0);
     GUI_DrawScreen();
+#ifdef TX15_ELRS_RC
+    tx15_rf_model_start(CLOCK_getms());
+    /* Long PAGE (mapped RIGHT) opens the official Lua tool from the native UI. */
+    BUTTON_RegisterCallback(&lua_action,CHAN_ButtonMask(BUT_RIGHT),
+        BUTTON_LONGPRESS|BUTTON_PRIORITY,request_lua,NULL);
+#endif
 #ifdef TX15_ELRS_DISCOVERY
     tx15_rf_discovery_init(CLOCK_getms());
 #endif
     ((volatile u32 *)0x2400e000u)[2]=3;
-#ifdef TX15_ELRS_LUA
+#if defined(TX15_ELRS_LUA) && !defined(TX15_ELRS_RC)
     tx15_lua_tool();
 #endif
     u32 previous=0;
@@ -34,7 +52,13 @@ void tx15_app_main(void) {
         CLOCK_ResetWatchdog();
         u32 now=CLOCK_getms();
         if(now-previous>=5) {
-            previous=now; BUTTON_Handler(); MIXER_CalcChannels(); PAGE_Event(); GUI_RefreshScreen();
+            previous=now; BUTTON_Handler();
+#ifndef TX15_ELRS_RC
+            MIXER_CalcChannels();
+#else
+            if(lua_requested) {lua_requested=0;tx15_lua_tool();}
+#endif
+            PAGE_Event(); GUI_RefreshScreen();
         }
     }
 }

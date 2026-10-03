@@ -21,8 +21,10 @@ def generate(root,out):
         subprocess.run(command,check=True,stdout=subprocess.DEVNULL)
         files['media/'+name+'.fon']=dst.read_bytes()
     files['media/config.ini']=(root/'src/fs/320x240x16/media/config.ini').read_bytes().replace(b'drawn_background=0',b'drawn_background=1')
-    files['layout/default.ini']=(root/'hardware/tx15/app/layout.ini').read_bytes()
-    files['models/model1.ini']=(root/'hardware/tx15/app/model.ini').read_bytes()
+    layout='layout-crsf.ini' if os.environ.get('TX15_ELRS_RC')=='1' else 'layout.ini'
+    files['layout/default.ini']=(root/'hardware/tx15/app'/layout).read_bytes()
+    model='model-crsf.ini' if os.environ.get('TX15_ELRS_RC')=='1' else 'model.ini'
+    files['models/model1.ini']=(root/'hardware/tx15/app'/model).read_bytes()
     if os.environ.get('TX15_ELRS_LUA') == '1':
         script=(root/'src/lua/scripts/elrs.lua').read_bytes()
         pinned=json.loads((root/'src/lua/sources.json').read_text())

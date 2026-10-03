@@ -1,6 +1,9 @@
 /* Native application runtime on the already initialized RAM bootstrap. */
 #include "common.h"
 #include "runtime.h"
+#ifdef TX15_ELRS_RC
+#include "rf_rc.h"
+#endif
 #include "../../../../../hardware/tx15/board/inputs.h"
 #define REPORT ((volatile uint32_t *)0x2400e000u)
 u32 CLOCK_getms(void) { return REPORT[11]; }
@@ -31,7 +34,12 @@ u32 ScanButtons(void) {
         | ((raw&TX15_PREV)?CHAN_ButtonMask(BUT_LEFT):0)
         | ((raw&TX15_NEXT)?CHAN_ButtonMask(BUT_RIGHT):0);
 }
-void SysTick_Handler(void) { REPORT[11]++; tx15_inputs_tick(); }
+void SysTick_Handler(void) {
+    REPORT[11]++; tx15_inputs_tick();
+#ifdef TX15_ELRS_RC
+    tx15_rf_rc_tick(REPORT[11]);
+#endif
+}
 void App_Fault(void) {
     unsigned ipsr; __asm volatile("mrs %0, ipsr":"=r"(ipsr));
     REPORT[14]=ipsr;REPORT[15]=*(volatile u32 *)0xe000ed28u;

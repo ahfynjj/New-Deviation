@@ -5,6 +5,9 @@
 
 ## P4 当前进度（2026-10-02，内外置ELRS与Lua兼容）
 
+- 最新持续RC批：已接原生模型的CRSF→Module选项（Off默认／Internal／Ext pending关闭），独立4ms UART发送、Lua/主页面共享链路、长按PAGE打开Lua和长按EXIT返回。专用AETR模型，CH5固定低、S1/S2在CH6/CH7，串口CH5/CH14强制低；样本超过100ms停止RC，整次台架180秒后关闭RF。61项检查（含33项真实参数回放）、120对象RC ARM与92对象默认ARM、严格RAM范围通过；独立审查的UART关闭后无法重开已复现并修复。尚未上板，不宣称4ms实测或接收机通道通过。
+- RC构建：`$env:TX15_ELRS_LUA='1'; $env:TX15_ELRS_RC='1'; $env:TX15_ELRS_WRITE='1'; python utils/build-tx15-app.py`。默认启动仍关闭模块，设置只在RAM。当前下一动作：先实机验证启停/时序/Lua期间持续输出，再接收端通道和失联；接收机型号、是否已绑定及监视工具等待用户补充。外置驱动/双槽独立参数、持久安装、USB仍待开发。
+
 - 最新写回批实机通过：官方未修改ELRS Lua在内置模块上完成Max Power的5次保存与读回确认（25→50→100→50→50→25 mW），0失败/拒绝，最后恢复原值，用户确认原界面恢复。5483次Lua调用，无错误/Fault，恢复/清理无错误；日志 `local/reset-halt-power-20261003-131325.json`。短按EXIT返回未单独确认，冷启动参数持久性未测。下一步接模型模块选择和持续CRSF输出，再做接收端通道验收；外置实物、独立启动/USB仍待实现。
 - 写回实现：可见TEXT_SELECTION元数据校验、单笔保存及重读确认；默认Lua构建仍参数只读，`TX15_ELRS_WRITE=1`单独开启选择项保存。统计查询单独允许，命令/RC禁用。57检查及117对象ARM、RAM边界通过；独立审查发现的UART忙时过早重读已复现并修复，原脚本+真实策略+40ms串口延迟回归通过。构建：`$env:TX15_ELRS_LUA='1'; $env:TX15_ELRS_WRITE='1'; python utils/build-tx15-app.py`。这仍是调试器装载RAM程序，不是可直接刷写的固件。
 
