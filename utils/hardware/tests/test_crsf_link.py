@@ -9,6 +9,9 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class CrsfLinkTests(unittest.TestCase):
+    def test_lua_rf_session(self):
+        self.run_c('rf_lua_test.c', ['crsf_link.c','crsf_stream.c'],
+                   ['src/target/tx/radiomaster/tx15/rf_lua.c'], ['-DTX15_ELRS_LUA=1'])
     def test_parameter_session(self):
         self.run_c('rf_discovery_test.c', ['crsf_link.c','crsf_stream.c','crsf_params.c'],
                    ['src/target/tx/radiomaster/tx15/rf.c'], ['-DTX15_ELRS_PARAMETERS=1'])

@@ -1,9 +1,12 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-10-02。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-03。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
 ## P4 当前进度（2026-10-02，内外置ELRS与Lua兼容）
+
+- 2026-10-03：官方ELRS r18源码与Lua5.2.4已接入，新增原生LCD/事件/CRSF API、预算与内存限制。官方脚本回放33项真实字段通过；55项检查、116对象ARM与RAM地址检查通过。审查发现的箭头/UTF-8边界已修复。首轮Lua上板仅读和浏览，0x2D及RC禁用；当前准备实机，尚未宣称界面上板通过或参数保存可用。构建：`$env:TX15_ELRS_LUA='1'; python utils/build-tx15-app.py`；先清除其它RF诊断环境变量。
+- 首次Lua上板窗口未检测到按键，120秒后退出，未复位/装载/写入。软件检查和镜像均已就绪，实机验收等待重新配合；见[记录](docs/tx15/bench-2026-10-03.md)。
 
 - 用户确认原生Deviation运行官方ELRS Lua脚本，同时支持内置/外置模块；首期选择一个模块启用。当前只有内置模块，外置硬件验收后补。
 - [设计](docs/superpowers/specs/2026-10-02-tx15-elrs-lua-design.md)和[分期计划](docs/superpowers/plans/2026-10-02-tx15-elrs-lua.md)已记录。首批CRSF帧/路由核心完成：16通道打包、CRC校验、有界参数队列、忙时保留、通道优先、槽位切换清空及过期会话拒收。

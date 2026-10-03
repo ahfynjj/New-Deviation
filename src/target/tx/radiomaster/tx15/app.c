@@ -12,6 +12,9 @@
 #include "rf.h"
 #include "../../../../../hardware/tx15/board/analog.h"
 const char DeviationVersion[33]="New Deviation TX15 RAM";
+#ifdef TX15_ELRS_LUA
+void tx15_lua_tool(void);
+#endif
 void tx15_app_main(void) {
     CONFIG_LoadTx(); CONFIG_ReadDisplay(); CONFIG_ReadModel(1);
     Model.protocol=PROTOCOL_NONE;
@@ -23,6 +26,9 @@ void tx15_app_main(void) {
     tx15_rf_discovery_init(CLOCK_getms());
 #endif
     ((volatile u32 *)0x2400e000u)[2]=3;
+#ifdef TX15_ELRS_LUA
+    tx15_lua_tool();
+#endif
     u32 previous=0;
     for(;;) {
         CLOCK_ResetWatchdog();

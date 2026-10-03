@@ -1,5 +1,8 @@
 """Generate bounded read-only resources from tracked Deviation assets."""
 from pathlib import Path
+import os
+import hashlib
+import json
 import subprocess
 
 def generate(root,out):
@@ -20,6 +23,12 @@ def generate(root,out):
     files['media/config.ini']=(root/'src/fs/320x240x16/media/config.ini').read_bytes().replace(b'drawn_background=0',b'drawn_background=1')
     files['layout/default.ini']=(root/'hardware/tx15/app/layout.ini').read_bytes()
     files['models/model1.ini']=(root/'hardware/tx15/app/model.ini').read_bytes()
+    if os.environ.get('TX15_ELRS_LUA') == '1':
+        script=(root/'src/lua/scripts/elrs.lua').read_bytes()
+        pinned=json.loads((root/'src/lua/sources.json').read_text())
+        if hashlib.sha256(script).hexdigest()!=pinned['script_sha256']:
+            raise ValueError('Official ELRS script differs from pinned source')
+        files['scripts/elrs.lua']=script
     total=sum(map(len,files.values()))
     if total>512*1024: raise ValueError('Embedded resources exceed 512 KiB limit')
     dst=out/'resources.c'

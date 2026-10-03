@@ -2,8 +2,14 @@
 #include "common.h"
 #include "runtime.h"
 #include "rf.h"
+#ifdef TX15_ELRS_LUA
+#include "rf_lua.h"
+#endif
 #include "../../../../../hardware/tx15/board/analog.h"
 int tx15_runtime_poll(unsigned now) {
+#ifdef TX15_ELRS_LUA
+    tx15_rf_lua_poll();
+#endif
 #ifdef TX15_ELRS_DISCOVERY
     tx15_rf_discovery_poll(now);
 #endif
