@@ -72,6 +72,40 @@ int main(int argc,char **argv)
     size_t used=a.used;assert(!nd_arena_alloc(&a,three,55,sizeof(memory.bytes)));assert(a.used==used && three[54]==0x2b);
     one=nd_arena_alloc(&a,one,100,8);assert(one && *one==0x4a);
     nd_arena_alloc(&a,one,8,0);nd_arena_alloc(&a,three,55,0);assert(a.used==0);
+    /* Parameter parsing allocates many tiny tables while most blocks remain
+     * live. Bound actual search work rather than relying on host wall time. */
+    assert(nd_arena_init(&a,memory.bytes,sizeof(memory.bytes)));
+    void *small[2000];
+    for(unsigned i=0;i<2000;i++) {small[i]=nd_arena_alloc(&a,NULL,0,24);assert(small[i]);}
+    assert(a.search_steps<=6000);
+    for(unsigned i=0;i<2000;i+=2) nd_arena_alloc(&a,small[i],24,0);
+    a.search_steps=0;
+    for(unsigned i=0;i<2000;i+=2) {small[i]=nd_arena_alloc(&a,NULL,0,24);assert(small[i]);}
+    assert(a.search_steps<=3000);
+    for(unsigned i=0;i<2000;i++) nd_arena_alloc(&a,small[i],24,0);
+    assert(a.used==0);
+    void *whole=nd_arena_alloc(&a,NULL,0,sizeof(memory.bytes)-32);assert(whole);
+    nd_arena_alloc(&a,whole,sizeof(memory.bytes)-32,0);
+    unsigned char *live[128]={0};size_t lengths[128]={0};uint32_t random=1234567;
+    for(unsigned step=0;step<20000;step++) {
+        random=random*1664525u+1013904223u;unsigned id=(random>>16)%128;
+        random=random*1664525u+1013904223u;size_t wanted=(random>>16)%1536;
+        if((random&7)==0)wanted=0;
+        for(size_t j=0;j<lengths[id];j++)assert(live[id][j]==(unsigned char)id);
+        size_t before_used=a.used;
+        unsigned char *resized=nd_arena_alloc(&a,live[id],lengths[id],wanted);
+        if(wanted && !resized) {assert(a.used==before_used);continue;}
+        size_t preserved=lengths[id]<wanted?lengths[id]:wanted;
+        for(size_t j=0;j<preserved;j++)assert(resized[j]==(unsigned char)id);
+        live[id]=resized;lengths[id]=wanted;
+        if(wanted)memset(resized,(unsigned char)id,wanted);
+        if(!(step%256))for(unsigned i=0;i<128;i++)for(unsigned j=i+1;j<128;j++)
+            if(live[i] && live[j])assert((uintptr_t)live[i]+lengths[i]<=(uintptr_t)live[j]
+                || (uintptr_t)live[j]+lengths[j]<=(uintptr_t)live[i]);
+    }
+    for(unsigned i=0;i<128;i++)nd_arena_alloc(&a,live[i],lengths[i],0);
+    assert(a.used==0);whole=nd_arena_alloc(&a,NULL,0,sizeof(memory.bytes)-32);assert(whole);
+    nd_arena_alloc(&a,whole,sizeof(memory.bytes)-32,0);
     start("return {init=function() assert(os==nil and io==nil and debug==nil and loadfile==nil and dofile==nil and load==nil and require==nil and coroutine==nil) end, run=function(e) assert(model.getModule(0).Type==5 and model.getModule(1).Type==0); assert(crossfireTelemetryPush()==true); return 0 end}");
     assert(nd_lua_run(&runner,0)==ND_LUA_RUNNING);
     start("return {run=function() lcd.drawText(0,0,string.char(128,192,193,226)); return 0 end}");

@@ -48,6 +48,10 @@ service time to diagnose repeatable board stalls. GC includes its allocator
 cost; drawing includes text dimensions and any platform polling it performs.
 These overlapping measurements must not be added as disjoint totals.
 
+The arena searches size-class free lists and coalesces neighboring free blocks;
+it does not scan live Lua objects for each new allocation. Metadata uses fixed
+32-bit offsets so host and board exercise the same 16-byte block layout.
+
 Base/table/string/math/bit32 are available. OS/io/debug/package/coroutine,
 file/dynamic loading and printing are absent. `pcall`/`xpcall` rethrow budget
 exhaustion; table finalizers are denied because Lua 5.2 runs them with hooks
