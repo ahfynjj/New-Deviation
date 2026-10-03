@@ -24,6 +24,12 @@ probe_vectors:
 .thumb_func
 Reset_Handler:
     cpsid i
+#ifdef TX15_BOOT_EARLY_SUPPLY
+    /* Cold-start bench only; legacy RAM diagnostics retain their exact path. */
+    bl tx15_boot_supply_early
+    cmp r0,#0
+    bne .Learly_supply_failed
+#endif
     ldr r0, =_stack_bottom
     ldr r1, =_stack_top
     movs r2, #0
@@ -68,4 +74,9 @@ Reset_Handler:
     dsb
     bl Probe_Main
     b .
+#ifdef TX15_BOOT_EARLY_SUPPLY
+.Learly_supply_failed:
+    /* Run* RAM may be unwritable; no C/mailbox/stack access on this path. */
+    b .Learly_supply_failed
+#endif
 .size Reset_Handler, .-Reset_Handler

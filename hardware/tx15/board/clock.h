@@ -6,7 +6,8 @@
 #define TX15_PLL_CORE_HZ 128000000u
 enum tx15_clock_result {
     TX15_CLOCK_OK, TX15_CLOCK_BAD_STATE,
-    TX15_CLOCK_HSE_TIMEOUT, TX15_CLOCK_SWITCH_TIMEOUT, TX15_CLOCK_PLL_TIMEOUT
+    TX15_CLOCK_HSE_TIMEOUT, TX15_CLOCK_SWITCH_TIMEOUT, TX15_CLOCK_PLL_TIMEOUT,
+    TX15_CLOCK_SUPPLY_TIMEOUT, TX15_CLOCK_VOLTAGE_TIMEOUT, TX15_CLOCK_FLASH_TIMEOUT
 };
 /* Reset HSI64 -> direct crystal HSE48. No PLL, voltage or Flash changes.
  * Keep HSI enabled for recovery. budget bounds register polls, not milliseconds.

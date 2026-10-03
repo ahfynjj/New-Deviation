@@ -71,3 +71,57 @@ SHA256均为 `968cab41ec1bd50f271b8c2ad7fff0fc981fefdca42aadc3ef672933ce2ad7a1`�
 控制器DCR为 `0x00180000`，其FSIZE配置与当前24位地址模式不等于
 物理Flash容量证明；寄存器解释依据[ST RM0433](https://www.st.com/resource/en/reference_manual/dm00314099-stm32h742-stm32h743-753-and-stm32h750-value-line-advanced-arm-based-32-bit-mcus-stmicroelectronics.pdf)。
 当前尚无JEDEC身份、TF卡备份或实际恢复验证，不宣称全机备份完成。
+
+## 冷启动初始化与只读存储驱动（2026-10-03）
+
+已实现独立启动所需的首段初始化代码，但尚未验证断电冷启动：
+
+- `early_supply.S` 在任何RAM写入、C函数栈之前，用无栈汇编保持PH12供电、
+  确认已启用LDO、完成SCUEN配置并等待ACTVOSRDY。失败原地停止，不写邮箱。
+  依据[ST PWREx的Run*限制](https://github.com/STMicroelectronics/stm32h7xx-hal-driver/blob/master/Src/stm32h7xx_hal_pwr_ex.c)，
+  供电配置完成前不能写RAM，不能仅靠后续C函数做这一步。
+- `cold_start.c` 随后建立VOS1、至少2个Flash读等待周期及HSE/PLL128时钟；
+  保留更高等待周期和其它ACR位。修改Flash读控制寄存器不等于编程Flash内容。
+- `qspi.c` 仅从复位空闲控制器进入，使用4MHz、单线`0x9F`读JEDEC和
+  `0x03`读数据；仅覆盖前16MiB地址窗口，不发送写使能、擦写或芯片配置命令。
+  GPIO复用已与本机寄存器核对。容量/布局须待实际身份确认后决定。
+
+合并RAM镜像只运行上述初始化和64字节读取，不初始化显示、SDRAM或射频；
+使用版本8邮箱验证两次ticks/loops前进，JEDEC及读取头单独保存。
+主机将读取头与已有16MiB备份前64字节比较。异常退出也强制复位QSPI、
+恢复PG6输出锁存，再恢复原GPIO/时钟和原固件复位入口；恢复失败禁止继续执行。
+台架要求已就绪LDO/VOS1..3和足够读等待周期。初始化临时进入VOS1；退出先恢复
+HSI64，再恢复原VOS并等待实际电压就绪，供电选择及Flash读等待周期保持不变。
+
+```powershell
+python utils/build-tx15-boot-bench.py
+python -m unittest discover -s utils/hardware/tests
+```
+
+本批77项相关检查通过；合并镜像ARM编译/链接及RAM布局检查通过，
+text3436字节、BSS4308字节，入口`0x240002c1`。本机构建ELF SHA256：
+`ff22f7e5ba0272e8f6b6bf11735a5d93817351ecc81a875c599f81c2ad3389d7`。
+这些构建数据不是断电独立启动证明；暖复位RAM测试不构成POR证明。
+
+下一步依据下列实机结果确定存储布局、编写真正的内部Flash启动程序与
+载荷装载路径，并区分应用的台架/持久运行模式。
+当前仍无可刷入成品，不指定任何Flash安装偏移，也不执行持久写入。
+
+### 合并台架实测
+
+首轮在装载前发现本机复位后VOS3（CSR1/D3CR=`0x6000`，CR3=`0x05000042`，
+ACR=`0x37`），被过严VOS1门槛拒绝；未装载镜像，原固件恢复且无清理错误。
+补齐安全电压恢复并通过回归/集中审查后，第二轮成功：
+
+- 日志 `local/hardware-session/reset-halt-power-20261003-165924.json`。
+- 3440字节RAM装载读回一致，版本8状态3/error0；ticks278→730、
+  loops149398→390352，Fault字段全零，PH12供电保持有效。
+- JEDEC=`0xc84018`，64字节`0x03`读取与已有映射备份前64字节完全一致。
+  该ID与[GigaDevice GD25Q128H官方ID表](https://download.gigadevice.com/Datasheet/DS-01121-GD25Q128H-Rev1.2.pdf)
+  一致；GD25Q128类为128Mbit/16MiB，不能由相同ID确定具体后缀或保护状态。
+- 先恢复HSI64，再恢复原VOS3；CSR1/CR3/D3CR/ACR精确读回初始值，
+  QSPI复位、PG6锁存、GPIO/FMC、时钟、CPU上下文恢复全部成功，无清理错误。
+  原固件再次运行，用户确认原界面恢复。
+
+本轮只有RAM与外设寄存器操作，未写Flash内容、选项字节、射频参数。
+仍未验证真实POR、SFDP/具体型号、Flash保护/恢复编程、TF卡备份或正式安装。
