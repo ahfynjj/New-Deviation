@@ -1,4 +1,5 @@
 #include "lua/runner.h"
+#include "protocol/transport/crsf_tools.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,10 +7,12 @@
 static union { double align; unsigned char bytes[256*1024]; } memory;
 static struct nd_lua runner;
 static struct crsf_link link;
-static unsigned now, texts, clears, names, requests, writes, stops, safe_text, draw_cost;
+static unsigned now, texts, clears, names, requests, writes, stats, stops, safe_text, draw_cost, power_index;
 static unsigned char captured[64][512];
 static unsigned captured_sizes[64], captured_count;
 static uint64_t completed_fields;
+static struct crsf_tools policy;
+static unsigned use_policy,busy_until,deferred_reads;
 static uint32_t clock_ms(void *ctx) { (void)ctx; return now; }
 static void clear(void *ctx) { (void)ctx; clears++;now+=draw_cost; }
 static void text(void *ctx,int x,int y,const char *s,unsigned flags,uint16_t color)
@@ -24,7 +27,14 @@ static void text(void *ctx,int x,int y,const char *s,unsigned flags,uint16_t col
 static void dimensions(void *ctx,const char *s,unsigned flags,int *w,int *h)
 { (void)ctx;(void)flags;*w=(int)strlen(s)*10;*h=21; }
 static void stop(void *ctx) { (void)ctx;stops++; }
-static const struct nd_lua_host host={.clock_ms=clock_ms,.clear=clear,.text=text,.size_text=dimensions,.stop=stop};
+static int authorize(void *ctx,uint8_t type,const uint8_t *data,unsigned n)
+{
+    (void)ctx;
+    if(use_policy)return crsf_tools_kind(&policy,type,data,n)!=0;
+    return type!=0x2d || (n==4 && data[0]==0xee && data[1]==0xea
+        && ((!data[2] && !data[3]) || (data[2]==4 && data[3]<=1)));
+}
+static const struct nd_lua_host host={.clock_ms=clock_ms,.clear=clear,.text=text,.size_text=dimensions,.stop=stop,.authorize=authorize};
 static void start(const char *source)
 {
     nd_lua_close(&runner);crsf_link_init(&link);crsf_link_select(&link,CRSF_SLOT_INTERNAL);
@@ -33,11 +43,25 @@ static void start(const char *source)
 static void reply(unsigned type,const unsigned char *payload,unsigned size)
 {
     struct crsf_frame frame;assert(crsf_frame_build(&frame,0xea,type,payload,size));
+    if(use_policy) {
+        struct crsf_message m={.type=(uint8_t)type,.size=size};memcpy(m.payload,payload,size);
+        crsf_tools_receive(&policy,&m,now);
+    }
     assert(crsf_link_receive(&link,link.slot,link.generation,&frame));
 }
 static int send(void *ctx,int slot,uint32_t generation,const uint8_t *frame,unsigned size)
 {
     (void)ctx;assert(slot==0 && generation==link.generation);assert(size<=64);
+    if(use_policy) {
+        int kind=crsf_tools_kind(&policy,frame[2],frame+3,size-4);assert(kind);
+        if(crsf_tools_defer(&policy,frame[2],frame+3,size-4,now)) {deferred_reads++;return 0;}
+        if(kind==CRSF_TOOL_WRITE) {
+            if(!busy_until)busy_until=now+40;
+            if(now<busy_until)return 0;
+            busy_until=0;
+        }
+        crsf_tools_sent(&policy,frame[2],frame+3,size-4,now);
+    }
     if (frame[2]==0x28) {
         unsigned char info[]={0xea,0xee,'T','e','s','t',' ','E','L','R','S',0,
             0x45,0x4c,0x52,0x53,0,0,0,0,0,4,1,0,4,0};
@@ -58,8 +82,14 @@ static int send(void *ctx,int slot,uint32_t generation,const uint8_t *frame,unsi
             memcpy(data+4,captured[id-1]+offset,n);reply(0x2b,data,4+n);return 1;
         }
         assert(id>=1 && id<=4);unsigned char data[60]={0xea,0xee,(unsigned char)id,0};
-        memcpy(data+4,fields[id-1],sizes[id-1]);reply(0x2b,data,4+sizes[id-1]);
-    } else { writes++;assert(frame[2]==0x2d && frame[5]==0 && frame[6]==0); }
+        memcpy(data+4,fields[id-1],sizes[id-1]);
+        if(id==4)data[4+sizeof(f4)-5]=(uint8_t)power_index;
+        reply(0x2b,data,4+sizes[id-1]);
+    } else {
+        assert(frame[2]==0x2d);
+        if(frame[5]==0 && frame[6]==0)stats++;
+        else {assert(frame[5]==4 && frame[6]<=1);power_index=frame[6];writes++;}
+    }
     return 1;
 }
 int main(int argc,char **argv)
@@ -146,7 +176,7 @@ int main(int argc,char **argv)
         }
         fclose(capture);
     }
-    start(script);free(script);
+    use_policy=1;crsf_tools_init(&policy,1);start(script);free(script);
     for (unsigned i=0;i<2500;i++) {
         now+=10;assert(nd_lua_run(&runner,0)==ND_LUA_RUNNING);crsf_link_service(&link,send,0);
     }
@@ -154,7 +184,18 @@ int main(int argc,char **argv)
     if(captured_count) assert(completed_fields==(captured_count==64?UINT64_MAX:(((uint64_t)1<<captured_count)-1)));
     nd_lua_run(&runner,ND_EVT_NEXT);nd_lua_run(&runner,ND_EVT_NEXT);nd_lua_run(&runner,ND_EVT_ENTER);
     if(!captured_count) assert(names==15); /* Official folder navigation. */
-    assert(!writes); /* Read-only API also blocks linkstat 0x2d in this first bench. */
+    assert(!writes && stats>0); /* Statistics requests are not parameter writes. */
+    if(!captured_count) {
+        unsigned before=requests;runner.allow_writes=1;
+        nd_lua_run(&runner,ND_EVT_ENTER);nd_lua_run(&runner,ND_EVT_NEXT);nd_lua_run(&runner,ND_EVT_ENTER);
+        for(unsigned i=0;i<300;i++) {now+=10;assert(nd_lua_run(&runner,0)==ND_LUA_RUNNING);crsf_link_service(&link,send,0);}
+        assert(writes==1 && power_index==1 && requests>before);
+        assert(policy.report.verified==1); /* Official reread after a delayed UART write. */
+        nd_lua_run(&runner,ND_EVT_ENTER);nd_lua_run(&runner,ND_EVT_PREV);nd_lua_run(&runner,ND_EVT_ENTER);
+        for(unsigned i=0;i<300;i++) {now+=10;assert(nd_lua_run(&runner,0)==ND_LUA_RUNNING);crsf_link_service(&link,send,0);}
+        assert(writes==2 && power_index==0);
+        assert(policy.report.verified==2 && deferred_reads>0);
+    }
     printf("Official Lua init/run, %u fields, folder, route guards, error/budget/OOM; peak %u bytes\n",captured_count?captured_count:4,(unsigned)runner.arena.peak);
     nd_lua_close(&runner);assert(runner.arena.used==0 && stops>=5);
     return 0;

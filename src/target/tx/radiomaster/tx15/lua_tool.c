@@ -19,6 +19,8 @@ static unsigned events[8],head,count,leave;
 static void service(void *ctx) { (void)ctx;tx15_rf_lua_poll(); }
 static uint32_t now(void *ctx) { (void)ctx;return CLOCK_getms(); }
 static void stop(void *ctx) { (void)ctx;tx15_rf_lua_stop(); }
+static int authorize(void *ctx,uint8_t type,const uint8_t *data,unsigned size)
+{ (void)ctx;return tx15_rf_lua_authorize(type,data,size); }
 static u8 select_font(unsigned flags)
 { return LCD_SetFont(flags&ND_MIDSIZE?LABEL_FONT.font:DEFAULT_FONT.font); }
 static void dimensions(void *ctx,const char *s,unsigned flags,int *w,int *h)
@@ -91,13 +93,14 @@ void tx15_lua_tool(void)
     for(size_t i=0;i<tx15_resource_count;i++) if(!strcmp(tx15_resources[i].path,"scripts/elrs.lua")) script=&tx15_resources[i];
     if(!script) return;
     struct nd_lua_host host={.clock_ms=now,.service=service,.clear=clear,.text=text,
-        .size_text=dimensions,.rect=rect,.line=line,.stop=stop};
+        .size_text=dimensions,.rect=rect,.line=line,.stop=stop,.authorize=authorize};
     head=count=leave=0;
     BUTTON_RegisterCallback(&action,CHAN_ButtonMask(BUT_ENTER)|CHAN_ButtonMask(BUT_EXIT)|
         CHAN_ButtonMask(BUT_UP)|CHAN_ButtonMask(BUT_DOWN)|CHAN_ButtonMask(BUT_LEFT)|CHAN_ButtonMask(BUT_RIGHT),
         BUTTON_PRESS|BUTTON_RELEASE|BUTTON_LONGPRESS|BUTTON_PRIORITY,button,NULL);
     u32 started=CLOCK_getms(),previous=started;
     nd_lua_start(&tool,heap.bytes,sizeof(heap.bytes),&host,tx15_rf_lua_init(),(const char *)script->data,script->size);
+    tool.allow_writes=tx15_rf_lua_writes_enabled();
     for(;;) {
         CLOCK_ResetWatchdog();BUTTON_Handler();u32 ms=CLOCK_getms();
         if(ms-previous>=20) {

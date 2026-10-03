@@ -26,10 +26,30 @@ external hardware/model UI are pending. Source tools return `init`/`run`.
 TF script loading is later; the current script is embedded as a resource.
 
 The first bench powers the module for up to 120 seconds, delivers validated
-extended replies to Lua, and sends only ping 0x28 and parameter read 0x2C.
-All 0x2D requests, including link-statistics queries, are blocked at the API
-and UART boundary. Changing a displayed value does not save it. There is no RC
-output. Errors/exit close the module and return to the native GUI.
+extended replies to Lua, and sends ping 0x28, parameter read 0x2C and statistics queries.
+The exact ELRS link-statistics query (0x2D, EE EA 00 00) is allowed separately
+from parameter writes. Default Lua builds remain read-only for parameters;
+there is no RC output. Errors/exit close the module and return to the native GUI.
+
+`TX15_ELRS_WRITE=1`, together with `TX15_ELRS_LUA=1`, opts into visible
+TEXT_SELECTION settings only. Their complete, ordered, bounded metadata must
+have been read in this session; values must be in range and choose a nonempty
+option. Command, info, folder, string, float and integer writes remain blocked.
+Both the interpreter API and UART adapter enforce the policy. Forbidden queued
+frames are removed, while busy or settling retains legitimate frames.
+
+A UART-accepted save starts a 200ms settling interval and a 3s readback deadline.
+The official Lua reread waits in the queue until settling completes, including
+when UART acceptance was delayed. A complete reread with matching schema/index
+is reported as verified; mismatch, timeout and cancellation are distinct.
+One save can wait for verification at a time. No automatic retry or rollback
+issues another save. The user restores the original setting explicitly.
+
+Readback relies on the local module replying within the settling/response
+windows. CRSF has no request nonce, so field/chunk/schema matching cannot
+exclude arbitrarily delayed duplicate replies. This checks observed runtime
+values; cold-start persistence and real-time RC continuity require later bench
+acceptance. The official script is unchanged.
 
 ## Bounds
 

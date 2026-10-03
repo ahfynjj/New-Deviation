@@ -7,6 +7,8 @@ from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 out=root/'local/tx15-hardware/app'; out.mkdir(parents=True,exist_ok=True)
 arm=Path(os.environ['TEMP'])/'new-deviation-arm8/bin'
+if os.environ.get('TX15_ELRS_WRITE')=='1' and os.environ.get('TX15_ELRS_LUA')!='1':
+ raise ValueError('Selection writes require the Lua tool build')
 if os.environ.get('TX15_ELRS_LUA') == '1' and any(os.environ.get(n)=='1' for n in ('TX15_ELRS_DISCOVERY','TX15_ELRS_PARAMETERS')):
  raise ValueError('Lua and diagnostic RF modes cannot run together')
 flags=['-isystem',str(root.parent/'tools/arm8/lib/gcc/arm-none-eabi/8.2.1/include'),
@@ -21,6 +23,7 @@ if os.environ.get('TX15_ELRS_PARAMETERS') == '1':
  flags+=['-DTX15_ELRS_DISCOVERY=1','-DTX15_ELRS_PARAMETERS=1']
 if os.environ.get('TX15_ELRS_LUA') == '1':
  flags+=['-DTX15_ELRS_LUA=1','-DLUA_ANSI','-I',str(root/'src/lua/vendor/lua-5.2.4/src')]
+ if os.environ.get('TX15_ELRS_WRITE')=='1': flags.append('-DTX15_ELRS_WRITE=1')
 for d in ('src','src/target/tx/radiomaster/tx15','src/target/drivers/filesystems',
  'src/gui/320x240x16','src/pages/320x240x16'):
  flags+=['-I',str(root/d)]
@@ -36,6 +39,7 @@ sources += [root/'src'/n for n in ('buttons.c','mixer.c','curves.c','inputs.c','
 sources.append(root/'src/protocol/transport/crsf_link.c')
 sources.append(root/'src/protocol/transport/crsf_stream.c')
 sources.append(root/'src/protocol/transport/crsf_params.c')
+sources.append(root/'src/protocol/transport/crsf_tools.c')
 if os.environ.get('TX15_ELRS_LUA') == '1':
  sources += [root/'src/lua/runner.c',root/'src/lua/arena.c']
  sources += [p for p in (root/'src/lua/vendor/lua-5.2.4/src').glob('*.c') if p.name not in

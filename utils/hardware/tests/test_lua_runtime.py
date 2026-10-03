@@ -22,7 +22,7 @@ class LuaRuntimeTests(unittest.TestCase):
                    '-I', str(next((ROOT.parent/'tools/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32').glob('*/include'))), '-I', str(LUA),
                    '-I', str(ROOT/'src'), str(ROOT/'utils/hardware/tests/lua_runtime_test.c'),
                    str(ROOT/'src/lua/runner.c'), str(ROOT/'src/lua/arena.c'),
-                   str(ROOT/'src/protocol/transport/crsf_link.c'), *map(str, sources),
+                   str(ROOT/'src/protocol/transport/crsf_link.c'), str(ROOT/'src/protocol/transport/crsf_tools.c'), *map(str, sources),
                    '-o', str(exe)]
             built = subprocess.run(cmd, env=env, capture_output=True, text=True, encoding='utf-8', errors='replace')
             self.assertEqual(built.returncode, 0, built.stdout + built.stderr)

@@ -119,7 +119,12 @@ static int push(lua_State *L)
         if(!lua_isnumber(L,-1) || !(b>=0 && b<=255) || (int)b!=b) allowed=0;
         data[i]=allowed?(uint8_t)b:0;lua_pop(L,1);
     }
-    if(allowed && type==0x2d && !r->allow_writes) {r->blocked_writes++;allowed=0;}
+    int statistics=allowed && type==0x2d && n==4 && data[0]==0xee && data[1]==0xea && !data[2] && !data[3];
+    if(allowed && type==0x2d && !statistics && !r->allow_writes) {r->blocked_writes++;allowed=0;}
+    if(allowed && r->host.authorize && !r->host.authorize(r->host.context,(uint8_t)type,data,(unsigned)n)) {
+        if(type==0x2d)r->blocked_writes++;
+        allowed=0;
+    }
     lua_pushboolean(L,allowed && crsf_link_push(r->link,(uint8_t)type,data,(unsigned)n));return 1;
 }
 static int pop(lua_State *L)

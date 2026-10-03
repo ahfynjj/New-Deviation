@@ -18,6 +18,7 @@ struct nd_lua_host {
     void (*rect)(void *,int,int,int,int,uint16_t,int);
     void (*line)(void *,int,int,int,int,uint16_t);
     void (*stop)(void *); /* Close selected bench link on failure/exit. */
+    int (*authorize)(void *,uint8_t,const uint8_t *,unsigned); /* Optional stricter platform policy. */
 };
 struct nd_lua {
     struct nd_arena arena;
@@ -38,7 +39,8 @@ struct nd_lua {
 };
 /* A fresh single-slot session is captured; route changes abort the tool.
  * Source-only, <=64KiB. No filesystem, dynamic loader, OS, debug or coroutine.
- * First bench is read-only; write support requires explicit allow_writes.
+ * Parameter writes require explicit allow_writes; ELRS statistics queries
+ * (0x2D, destination EE/origin EA/field zero/value zero) remain readable.
  * Count/time hooks bound Lua VM work. C library/GC timings need board proof.
  */
 int nd_lua_start(struct nd_lua *,void *,size_t,const struct nd_lua_host *,
