@@ -14,9 +14,29 @@ static uint32_t crc32(const uint8_t *p, uint32_t n)
     }
     return ~crc;
 }
-int tx15_boot_image_validate(const uint8_t *p, size_t bytes, struct tx15_boot_image *plan)
+uint32_t tx15_boot_image_size(const uint8_t p[64])
 {
     static const uint8_t magic[8]={'N','D','1','5','A','P','P','1'};
+    static const uint32_t dest[2]={0x24010000u,0xd0080000u};
+    static const uint32_t capacity[2]={0x6c000u,0x80000u};
+    if (!p) return 0;
+    for (unsigned i=0;i<8;i++) if (p[i]!=magic[i]) return 0;
+    uint32_t bytes=word(p+12),offset=64;
+    if (bytes<64 || bytes>64u+0x6c000u+0x80000u || word(p+8)!=1
+            || word(p+20)!=0x54583135u || word(p+56) || word(p+60)!=crc32(p,60)) return 0;
+    for (unsigned i=0;i<2;i++) {
+        const uint8_t *d=p+24+i*16;
+        uint32_t length=word(d+8),padded=(length+7u)&~7u;
+        if (word(d)!=dest[i] || word(d+4)!=offset || !length || length>capacity[i]
+                || padded>capacity[i] || padded>bytes-offset) return 0;
+        if (!i && (length<704 || !(word(p+16)&1u) || (word(p+16)&~1u)<dest[0]
+                || (word(p+16)&~1u)-dest[0]>=length)) return 0;
+        offset+=padded;
+    }
+    return offset==bytes?bytes:0;
+}
+int tx15_boot_image_validate(const uint8_t *p, size_t bytes, struct tx15_boot_image *plan)
+{
     static const uint32_t dest[2]={0x24010000u,0xd0080000u};
     static const uint32_t capacity[2]={0x6c000u,0x80000u};
     if (!plan) return 0;
@@ -26,9 +46,7 @@ int tx15_boot_image_validate(const uint8_t *p, size_t bytes, struct tx15_boot_im
         plan->segments[i].destination=plan->segments[i].length=0;
     }
     if (!p || bytes<64 || bytes>64u+0x6c000u+0x80000u) return 0;
-    for (unsigned i=0;i<8;i++) if (p[i]!=magic[i]) return 0;
-    if (word(p+8)!=1 || word(p+12)!=bytes || word(p+20)!=0x54583135u
-            || word(p+56)!=0 || word(p+60)!=crc32(p,60)) return 0;
+    if (tx15_boot_image_size(p)!=bytes) return 0;
     uint32_t offset=64, lengths[2], starts[2];
     for (unsigned i=0;i<2;i++) {
         const uint8_t *d=p+24+i*16;

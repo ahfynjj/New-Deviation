@@ -1,11 +1,15 @@
 """Cross-compile original Deviation GUI/pages for native TX15 (no emulator).
-Builds a RAM-only ELF; hardware acceptance is a separate step.
+Builds a RAM-executed ELF. Opt-in standalone mode requires the native cold loader.
 """
-import os, subprocess, sys
+import hashlib,json,os, subprocess, sys
 sys.stdout.reconfigure(encoding="utf-8",errors="replace")
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
-out=root/'local/tx15-hardware/app'; out.mkdir(parents=True,exist_ok=True)
+standalone=os.environ.get('TX15_STANDALONE')=='1'
+if standalone and any(os.environ.get(n)=='1' for n in ('TX15_ELRS_LUA','TX15_ELRS_RC',
+ 'TX15_ELRS_WRITE','TX15_ELRS_DISCOVERY','TX15_ELRS_PARAMETERS')):
+ raise ValueError('Standalone first-boot build keeps RF disabled; validate cold boot before adding RF modes')
+out=root/'local/tx15-hardware'/('app-standalone' if standalone else 'app'); out.mkdir(parents=True,exist_ok=True)
 arm=Path(os.environ['TEMP'])/'new-deviation-arm8/bin'
 if os.environ.get('TX15_ELRS_RC')=='1' and os.environ.get('TX15_ELRS_LUA')!='1':
  raise ValueError('RC bench requires the shared Lua RF session build')
@@ -18,7 +22,9 @@ flags=['-isystem',str(root.parent/'tools/arm8/lib/gcc/arm-none-eabi/8.2.1/includ
  '-isystem',str(root.parent/'tools/arm8/arm-none-eabi/include'),'-mcpu=cortex-m7','-mthumb','-mfloat-abi=soft','-std=gnu99','-Os','-g',
  '-ffunction-sections','-fdata-sections','-ffreestanding','-fno-common',
  '-Wall','-Wextra','-Werror=implicit-function-declaration','-Werror=undef',
- '-DTX15_INPUT_TRACE=1','-DBUILD_TYPE=0','-DSTATUS_SCREEN','-DHGVERSION="New Deviation TX15 RAM"']
+ '-DTX15_INPUT_TRACE=1','-DBUILD_TYPE=0','-DSTATUS_SCREEN',
+ '-DHGVERSION="New Deviation TX15"' if standalone else '-DHGVERSION="New Deviation TX15 RAM"']
+if standalone:flags.append('-DTX15_STANDALONE=1')
 if os.environ.get('TX15_ELRS_DISCOVERY') == '1':
  flags.append('-DTX15_ELRS_DISCOVERY=1')
 if os.environ.get('TX15_ELRS_PARAMETERS') == '1':
@@ -52,6 +58,9 @@ from tx15_resources import generate
 sources.append(generate(root,out))
 sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c','analog.c','rf_uart.c')]
 sources.append(root/'hardware/tx15/app/startup.S')
+if standalone:
+ sources += [root/'hardware/tx15/boot'/n for n in ('handoff.c','power_button.c')]
+ sources.append(root/'hardware/tx15/board/power.c')
 objects=[]
 with (out/'compile.log').open('w',encoding='utf-8') as log:
  for src in sources:
@@ -92,5 +101,11 @@ print('Linked and checked RAM load map:',elf,'entry',hex(entry))
 from hardware.boot_image import pack
 payload=out/'tx15-app.nd15'
 payload.write_bytes(pack(elf.read_bytes()))
+(out/'build.json').write_text(json.dumps({'schema':1,
+ 'mode':'standalone-first-boot-rf-off' if standalone else 'ram-bench',
+ 'elf_sha256':hashlib.sha256(elf.read_bytes()).hexdigest(),
+ 'payload_sha256':hashlib.sha256(payload.read_bytes()).hexdigest(),
+ 'rf_enabled':any(os.environ.get(n)=='1' for n in ('TX15_ELRS_LUA','TX15_ELRS_DISCOVERY','TX15_ELRS_RC')),
+ 'persistent_settings':False},indent=2),encoding='utf8')
 print('Checked native boot payload:',payload,'(requires cold-start loader; not directly flashable)')
 print('No device accessed; hardware acceptance remains pending.')

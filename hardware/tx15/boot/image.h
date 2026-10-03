@@ -11,6 +11,9 @@ struct tx15_boot_image {
     uint32_t entry;
     struct tx15_boot_segment segments[2];
 };
+/* Header-only size/descriptor check before a bounded storage read. Does not
+ * validate payload CRC/vectors and never authorizes execution. Returns 0 on error. */
+uint32_t tx15_boot_image_size(const uint8_t header[64]);
 /* Returns 1 only after checking the whole immutable source image. On failure
  * clears the plan. Does not copy, execute, or touch hardware/Flash. CRC detects
  * corruption; it is not an authenticity/signature check. */

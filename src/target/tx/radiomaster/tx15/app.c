@@ -21,7 +21,11 @@ static unsigned request_lua(u32 buttons,unsigned flags,void *data) {
 }
 #endif
 #include "../../../../../hardware/tx15/board/analog.h"
+#ifdef TX15_STANDALONE
+const char DeviationVersion[33]="New Deviation TX15";
+#else
 const char DeviationVersion[33]="New Deviation TX15 RAM";
+#endif
 #ifdef TX15_ELRS_LUA
 void tx15_lua_tool(void);
 #endif

@@ -19,7 +19,20 @@ void MCU_InitModules(void) { memset(Transmitter.module_enable,0,sizeof(Transmitt
 int MCU_SetPin(struct mcu_pin *p,const char *name) { (void)p;(void)name;return 0; }
 unsigned PWR_ReadVoltage(void) { return 0; } /* Unmeasured, not a fabricated battery voltage. */
 int PWR_CheckPowerSwitch(void) { return 0; }
-void PWR_Shutdown(void) { for(;;) __asm volatile("nop"); }
+void PWR_Shutdown(void) {
+#ifdef TX15_STANDALONE
+    /* First standalone build is RF-disabled and has no persistent settings.
+     * Cut backlight/module/PH12; if the button still supplies power, wait for
+     * its release without returning to the application or reasserting hold. */
+    __asm volatile("cpsid i":::"memory");
+    *(volatile u32 *)0xe000e010u=0;
+    *(volatile u32 *)0x58020418u=1u<<29;
+    *(volatile u32 *)0x58020018u=1u<<26;
+    *(volatile u32 *)0x58021c18u=1u<<28;
+    __asm volatile("dsb":::"memory");
+#endif
+    for(;;) __asm volatile("nop");
+}
 int SPITouch_IRQ(void) { return 0; }
 void BACKLIGHT_Brightness(unsigned b) { (void)b; } /* bootstrap owns backlight */
 void PPMin_Start(void) {} void PPMin_Stop(void) {}

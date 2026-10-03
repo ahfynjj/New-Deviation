@@ -1,6 +1,12 @@
 /* Native application runtime on the already initialized RAM bootstrap. */
 #include "common.h"
 #include "runtime.h"
+#include "boot_contract.h"
+#ifdef TX15_STANDALONE
+#include "../../../../../hardware/tx15/board/power.h"
+#include "../../../../../hardware/tx15/boot/power_button.h"
+static struct tx15_power_button power_button;
+#endif
 #ifdef TX15_ELRS_RC
 #include "rf_rc.h"
 #endif
@@ -8,6 +14,10 @@
 #define REPORT ((volatile uint32_t *)0x2400e000u)
 u32 CLOCK_getms(void) { return REPORT[11]; }
 void CLOCK_ResetWatchdog(void) {
+#ifdef TX15_STANDALONE
+    if(tx15_power_button_poll(&power_button,CLOCK_getms(),
+        (tx15_power_status()&TX15_BUTTON_PRESSED)!=0)) PWR_Shutdown();
+#endif
     /* RAM bootstrap does not start IWDG. Keep sampling/heartbeat alive while
      * original Deviation pages run their own cooperative wait loops. */
     if(tx15_runtime_poll(CLOCK_getms())) REPORT[12]++;
@@ -48,9 +58,9 @@ void App_Fault(void) {
 }
 void tx15_app_main(void);
 void App_Main(void) {
-    /* The host validates bootstrap state before entry. No clocks/SDRAM reset. */
-    if(REPORT[0]!=0x4e445631 || REPORT[1]!=6 || REPORT[2]!=3) App_Fault();
-    REPORT[1]=7; REPORT[2]=1; REPORT[12]=0;
+    /* A standalone build requires the separate native cold-loader contract;
+     * legacy RAM sessions retain V6->V7. No clocks/SDRAM reset at this stage. */
+    if(!tx15_app_boot_accept((volatile struct probe_report *)REPORT)) App_Fault();
     tx15_inputs_init();
     *(volatile u32 *)0xe000e010u=0;
     *(volatile u32 *)0xe000e014u=127999;
