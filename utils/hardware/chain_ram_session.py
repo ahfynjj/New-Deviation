@@ -48,7 +48,8 @@ def verify_sdram_board(ap):
             if pins & 1 << pin and (mode >> pin * 2 & 3 != 2 or af[pin // 8] >> pin % 8 * 4 & 15 != 12):
                 raise RuntimeError(f'SDRAM GPIO mismatch port={p + 2}, pin={pin}')
 
-def run(ap, dp, result):
+def run(ap, dp, result, display_diagnostic=False, backlight_diagnostic=False):
+    if backlight_diagnostic:display_diagnostic=True
     binary, layout, payload, prefix = boot_chain.validate_bundle(REPO)
     out = REPO / 'local' / 'ram-runs' / datetime.now().strftime('%Y%m%d-%H%M%S')
     out.mkdir(parents=True, exist_ok=False)
@@ -59,7 +60,9 @@ def run(ap, dp, result):
 
     def write(address, value):
         if address not in CONTROL_ADDRS and (not allowed_ram_word(address, len(binary))) and address != 0x58024818:
-            raise ValueError(f'Write address not allowed: {address:#x}')
+            import display_diagnostics
+            if not backlight_diagnostic or address not in display_diagnostics.BACKLIGHT_WRITES:
+                raise ValueError(f'Write address not allowed: {address:#x}')
         ap.write32(address, value)
         dp.flush()
 
@@ -177,18 +180,41 @@ def run(ap, dp, result):
             if time.monotonic() > deadline:
                 raise TimeoutError('Native boot/app startup timeout')
             time.sleep(0.05)
-        print('NATIVE CHAIN APP READY: 75 seconds. Test wheel/ENTER/short EXIT and six analog inputs. Do not press POWER. RF off; no Flash writes.', flush=True)
+        print('NATIVE CHAIN APP READY: '+('display flicker comparison, 70 seconds.' if display_diagnostic else
+            '75 seconds. Test wheel/ENTER/short EXIT and six analog inputs.')+' Do not press POWER. RF off; no Flash writes.', flush=True)
         first = read_bytes(0x2400e000, 128)
         (out / 'mailbox-1.bin').write_bytes(first)
         report['first'] = decode(first)
         if ap.read32(0x58020414)&(1<<13):raise RuntimeError('Internal RF power unexpectedly on')
         report['internal_rf_off']=True
         report['pll_clock_first'] = {hex(a): hex(v) for a, v in capture_pll128_clock(ap.read32).items()}
-        # Short waits keep fault detection and host progress responsive.
-        deadline=time.monotonic()+75
-        while time.monotonic()<deadline:
-            if ap.read32(0x2400e008)!=3:raise RuntimeError('Native application left running state')
-            time.sleep(0.5)
+        if display_diagnostic:
+            import display_diagnostics
+            # Incrementally preserve evidence even if a later capture fails.
+            report['display_samples']=[]
+            overlay=display_diagnostics.FrameOverlay(ap,dp)
+            trial=display_diagnostics.BacklightTrial(ap.read32,write) if backlight_diagnostic else None
+            contrast=display_diagnostics.PausedContrast(overlay,trial) if trial else overlay
+            try:
+                rows=display_diagnostics.observe(ap.read32,write,lambda:wait_bit(1<<17),time.sleep,time.monotonic,
+                    rows=report['display_samples'],overlay=contrast)
+            finally:
+                report['display_overlay_restored']=overlay.restored
+                if trial:
+                    report['backlight_restored']=trial.restored
+                    if trial.saved is not None:
+                        report['backlight_recovery_failed']=True
+                if overlay.original is not None:report['display_recovery_failed']=True
+            report['display_overlay_restored']=overlay.restored
+            report['display_samples']=rows
+            report['display_summary']=display_diagnostics.summarize(rows)
+            print('DISPLAY SUMMARY',report['display_summary'],flush=True)
+        else:
+            # Short waits keep fault detection and host progress responsive.
+            deadline=time.monotonic()+75
+            while time.monotonic()<deadline:
+                if ap.read32(0x2400e008)!=3:raise RuntimeError('Native application left running state')
+                time.sleep(0.5)
         second = read_bytes(0x2400e000, 128)
         (out / 'mailbox-2.bin').write_bytes(second)
         report['second'] = decode(second)
@@ -213,6 +239,8 @@ def run(ap, dp, result):
             recovery_errors.append('SDRAM capture recovery: ' + capture_cleanup_error)
         try:
             if changed:
+                if report.get('backlight_recovery_failed') or report.get('display_recovery_failed'):
+                    raise RuntimeError('Display/PWM recovery incomplete; keep CPU halted for manual power cycle')
                 report['fault_before_cleanup']={hex(a):hex(ap.read32(a)) for a in (0xe000ed04,0xe000ed28,0xe000ed2c)}
                 boot_chain.quiesce_thread(ap.read32,write,reg_write,lambda:wait_bit(1<<17),time.sleep)
                 write(0xe000ed28, ap.read32(0xe000ed28))

@@ -14,6 +14,8 @@ from pyocd.coresight.minimal_mem_ap import MinimalMemAP
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--arm', action='store_true')
+parser.add_argument('--display-diagnostic',action='store_true',help='Read LCD state and compare 15-second CPU pause; no LCD configuration writes')
+parser.add_argument('--backlight-diagnostic',action='store_true',help='Fixed 13/101 PWM only during red-strip pause; then restore TIM1/PA10')
 args = parser.parse_args()
 if not args.arm: parser.error('Hardware operation requires --arm')
 args.ram_probe=True
@@ -142,7 +144,7 @@ try:
     r['status'] = 'halt_and_power_hold_verified'
     print('HALT AND POWER HOLD VERIFIED', r['after_button_release'], flush=True)
     if args.ram_probe:
-        ram_session.run(ap, dp, r)
+        ram_session.run(ap, dp, r,display_diagnostic=args.display_diagnostic,backlight_diagnostic=args.backlight_diagnostic)
         r['status'] = 'ram_live_verified'
 except Exception as exc:
     r['status'] = 'error'
