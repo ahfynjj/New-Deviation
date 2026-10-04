@@ -22,9 +22,10 @@ def write_allowed(address,image_bytes):
                             or 0x2400e000<=address<=0x2400e07c)
 
 class RecoveryContext:
-    def __init__(self,session=None,ap=None,io=None,wait=300):
+    def __init__(self,session=None,ap=None,io=None,wait=300,ready_gate=None):
         self.session=session;self.ap=ap;self.io=io;self.wait=wait;self.image_bytes=0
-        self.report={'original_firmware_executed':False,'cpu_resume_allowed':False,'writes':[]}
+        self.ready_gate=ready_gate
+        self.report={'original_firmware_executed':None,'cpu_resume_allowed':False,'writes':[]}
     def _write(self,a,v):
         if not write_allowed(a,self.image_bytes):raise ValueError('Recovery initializer write refused '+hex(a))
         self.report['writes'].append([hex(a),hex(v)])
@@ -48,16 +49,22 @@ class RecoveryContext:
         if latency<2:self._write(0x52002000,(self.io.read32(0x52002000)&~15)|2)
         if self.io.read32(0x52002000)&15<2:raise RuntimeError('Flash latency setup failed')
     def enter(self,kit):
+        if not callable(self.ready_gate):raise RuntimeError('Explicit power-held confirmation gate required')
         self.image_bytes=len(kit.reader)
         probe=self.session.probe
+        from pyocd.probe.debug_probe import DebugProbe
+        # PWLINK2's first port selection releases NRST. Do it BEFORE asserting
+        # reset; DebugPort.connect sees an already selected wire protocol.
+        probe.connect(DebugProbe.Protocol.SWD)
         probe.assert_reset(True)
         if not probe.is_reset_asserted():raise RuntimeError('NRST assertion failed')
-        print('ARMED UNDER RESET: hold POWER until RELEASE message (about 5 seconds). Waiting '+str(self.wait)+' seconds.',flush=True)
+        print('ARMED UNDER RESET: hold POWER; confirm HELD; keep holding until RELEASE message.',flush=True)
+        self.ready_gate() # Accessible AP is NOT proof user is holding POWER.
+        self.report['power_held_confirmation']=True
         dp=self.session.target.dp
         last=None;deadline=time.monotonic()+self.wait
         while time.monotonic()<deadline:
             try:
-                from pyocd.probe.debug_probe import DebugProbe
                 from pyocd.coresight.minimal_mem_ap import MinimalMemAP
                 dp.connect(DebugProbe.Protocol.SWD)
                 self.ap=MinimalMemAP(dp);self.ap.init();self.io=MemAPIO(self.ap,dp,read_only=False)
@@ -67,15 +74,26 @@ class RecoveryContext:
             except ValueError:raise
             except Exception as exc:last=exc;time.sleep(0.05)
         else:raise TimeoutError('No powered MCU under reset: '+str(last))
+        self.report['reset_before_catch']=probe.is_reset_asserted()
+        self.report['debug_before_catch']={hex(a):hex(self.io.read32(a)) for a in (0xe000edfc,DHCSR)}
+        if not self.report['reset_before_catch']:
+            raise RuntimeError('NRST no longer asserted after SWD connect; no reset catch armed')
+        self._write(0xe000edfc,1) # VC_CORERESET: do not depend on valid Flash vectors.
+        self._write(DHCSR,0xa05f0001)
+        self.report['debug_armed']={hex(a):hex(self.io.read32(a)) for a in (0xe000edfc,DHCSR)}
+        if not self.io.read32(0xe000edfc)&1 or not self.io.read32(DHCSR)&1:
+            raise RuntimeError('Reset catch/debug enable did not read back')
+        probe.assert_reset(False)
+        try:self._wait(lambda:self.io.read32(DHCSR)&0x20000,0.5)
+        finally:self.report['debug_after_reset']={hex(a):hex(self.io.read32(a)) for a in (0xe000edfc,DHCSR,0xe000ed04,0xe000ed08)}
+        self.report['original_firmware_executed']=False
+        # System/Flash identity space is not accessible during NRST on H750.
+        # Only core debug controls are touched before the caught halt.
         if self.io.read32(0x5c001000)&0xfff!=0x450 or self.io.read32(0x1ff1e880)&0xffff!=128:
             raise RuntimeError('Not the reviewed H750 device')
         uid=b''.join(struct.pack('<I',self.io.read32(UID_BASE+i)) for i in (0,4,8)).hex()
         if uid!=kit.uid:raise RuntimeError('MCU UID differs from frozen kit; no RAM/Flash load')
         self.report['uid_verified']=True
-        self._write(0xe000edfc,1) # VC_CORERESET: do not depend on valid Flash vectors.
-        self._write(DHCSR,0xa05f0001)
-        probe.assert_reset(False)
-        self._wait(lambda:self.io.read32(DHCSR)&0x20000,0.5)
         # Preload latch before output mode; user is still holding POWER.
         self._write(0x580244e0,self.io.read32(0x580244e0)|0x81)
         self._write(0x58021c18,0x1000)
@@ -88,7 +106,7 @@ class RecoveryContext:
         self._write(0x5c001034,self.io.read32(0x5c001034)|(1<<6))
         self._write(0x5c001054,self.io.read32(0x5c001054)|(1<<18))
         print('HALTED, PH12 HIGH: RELEASE POWER NOW.',flush=True)
-        self._wait(lambda:self.io.read32(0x58020010)&0x10,15)
+        self._wait(lambda:self.io.read32(0x58020010)&0x10,120)
         capture_reset_clock(self.io.read32)
         if self.io.read32(0xe000ed04)&511 or self.io.read32(0xe000ed94)&1 or self.io.read32(0xe000ed14)&0x30000:
             raise RuntimeError('Not reset/thread/cache-clean; no RAM execution')

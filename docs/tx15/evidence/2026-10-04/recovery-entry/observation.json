@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "source_log": "local/hardware-session/flash-entry-20261004-162629.json",
+  "source_sha256": "d8908db395fb29bb387823a09c0d55fddd86496936898fa94e93db63682f411a",
+  "utc": "2026-10-04T08:25:24.826908+00:00",
+  "status": "verified-halted",
+  "device_uid": "1c0039000e51333234363236",
+  "read_only": true,
+  "flash_mutation_commands": 0,
+  "power_held_confirmation": true,
+  "reset_before_catch": true,
+  "debug_armed": {
+    "0xe000edfc": "0x1",
+    "0xe000edf0": "0x2010001"
+  },
+  "debug_after_reset": {
+    "0xe000edfc": "0x1",
+    "0xe000edf0": "0x30003",
+    "0xe000ed04": "0x0",
+    "0xe000ed08": "0x8000000"
+  },
+  "original_firmware_executed": false,
+  "uid_verified": true,
+  "ram_readback_verified": true,
+  "first": {
+    "magic": 1313101361,
+    "version": 8,
+    "state": 3,
+    "error": 0,
+    "cpuid": 1092600433,
+    "device_id": 537093200,
+    "rcc_cr": 50544677,
+    "rcc_cfgr": 27,
+    "rcc_d1cfgr": 72,
+    "scb_ccr": 262656,
+    "mpu_ctrl": 0,
+    "ticks": 27,
+    "loops": 16043,
+    "ram_words": 0,
+    "fault_exception": 0,
+    "cfsr": 0,
+    "hfsr": 0,
+    "mmfar": 0,
+    "bfar": 0,
+    "power_status": 15,
+    "unused_sdram_zero": true
+  },
+  "second": {
+    "magic": 1313101361,
+    "version": 8,
+    "state": 3,
+    "error": 0,
+    "cpuid": 1092600433,
+    "device_id": 537093200,
+    "rcc_cr": 50544677,
+    "rcc_cfgr": 27,
+    "rcc_d1cfgr": 72,
+    "scb_ccr": 262656,
+    "mpu_ctrl": 0,
+    "ticks": 298,
+    "loops": 160261,
+    "ram_words": 0,
+    "fault_exception": 0,
+    "cfsr": 0,
+    "hfsr": 0,
+    "mmfar": 0,
+    "bfar": 0,
+    "power_status": 15,
+    "unused_sdram_zero": true
+  },
+  "observation": {
+    "jedec_id": "0xc84018",
+    "status_hex": "000220",
+    "geometry": {
+      "capacity_bytes": 16777216,
+      "page_bytes": 256,
+      "address_bytes": 3,
+      "erase_types": [
+        [
+          4096,
+          32
+        ],
+        [
+          32768,
+          82
+        ],
+        [
+          65536,
+          216
+        ]
+      ],
+      "bfpt_revision": [
+        1,
+        6
+      ],
+      "bfpt_dwords": 16,
+      "sfdp_sha256": "20a4bebab35f8abb7abb240a2e92180d275422525d9638cbb8f039b1ec859e1c"
+    },
+    "conservative_status_clear": true,
+    "exact_part_suffix": null,
+    "flash_write_authorized": false,
+    "physical_write_recovery_tested": false
+  },
+  "rehearsal": "reset/RAM/read-only-prefixes-verified",
+  "halt_verified": true,
+  "manual_restart_user_confirmed": true,
+  "manual_restart": "Debugger USB disconnected, battery disconnected for 5 seconds, original UI restored after normal power-on",
+  "limitations": [
+    "Flash programming not tested",
+    "Physical recovery with corrupt Flash vectors not tested",
+    "Native power-off boot not tested"
+  ],
+  "file_sha256": {
+    "boot.bin": "5241eea8b1761243f3aef4be42793027d64b3dc815c8d24d99e53ae03cbb4ef1",
+    "payload.bin": "085a9e98960aaa343aeb843cfa927263a48f727ba271ef8ce209c86b433e1546",
+    "original-internal.bin": "984420d754587cd5561c1b3f3df49ccdd34da868ff785efbdcdc0cff09569ad0",
+    "original-external.bin": "6f1afac85dd9acaa9e07522f9ace8b4124d68da88df856cb54b1c247dc08b315",
+    "reader.elf": "7df17ec5959416d7ce527600309db744af76ded319d88ba5b12a7aa54a3d8265",
+    "reader.bin": "d097c3f89118eab9576a27eca2d8d7a6df8c9d868ff71063344889085b8f00ad"
+  }
+}

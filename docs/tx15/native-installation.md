@@ -200,14 +200,19 @@ RF关闭启动/载荷镜像、原内部128KiB、原外部首1MiB、已验证RAM�
 每次使用重新校验摘要。读包无需原编译输出和完整16MiB外部备份，仍需本版本
 Python/pyOCD工具代码；建议把kit和代码另存到可恢复位置。
 
-`--rehearse` 与实际安装/恢复共用复位捕获和RAM入口：先断言NRST，等待用户按住
-电源供电，设置复位捕获后释放NRST、及时拉高PH12，再提示松开按键。入口不读取
+`--rehearse` 与实际安装/恢复共用复位捕获和RAM入口：先选择SWD接口再断言NRST，
+等待用户按住电源并在交互终端输入 `HELD`，设置并读回复位捕获后释放NRST、
+确认暂停后核对UID/系统身份、及时拉高PH12，再提示松开按键。入口不读取
 原Flash的SP/PC、不要求原系统配置SDRAM；先检查UID/核心/复位状态和LDO配置，
-finalize SCUEN后才写AXI RAM。原邮箱清零，双快照证明当次运行，再暂停CPU。
+finalize SCUEN后才写AXI RAM。首次接口连接会释放NRST，因此顺序不能倒置；
+NRST期间仅访问核心调试空间，系统/Flash身份必须等复位释放且暂停捕获通过后读取。
+原邮箱清零，双快照证明当次运行，再暂停CPU。
 只读演练传输允许列表禁止Flash解锁/擦写；只比较原内外各64B，不替代完整检查。
 
-所有成功/失败出口均不执行旧PC，不发自动复位；退出先读回CPU暂停状态才清除
-复位捕获。USB丢失导致无法确认暂停时，日志如实记录，不宣称停机成功。
+所有成功/失败出口均不恢复旧PC，不发自动复位；取得AP后退出先读回CPU暂停状态
+才清除复位捕获。人工确认超时/拒绝等取得AP前的退出不能确认CPU暂停，记录
+`halt_verified=false`；此时软件不释放NRST，探针断开时物理引脚行为尚未实测。
+USB丢失导致无法确认暂停时也如实记录，不宣称停机成功；按失败提示人工恢复。
 实际安装/恢复失败须先完成恢复后才正常开机；成功或只读演练结束后，按日志提示
 断开调试器USB、断开遥控器电池5秒，再接回电池并正常开机。
 
@@ -223,14 +228,30 @@ $py = 'D:\DEVI移植\tools\pyocd-venv\Scripts\python.exe'
 # 使用上条输出的device_uid；本条不连接设备
 & $py utils/hardware/flash_install.py --prepare --device-uid <96位UID的24位小写hex>
 & $py utils/hardware/flash_install.py
-# 用户可以配合、脚本ARMED后才提示按住电源；不擦写Flash
+# 必须在交互终端运行；Codex exec_command 使用 tty:true
+# ARMED后按住电源不松开，确认后在终端输入 HELD
+# 看到 RELEASE POWER NOW 才松开；不擦写Flash
 & $py utils/hardware/flash_install.py --arm --rehearse --press-window 300
 ```
 
 实际写入命令为 `--arm --install --approval <清单中的install_approval>`；恢复为
 `--arm --recover --approval <recovery_approval>`。当前不执行这两条命令，也未取得
-实际擦写/失败Flash向量情况下的物理恢复证明。**实机演练待确认开机**：首次只读
-UID读取未收到SWD ACK，没有暂停、复位或Flash命令，尚未生成实机UID冻结包。
+实际擦写/失败Flash向量情况下的物理恢复证明。
+
+**实机恢复入口演练已通过**，日志 `local/hardware-session/flash-entry-20261004-162629.json`：
+复位捕获/UID核对/3816B RAM读回成功，V8 ticks27→298、loops16043→160261，
+error/fault=0；独立后端与RAM读取的几何一致，内外各64B原前缀与备份一致，
+Flash破坏性命令0，退出暂停读回通过。用户断开调试器USB、电池5秒后开机，
+确认原界面恢复。实机UID绑定冻结kit已生成于 `local/tx15-hardware/install/kit/`。
+26项入口相关软件检查通过；精简证据见
+[恢复入口证据](evidence/2026-10-04/recovery-entry/observation.json)。
+
+此前三个入口问题已定位：缺少人工供电确认、首次SWD连接释放NRST、复位期间
+提前读取系统身份。相关失败均未写Flash；修正有回归与上述成功实机记录。
+这次演练证明不依赖原系统执行或SDRAM的RAM入口及只读后端，不证明真实擦写、
+损坏Flash向量情况下的物理恢复或New Deviation的断电启动。
+首次写入的具体文件/范围/原备份/恢复命令见
+[首次安装清单](first-install-2026-10-04.md)，仍需用户明确确认才执行。
 
 ## 下一批
 

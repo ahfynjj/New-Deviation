@@ -10,12 +10,27 @@ import json
 from pathlib import Path
 import struct
 import tempfile
+import queue
+import threading
+import sys
 import install_kit
 import install_entry
 from recovery_context import RecoveryContext,UID_BASE
 
 ROOT=Path(__file__).resolve().parents[2]
 PROBE_UID='B8EFB57613B198CA10834F0545435DBB'
+
+def power_held_gate(seconds):
+    if not sys.stdin.isatty():raise RuntimeError('Interactive terminal required for power-held confirmation')
+    responses=queue.Queue()
+    def receive():
+        try:responses.put(input('POWER HELD? type HELD and press Enter: '))
+        except BaseException as exc:responses.put(exc)
+    threading.Thread(target=receive,daemon=True).start()
+    try:answer=responses.get(timeout=seconds)
+    except queue.Empty:raise TimeoutError('No power-held confirmation; no RAM/Flash load')
+    if isinstance(answer,BaseException):raise RuntimeError('Power-held input unavailable') from answer
+    if answer.strip()!='HELD':raise ValueError('Expected exact HELD confirmation; no RAM/Flash load')
 
 def open_probe():
     from pyocd.core.helpers import ConnectHelper
@@ -70,10 +85,11 @@ def main(argv=None):
         (kit.folder/'checklist.json').write_text(json.dumps(checklist,indent=2)+'\n',encoding='utf8')
         print(json.dumps(checklist,indent=2));return 0
     if not args.arm:parser.error('Hardware operation requires --arm')
+    if not sys.stdin.isatty():parser.error('Hardware entry needs an interactive terminal; no reset attempted')
     if args.rehearse and args.approval:parser.error('Rehearsal cannot accept write approval')
     holder=[]
     def opener():
-        context=RecoveryContext(open_probe(),wait=args.press_window)
+        context=RecoveryContext(open_probe(),wait=args.press_window,ready_gate=lambda:power_held_gate(args.press_window))
         holder.append(context);return context
     result={'utc':datetime.now(timezone.utc).isoformat(),'mode':'rehearse' if args.rehearse else 'install' if args.install else 'recover'}
     try:

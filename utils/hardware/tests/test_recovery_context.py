@@ -50,9 +50,66 @@ def model_context(model):
     session=Mock()
     session.probe.is_reset_asserted.return_value=True
     session.probe.assert_reset=Mock(side_effect=lambda value:model.regs.update({c.DHCSR:0x30003}) if not value else None)
-    return RecoveryContext(session),session
+    return RecoveryContext(session,ready_gate=lambda:None),session
 
 class ContextTests(unittest.TestCase):
+    def test_system_identity_reads_wait_for_reset_release_and_caught_halt(self):
+        model=ResetRAM();context,session=model_context(model)
+        pins={'reset':False}
+        original_read=model.read32
+        def read(a):
+            if pins['reset'] and not 0xe000e000<=a<0xe0010000:
+                raise RuntimeError('System bus unavailable while NRST held')
+            return original_read(a)
+        model.read32=read
+        def reset_pin(value):
+            pins['reset']=value
+            if not value:model.regs[c.DHCSR]=0x30003
+        session.probe.assert_reset.side_effect=reset_pin
+        session.probe.is_reset_asserted.side_effect=lambda:pins['reset']
+        reader=(ROOT/'local/tx15-hardware/flash-info/flash-info.bin').read_bytes()
+        with patch('pyocd.coresight.minimal_mem_ap.MinimalMemAP',return_value=model),patch.object(c.time,'sleep'):
+            context.enter(SimpleNamespace(reader=reader,entry=0x240002c1,uid=UID))
+        self.assertTrue(context.report['uid_verified'])
+    def test_probe_port_selection_precedes_nrst_and_dp_connect_cannot_release_it(self):
+        model=ResetRAM();context,session=model_context(model)
+        pins={'reset':False,'connected':False}
+        def connect_port(*args):pins.update(reset=False,connected=True)
+        def reset_pin(value):
+            pins['reset']=value
+            if not value:model.regs[c.DHCSR]=0x30003
+        session.probe.connect.side_effect=connect_port
+        session.probe.assert_reset.side_effect=reset_pin
+        session.probe.is_reset_asserted.side_effect=lambda:pins['reset']
+        session.target.dp.connect.side_effect=lambda *args:None if pins['connected'] else connect_port()
+        reader=(ROOT/'local/tx15-hardware/flash-info/flash-info.bin').read_bytes()
+        with patch('pyocd.coresight.minimal_mem_ap.MinimalMemAP',return_value=model),patch.object(c.time,'sleep'):
+            context.enter(SimpleNamespace(reader=reader,entry=0x240002c1,uid=UID))
+        self.assertTrue(context.report['reset_before_catch'])
+        self.assertFalse(context.report['original_firmware_executed'])
+        session.probe.connect.assert_called_once()
+    def test_swd_connect_releasing_reset_is_detected_before_catch_or_ram_write(self):
+        model=ResetRAM();context,session=model_context(model)
+        session.probe.is_reset_asserted.side_effect=[True,False]
+        reader=(ROOT/'local/tx15-hardware/flash-info/flash-info.bin').read_bytes()
+        with patch('pyocd.coresight.minimal_mem_ap.MinimalMemAP',return_value=model):
+            with self.assertRaisesRegex(RuntimeError,'NRST no longer asserted'):
+                context.enter(SimpleNamespace(reader=reader,entry=0x240002c1,uid=UID))
+        self.assertFalse(model.writes)
+        self.assertFalse(context.report['reset_before_catch'])
+        self.assertIsNone(context.report['original_firmware_executed'])
+    def test_no_gate_or_failed_confirmation_never_releases_reset_or_accesses_ap(self):
+        reader=(ROOT/'local/tx15-hardware/flash-info/flash-info.bin').read_bytes()
+        kit=SimpleNamespace(reader=reader,entry=0x240002c1,uid=UID)
+        model=ResetRAM();context,session=model_context(model)
+        context.ready_gate=None
+        with self.assertRaises(RuntimeError):context.enter(kit)
+        session.probe.assert_reset.assert_not_called()
+        context.ready_gate=Mock(side_effect=TimeoutError('No human confirmation'))
+        with self.assertRaises(TimeoutError):context.enter(kit)
+        self.assertEqual(session.probe.assert_reset.call_args_list[-1].args,(True,))
+        session.target.dp.connect.assert_not_called()
+        self.assertFalse(model.writes)
     def test_entry_with_invalid_flash_vectors_finalizes_supply_before_ram_and_stays_halted(self):
         model=ResetRAM();context,session=model_context(model)
         reader=(ROOT/'local/tx15-hardware/flash-info/flash-info.bin').read_bytes()
@@ -72,7 +129,7 @@ class ContextTests(unittest.TestCase):
         reader=(ROOT/'local/tx15-hardware/flash-info/flash-info.bin').read_bytes()
         with patch('pyocd.coresight.minimal_mem_ap.MinimalMemAP',return_value=model):
             with self.assertRaises(RuntimeError):context.enter(SimpleNamespace(reader=reader,entry=0x240002c1,uid=UID))
-        self.assertFalse(model.writes)
+        self.assertEqual(model.writes,[(0xe000edfc,1),(c.DHCSR,0xa05f0001)])
     def test_bootstrap_allowlist_excludes_flash_commands_options_and_sdram(self):
         for addr in (0x08000000,0x90000000,0xd0000000,0x52002004,0x5200200c,0x52002018,0x52005020):
             self.assertFalse(write_allowed(addr,3816),hex(addr))
@@ -89,6 +146,13 @@ class ContextTests(unittest.TestCase):
         io=IO();c=RecoveryContext(None,None,io)
         c.hold()
         self.assertEqual(io.writes,[(0xe000edf0,0xa05f0003),(0xe000edfc,0)])
+    def test_cleanup_before_ap_acquired_does_not_claim_halted_or_release_reset(self):
+        context=RecoveryContext(session=Mock())
+        context.session.probe.assert_reset=Mock()
+        context.hold()
+        self.assertFalse(context.report['halt_verified'])
+        context.session.probe.assert_reset.assert_not_called()
+        self.assertFalse(context.report['writes'])
     def test_unfinalized_or_bypass_supply_prevents_all_ram_writes(self):
         class IO:
             def read32(self,a):return 1 if a==0x5802480c else 0
