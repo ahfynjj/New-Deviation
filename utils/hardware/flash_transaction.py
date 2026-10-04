@@ -143,7 +143,8 @@ def main():
     observed=validated_observation(json.loads(args.evidence.read_text(encoding='utf8')))
     manifest=plan.manifest()|dict(install_seal=plan.seal,recovery_seal=plan.recovery_seal,
         device_observation=observed,evidence_file=str(args.evidence.resolve()),
-        pending=['SWD erase/program hardware backend and recovery validation',
+        pending=['Reset/RAM recovery entry hardware rehearsal and device UID-bound frozen kit',
+                 'First physical erase/program and complete recovery verification',
                  'Fresh device/protection/content checks at actual installation',
                  'Human approval of exact persistent replacement',
                  'Power-off cold boot and power-button shutdown acceptance'])

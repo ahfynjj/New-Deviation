@@ -108,7 +108,7 @@ class Journal:
         if recovery:r['external_dirty']=r['internal_dirty']=False
         self._save(r)
 
-def execute(plan,backend_factory,action,authorization,path):
+def execute(plan,backend_factory,action,authorization,path,on_create=None):
     """Software coordinator, not a probe-opening or recovery-entry CLI.
 
     Caller must already hold a reviewed RAM context and explicit human approval.
@@ -117,6 +117,7 @@ def execute(plan,backend_factory,action,authorization,path):
     from flash_transaction import install,recover
     journal=Journal.create(path,plan,action,authorization)
     try:
+        if on_create is not None:on_create(journal)
         backend=backend_factory(journal)
         result=(install if action=='install' else recover)(plan,backend,authorization)
         journal.finish(result)

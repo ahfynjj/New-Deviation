@@ -189,9 +189,48 @@ python utils/hardware/run_native_chain.py --arm --flash-backend-check
 通过，用户确认原界面恢复。可选 `--press-window 300` 留5分钟按键窗口。
 41项相关软件检查通过。未发送擦写命令，后续不重复此项基础核对。
 
-仍需完成：失败安装后重新进入RAM恢复环境的入口、完整恢复读回与安装退出策略的
-台架验证，最终具体刷入确认清单。实际擦除/编程尚未实机验证；当前未写Flash，
-未获得永久刷入许可，未验证真实断电启动。
+失败启动恢复入口已完成代码，见下节；仍需完成该入口的台架演练、完整恢复读回与
+首次真实擦写验收。当前未写Flash、未获得永久刷入许可，未验证真实断电启动。
+
+## 首次安装与失败启动恢复入口（2026-10-04）
+
+`flash_install.py` 的默认行为只生成清单；`--identify` 仅在CPU运行状态读取MCU
+96位UID，不暂停/复位；`--prepare` 离线生成冻结kit，不覆盖已有目录。kit包含固定
+RF关闭启动/载荷镜像、原内部128KiB、原外部首1MiB、已验证RAM初始化ELF/BIN；
+每次使用重新校验摘要。读包无需原编译输出和完整16MiB外部备份，仍需本版本
+Python/pyOCD工具代码；建议把kit和代码另存到可恢复位置。
+
+`--rehearse` 与实际安装/恢复共用复位捕获和RAM入口：先断言NRST，等待用户按住
+电源供电，设置复位捕获后释放NRST、及时拉高PH12，再提示松开按键。入口不读取
+原Flash的SP/PC、不要求原系统配置SDRAM；先检查UID/核心/复位状态和LDO配置，
+finalize SCUEN后才写AXI RAM。原邮箱清零，双快照证明当次运行，再暂停CPU。
+只读演练传输允许列表禁止Flash解锁/擦写；只比较原内外各64B，不替代完整检查。
+
+所有成功/失败出口均不执行旧PC，不发自动复位；退出先读回CPU暂停状态才清除
+复位捕获。USB丢失导致无法确认暂停时，日志如实记录，不宣称停机成功。
+实际安装/恢复失败须先完成恢复后才正常开机；成功或只读演练结束后，按日志提示
+断开调试器USB、断开遥控器电池5秒，再接回电池并正常开机。
+
+安装/恢复许可绑定具体文件、范围和MCU UID；许可字段本身不是人类同意的证明。
+代理或操作者只能在用户明确确认清单后传入。两次工具运行由操作系统探针锁互斥，
+活动日志指针也在第一次Flash命令之前持久化。安装存在未恢复/已安装记录时拒绝
+重复执行；显式恢复允许用本机UID绑定的已验证原备份修复丢失或损坏的活动指针。
+旧事务文件保留，恢复新建记录，外部1MiB恢复/读回先于内部128KiB恢复/读回。
+
+```powershell
+$py = 'D:\DEVI移植\tools\pyocd-venv\Scripts\python.exe'
+& $py utils/hardware/flash_install.py --identify
+# 使用上条输出的device_uid；本条不连接设备
+& $py utils/hardware/flash_install.py --prepare --device-uid <96位UID的24位小写hex>
+& $py utils/hardware/flash_install.py
+# 用户可以配合、脚本ARMED后才提示按住电源；不擦写Flash
+& $py utils/hardware/flash_install.py --arm --rehearse --press-window 300
+```
+
+实际写入命令为 `--arm --install --approval <清单中的install_approval>`；恢复为
+`--arm --recover --approval <recovery_approval>`。当前不执行这两条命令，也未取得
+实际擦写/失败Flash向量情况下的物理恢复证明。**实机演练待确认开机**：首次只读
+UID读取未收到SWD ACK，没有暂停、复位或Flash命令，尚未生成实机UID冻结包。
 
 ## 下一批
 
