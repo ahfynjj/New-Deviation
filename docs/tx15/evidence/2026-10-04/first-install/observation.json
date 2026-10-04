@@ -64,9 +64,15 @@
   "internal_program_bytes": 6880,
   "internal_full_readback_passed": true,
   "rf_enabled": false,
-  "independent_power_cycle_acceptance": "pending-user-observation",
-  "shutdown_restart_acceptance": "pending",
+  "independent_power_cycle_acceptance": "passed-user-confirmed",
+  "independent_power_cycle_user_report": "\u5f00\u673a\u4e86 devi\u7cfb\u7edf",
+  "independent_power_cycle_acceptance_date": "2026-10-04",
+  "shutdown_restart_acceptance": "passed-user-confirmed",
   "physical_original_recovery_write_tested": false,
   "usb_update_available": false,
-  "models_calibration_persistent": false
+  "models_calibration_persistent": false,
+  "menu_six_inputs_acceptance": "passed-user-confirmed",
+  "standalone_acceptance_user_report": "\u6240\u6709\u90fd\u6b63\u5e38\uff0c\u6ca1\u6709\u95ea\u5c4f\u4e86",
+  "visible_flicker_after_persistent_boot": "not-observed-by-user",
+  "display_root_cause_identified": false
 }
