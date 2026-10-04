@@ -57,7 +57,22 @@ def restore_app_peripherals(read,write,analog,display,report,flash_info_only=Fal
     report['restored_analog']=analog_session.restore(read,write,analog)
     report['restored_display']=display_session.restore(read,write,display)
 
-def run(ap, dp, result, display_diagnostic=False, backlight_diagnostic=False, flash_info_only=False):
+def capture_flash_backend_check(ap,dp,report,prefix):
+    """Defer even host cancellation so the enclosing finally can restore CPU."""
+    try:
+        import swd_flash
+        from flash_transaction import load_bundle
+        plan=load_bundle(REPO)
+        report['flash_backend']=swd_flash.read_only_check(ap,dp,
+            report['flash_info'],prefix,plan.original_internal[:64])
+        print('SWD FLASH BACKEND READ-ONLY VERIFIED',report['flash_backend'],flush=True)
+    except BaseException as exc:
+        report['flash_backend_error']=type(exc).__name__+': '+str(exc)
+        return exc
+    return None
+
+def run(ap, dp, result, display_diagnostic=False, backlight_diagnostic=False, flash_info_only=False, flash_backend_check=False):
+    if flash_backend_check and not flash_info_only:raise ValueError('Backend check requires Flash-info mode')
     if backlight_diagnostic:display_diagnostic=True
     if flash_info_only:
         if display_diagnostic:raise ValueError('Flash-info and display modes cannot be combined')
@@ -71,6 +86,7 @@ def run(ap, dp, result, display_diagnostic=False, backlight_diagnostic=False, fl
     original = None
     changed = False
     capture_cleanup_error = None
+    backend_check_error = None
 
     def write(address, value):
         if address not in CONTROL_ADDRS and (not allowed_ram_word(address, len(binary))) and address != 0x58024818:
@@ -278,6 +294,11 @@ def run(ap, dp, result, display_diagnostic=False, backlight_diagnostic=False, fl
                     raise RuntimeError('Display/PWM recovery incomplete; keep CPU halted for manual power cycle')
                 report['fault_before_cleanup']={hex(a):hex(ap.read32(a)) for a in (0xe000ed04,0xe000ed28,0xe000ed2c)}
                 boot_chain.quiesce_thread(ap.read32,write,reg_write,lambda:wait_bit(1<<17),time.sleep)
+                if flash_backend_check and report.get('live') and report.get('flash_info'):
+                    # Check only short prefixes here, not a full-install proof.
+                    # Adapter has its own no-WREN/no-key allowlist. Always run
+                    # ordinary controller/clock/context restoration afterwards.
+                    backend_check_error=capture_flash_backend_check(ap,dp,report,prefix)
                 write(0xe000ed28, ap.read32(0xe000ed28))
                 write(0xe000ed2c, ap.read32(0xe000ed2c))
                 restore_app_peripherals(ap.read32,write,original_analog,original_display,report,flash_info_only)
@@ -296,6 +317,8 @@ def run(ap, dp, result, display_diagnostic=False, backlight_diagnostic=False, fl
         report['recovery_errors'] = recovery_errors
         if recovery_errors:
             raise RuntimeError('; '.join(recovery_errors))
+    if backend_check_error is not None:
+        raise RuntimeError('Read-only backend check failed: '+str(backend_check_error)) from backend_check_error
 if __name__ == '__main__':
     image, layout = validate_image()
     for addr in (0x8000000, 0x90000000, 0x2400e080, 0x2400f000, 0x24000001):

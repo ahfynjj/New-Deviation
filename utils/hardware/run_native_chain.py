@@ -14,10 +14,14 @@ from pyocd.coresight.minimal_mem_ap import MinimalMemAP
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--arm', action='store_true')
+parser.add_argument('--press-window',type=int,default=120,help='Power-key wait seconds (60..600); no reset/writes before detected press')
 parser.add_argument('--display-diagnostic',action='store_true',help='Read LCD state and compare 15-second CPU pause; no LCD configuration writes')
 parser.add_argument('--backlight-diagnostic',action='store_true',help='Fixed 13/101 PWM only during red-strip pause; then restore TIM1/PA10')
 parser.add_argument('--flash-info',action='store_true',help='Small RAM status/SFDP reader only; no application or Flash writes')
+parser.add_argument('--flash-backend-check',action='store_true',help='Read-only SWD Flash backend check; implies --flash-info, no WREN or FLASH keys')
 args = parser.parse_args()
+if not 60<=args.press_window<=600:parser.error('Press window must be 60..600 seconds')
+if args.flash_backend_check:args.flash_info=True
 if args.flash_info and (args.display_diagnostic or args.backlight_diagnostic):parser.error('Flash-info is a separate mode')
 if not args.arm: parser.error('Hardware operation requires --arm')
 args.ram_probe=True
@@ -25,6 +29,9 @@ import chain_ram_session as ram_session
 if args.flash_info:
     import flash_info_bundle
     flash_info_bundle.validate(ram_session.REPO)
+    if args.flash_backend_check:
+        from flash_transaction import load_bundle
+        load_bundle(ram_session.REPO) # Validate candidates/backups before opening probe.
 else:ram_session.validate_image()  # Pin all images and backup before opening probe.
 
 DHCSR, DEMCR = 0xe000edf0, 0xe000edfc
@@ -90,8 +97,8 @@ try:
         raise RuntimeError('Button already pressed; stop')
     saved = {addr: ap.read32(addr) for addr in (DEMCR, DBG3, DBG4)}
     r['saved'] = {hex(k): hex(v) for k, v in saved.items()}
-    print('ARMED: press and hold power about 2 seconds; waiting up to 120 seconds.', flush=True)
-    deadline = time.monotonic() + 120
+    print(f'ARMED: press and hold power about 2 seconds; waiting up to {args.press_window} seconds.', flush=True)
+    deadline = time.monotonic() + args.press_window
     while ap.read32(AIDR) & 0x10:
         if time.monotonic() > deadline:
             raise TimeoutError('No press; no reset or target writes attempted')
@@ -149,7 +156,8 @@ try:
     r['status'] = 'halt_and_power_hold_verified'
     print('HALT AND POWER HOLD VERIFIED', r['after_button_release'], flush=True)
     if args.ram_probe:
-        ram_session.run(ap, dp, r,display_diagnostic=args.display_diagnostic,backlight_diagnostic=args.backlight_diagnostic,flash_info_only=args.flash_info)
+        ram_session.run(ap, dp, r,display_diagnostic=args.display_diagnostic,backlight_diagnostic=args.backlight_diagnostic,
+                        flash_info_only=args.flash_info,flash_backend_check=args.flash_backend_check)
         r['status'] = 'ram_live_verified'
 except Exception as exc:
     r['status'] = 'error'

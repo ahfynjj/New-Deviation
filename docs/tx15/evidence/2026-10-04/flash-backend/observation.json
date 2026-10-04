@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "source_log": "local/hardware-session/native-chain-20261004-122319.json",
+  "mode": "read-only-swd-backend",
+  "reader_elf_sha256": "7df17ec5959416d7ce527600309db744af76ded319d88ba5b12a7aa54a3d8265",
+  "reader_bin_sha256": "d097c3f89118eab9576a27eca2d8d7a6df8c9d868ff71063344889085b8f00ad",
+  "backend": {
+    "jedec_id": "0xc84018",
+    "status_hex": "000220",
+    "geometry": {
+      "capacity_bytes": 16777216,
+      "page_bytes": 256,
+      "address_bytes": 3,
+      "erase_types": [
+        [
+          4096,
+          32
+        ],
+        [
+          32768,
+          82
+        ],
+        [
+          65536,
+          216
+        ]
+      ],
+      "bfpt_revision": [
+        1,
+        6
+      ],
+      "bfpt_dwords": 16,
+      "sfdp_sha256": "20a4bebab35f8abb7abb240a2e92180d275422525d9638cbb8f039b1ec859e1c"
+    },
+    "conservative_status_clear": true,
+    "exact_part_suffix": null,
+    "flash_write_authorized": false,
+    "physical_write_recovery_tested": false,
+    "backend_check": "read-only-prefixes-verified",
+    "controller_setup_writes": 29,
+    "flash_mutation_commands": 0,
+    "internal_prefix_bytes": 64,
+    "external_prefix_bytes": 64
+  },
+  "mailbox_first": {
+    "ticks": 78,
+    "loops": 42743
+  },
+  "mailbox_second": {
+    "ticks": 1252,
+    "loops": 668354
+  },
+  "context_restored": true,
+  "recovery_errors": [],
+  "cleanup_errors": [],
+  "user_original_screen_confirmed": true,
+  "flash_write_authorized": false,
+  "physical_programming_tested": false
+}

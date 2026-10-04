@@ -86,8 +86,10 @@ def install(plan,backend,authorization):
         _external(backend,plan.payload,plan.erase_bytes)
         if backend.read_external(plan.erase_bytes,1048576-plan.erase_bytes)!=plan.original_external[plan.erase_bytes:]:
             raise RuntimeError('External bytes outside erase range changed')
+        if hasattr(backend,'verified_stage'):backend.verified_stage('external')
         internal_dirty=True  # mark BEFORE issuing a potentially interrupted erase
         _internal(backend,plan.boot)
+        if hasattr(backend,'verified_stage'):backend.verified_stage('internal')
     except BaseException as error:
         # Ctrl+C/SystemExit after an erase is also a partial replacement.
         raise WriteFailure(str(error),True,internal_dirty) from error
@@ -98,7 +100,9 @@ def recover(plan,backend,authorization):
     backend.check_device()
     try:
         _external(backend,plan.original_external,1048576)
+        if hasattr(backend,'verified_stage'):backend.verified_stage('external')
         _internal(backend,plan.original_internal)
+        if hasattr(backend,'verified_stage'):backend.verified_stage('internal')
     except BaseException as error:
         # Recovery begins from an unknown/partial image. It is unsafe even if
         # this attempt failed before touching the already-damaged internal bank.

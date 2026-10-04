@@ -6,6 +6,18 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import chain_ram_session as s
 
 class RecoveryScopeTests(unittest.TestCase):
+    def test_backend_check_interrupt_is_deferred_until_ordinary_cleanup(self):
+        import swd_flash
+        import flash_transaction
+        for error in (KeyboardInterrupt('cancel'),SystemExit('exit'),RuntimeError('USB read error')):
+            report={'flash_info':{}}
+            with patch.object(flash_transaction,'load_bundle',return_value=type('Plan',(),{'original_internal':b'I'*131072})()),\
+                 patch.object(swd_flash,'read_only_check',side_effect=error):
+                captured=s.capture_flash_backend_check(None,None,report,b'X'*64)
+            self.assertIs(captured,error)
+            self.assertIn('flash_backend_error',report)
+            self.assertNotIn('flash_backend',report)
+
     def test_flash_reader_never_accesses_uninitialized_ltdc_or_adc_on_cleanup(self):
         # With PLL3 stopped, querying LTDC can leave this board's SWD in WAIT.
         def refuse(*args):raise AssertionError('Unowned application peripheral accessed')
