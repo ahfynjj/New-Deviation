@@ -3,6 +3,10 @@
 #include "../board/power.h"
 #include "cold_start.h"
 #include "qspi.h"
+#ifdef TX15_FLASH_INFO
+#include "flash_info.h"
+volatile struct { uint32_t magic,result; struct tx15_flash_info info; } flash_info_report;
+#endif
 #define R(a) (*(volatile uint32_t *)(a))
 volatile struct probe_report probe_report __attribute__((section(".mailbox"),aligned(8)));
 struct boot_qspi_report { uint32_t result,jedec_id; uint8_t header[64]; };
@@ -42,6 +46,20 @@ void Probe_Main(void) {
         if (qspi==TX15_QSPI_OK) for(unsigned i=0;i<64;i++)boot_qspi_report.header[i]=header[i];
     }
     boot_qspi_report.result=qspi;
+#ifdef TX15_FLASH_INFO
+    if(qspi==TX15_QSPI_OK) {
+        struct tx15_flash_info info;
+        qspi=tx15_flash_info_read(id,&info,1000000u);
+        flash_info_report.result=qspi;
+        if(qspi==TX15_QSPI_OK) {
+            const uint8_t *from=(const uint8_t *)&info;
+            volatile uint8_t *to=(volatile uint8_t *)&flash_info_report.info;
+            for(unsigned i=0;i<sizeof(info);i++)to[i]=from[i];
+            __asm volatile("dsb":::"memory");
+            flash_info_report.magic=0x46494e31u;
+        }
+    }
+#endif
     tx15_boot_qspi_stop(); // no QSPI ownership left for original reset-entry recovery
     if(qspi!=TX15_QSPI_OK) {probe_report.error=256u|((uint32_t)qspi<<16);probe_report.state=PROBE_ERROR;stop();}
     R(0xe000e010u)=0;R(0xe000e014u)=TX15_PLL_CORE_HZ/1000u-1;R(0xe000e018u)=0;

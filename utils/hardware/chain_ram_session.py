@@ -48,12 +48,26 @@ def verify_sdram_board(ap):
             if pins & 1 << pin and (mode >> pin * 2 & 3 != 2 or af[pin // 8] >> pin % 8 * 4 & 15 != 12):
                 raise RuntimeError(f'SDRAM GPIO mismatch port={p + 2}, pin={pin}')
 
-def run(ap, dp, result, display_diagnostic=False, backlight_diagnostic=False):
+def restore_app_peripherals(read,write,analog,display,report,flash_info_only=False):
+    if flash_info_only:
+        # This reader never starts PLL3/LTDC or ADC. Do not try to restore an
+        # untouched LCD by accessing its registers with the pixel clock off.
+        report['application_peripherals_untouched']=True
+        return
+    report['restored_analog']=analog_session.restore(read,write,analog)
+    report['restored_display']=display_session.restore(read,write,display)
+
+def run(ap, dp, result, display_diagnostic=False, backlight_diagnostic=False, flash_info_only=False):
     if backlight_diagnostic:display_diagnostic=True
-    binary, layout, payload, prefix = boot_chain.validate_bundle(REPO)
+    if flash_info_only:
+        if display_diagnostic:raise ValueError('Flash-info and display modes cannot be combined')
+        import flash_info_bundle
+        binary,layout,prefix=flash_info_bundle.validate(REPO)
+    else:
+        binary, layout, payload, prefix = boot_chain.validate_bundle(REPO)
     out = REPO / 'local' / 'ram-runs' / datetime.now().strftime('%Y%m%d-%H%M%S')
     out.mkdir(parents=True, exist_ok=False)
-    result['ram_run'] = report = {'folder': str(out), 'elf_sha256': EXPECTED_ELF, 'bin_sha256': EXPECTED_BIN, 'context_restored': False}
+    result['ram_run'] = report = {'folder': str(out), 'elf_sha256': flash_info_bundle.ELF_SHA if flash_info_only else EXPECTED_ELF, 'bin_sha256': flash_info_bundle.BIN_SHA if flash_info_only else EXPECTED_BIN, 'context_restored': False}
     original = None
     changed = False
     capture_cleanup_error = None
@@ -149,83 +163,104 @@ def run(ap, dp, result, display_diagnostic=False, backlight_diagnostic=False):
         reg_write(16, 0x1000000)
         reg_write(15, int(layout['entry'], 16))
         write(DHCSR, 0xa05f0001)
-        deadline = time.monotonic() + 20
-        while ap.read32(boot_chain.CONTROL) != boot_chain.READY:
-            if ap.read32(0x2400e008) in (4, 5):
-                raise RuntimeError('Loader initialization fault: ' + str(read_bytes(0x2400e000, 128).hex()))
-            if time.monotonic() > deadline:
-                raise TimeoutError('Loader source gate timeout')
-            time.sleep(0.05)
-        write(DHCSR, 0xa05f0003)
-        wait_bit(1 << 17)
-        if ap.read32(0xe000ed04) & 511:
-            raise RuntimeError('Loader source wait not in thread mode')
-        control = read_bytes(boot_chain.CONTROL, 80)
-        ready, size, gate, jedec = struct.unpack_from('<4I', control)
-        if (ready, size, gate, jedec) != (boot_chain.READY, 0, 0, 0xc84018) or control[16:] != prefix:
-            raise RuntimeError('QSPI/original-prefix/source-gate validation failed')
-        report['qspi'] = {'jedec': hex(jedec), 'original_prefix_verified': True}
-        report['source_loaded_bytes'] = boot_chain.upload(ap, dp, payload)
-        report['source_sha256'] = boot_chain.PAYLOAD_SHA
-        report['source_readback_verified'] = True
-        write(boot_chain.CONTROL + 4, len(payload))
-        write(boot_chain.CONTROL + 8, boot_chain.GO)
-        if ap.read32(boot_chain.CONTROL + 4) != len(payload) or ap.read32(boot_chain.CONTROL + 8) != boot_chain.GO:
-            raise RuntimeError('Source gate readback mismatch')
-        write(DHCSR, 0xa05f0001)
-        deadline = time.monotonic() + 20
-        while ap.read32(0x2400e004) != 10 or ap.read32(0x2400e008) in (0, 1, 2):
-            if ap.read32(0x2400e008) in (4, 5):
-                raise RuntimeError('Native boot/app startup failed: ' + read_bytes(0x2400e000, 128).hex())
-            if time.monotonic() > deadline:
-                raise TimeoutError('Native boot/app startup timeout')
-            time.sleep(0.05)
-        print('NATIVE CHAIN APP READY: '+('display flicker comparison, 70 seconds.' if display_diagnostic else
-            '75 seconds. Test wheel/ENTER/short EXIT and six analog inputs.')+' Do not press POWER. RF off; no Flash writes.', flush=True)
-        first = read_bytes(0x2400e000, 128)
-        (out / 'mailbox-1.bin').write_bytes(first)
-        report['first'] = decode(first)
-        if ap.read32(0x58020414)&(1<<13):raise RuntimeError('Internal RF power unexpectedly on')
-        report['internal_rf_off']=True
-        report['pll_clock_first'] = {hex(a): hex(v) for a, v in capture_pll128_clock(ap.read32).items()}
-        if display_diagnostic:
-            import display_diagnostics
-            # Incrementally preserve evidence even if a later capture fails.
-            report['display_samples']=[]
-            overlay=display_diagnostics.FrameOverlay(ap,dp)
-            trial=display_diagnostics.BacklightTrial(ap.read32,write) if backlight_diagnostic else None
-            contrast=display_diagnostics.PausedContrast(overlay,trial) if trial else overlay
-            try:
-                rows=display_diagnostics.observe(ap.read32,write,lambda:wait_bit(1<<17),time.sleep,time.monotonic,
-                    rows=report['display_samples'],overlay=contrast)
-            finally:
-                report['display_overlay_restored']=overlay.restored
-                if trial:
-                    report['backlight_restored']=trial.restored
-                    if trial.saved is not None:
-                        report['backlight_recovery_failed']=True
-                if overlay.original is not None:report['display_recovery_failed']=True
-            report['display_overlay_restored']=overlay.restored
-            report['display_samples']=rows
-            report['display_summary']=display_diagnostics.summarize(rows)
-            print('DISPLAY SUMMARY',report['display_summary'],flush=True)
+        if flash_info_only:
+            deadline=time.monotonic()+20
+            while ap.read32(0x2400e008) in (0,1,2):
+                if time.monotonic()>deadline:raise TimeoutError('Flash-info startup timeout')
+                time.sleep(0.05)
+            report['first']=boot_session.decode(read_bytes(0x2400e000,128))
+            if report['first']['state']!=3 or report['first']['error']:
+                raise RuntimeError('Flash-info RAM reader failed: '+str(report['first']))
+            qspi=read_bytes(flash_info_bundle.QSPI_ADDR,72)
+            report['qspi']=boot_session.decode_qspi(qspi,prefix)
+            data=read_bytes(flash_info_bundle.INFO_ADDR,flash_info_bundle.REPORT_BYTES)
+            (out/'flash-info.bin').write_bytes(data)
+            # Preserve raw evidence even if an unexpected SFDP layout is refused.
+            report['flash_info_raw_hex']=data.hex()
+            report['flash_info']=flash_info_bundle.decode(data,int(report['qspi']['jedec_id'],16))
+            print('READ-ONLY FLASH INFO',report['flash_info'],flush=True)
+            time.sleep(0.5)
+            report['second']=boot_session.decode(read_bytes(0x2400e000,128))
+            report['live']=boot_session.is_live(report['second'],report['first'])
+            report['power_flash_after']={hex(a):hex(ap.read32(a)) for a in safety}
         else:
-            # Short waits keep fault detection and host progress responsive.
-            deadline=time.monotonic()+75
-            while time.monotonic()<deadline:
-                if ap.read32(0x2400e008)!=3:raise RuntimeError('Native application left running state')
-                time.sleep(0.5)
-        second = read_bytes(0x2400e000, 128)
-        (out / 'mailbox-2.bin').write_bytes(second)
-        report['second'] = decode(second)
-        report['pll_clock_second'] = {hex(a): hex(v) for a, v in capture_pll128_clock(ap.read32).items()}
-        report['power_flash_after'] = {hex(a): hex(ap.read32(a)) for a in safety}
+            deadline = time.monotonic() + 20
+            while ap.read32(boot_chain.CONTROL) != boot_chain.READY:
+                if ap.read32(0x2400e008) in (4, 5):
+                    raise RuntimeError('Loader initialization fault: ' + str(read_bytes(0x2400e000, 128).hex()))
+                if time.monotonic() > deadline:
+                    raise TimeoutError('Loader source gate timeout')
+                time.sleep(0.05)
+            write(DHCSR, 0xa05f0003)
+            wait_bit(1 << 17)
+            if ap.read32(0xe000ed04) & 511:
+                raise RuntimeError('Loader source wait not in thread mode')
+            control = read_bytes(boot_chain.CONTROL, 80)
+            ready, size, gate, jedec = struct.unpack_from('<4I', control)
+            if (ready, size, gate, jedec) != (boot_chain.READY, 0, 0, 0xc84018) or control[16:] != prefix:
+                raise RuntimeError('QSPI/original-prefix/source-gate validation failed')
+            report['qspi'] = {'jedec': hex(jedec), 'original_prefix_verified': True}
+            report['source_loaded_bytes'] = boot_chain.upload(ap, dp, payload)
+            report['source_sha256'] = boot_chain.PAYLOAD_SHA
+            report['source_readback_verified'] = True
+            write(boot_chain.CONTROL + 4, len(payload))
+            write(boot_chain.CONTROL + 8, boot_chain.GO)
+            if ap.read32(boot_chain.CONTROL + 4) != len(payload) or ap.read32(boot_chain.CONTROL + 8) != boot_chain.GO:
+                raise RuntimeError('Source gate readback mismatch')
+            write(DHCSR, 0xa05f0001)
+            deadline = time.monotonic() + 20
+            while ap.read32(0x2400e004) != 10 or ap.read32(0x2400e008) in (0, 1, 2):
+                if ap.read32(0x2400e008) in (4, 5):
+                    raise RuntimeError('Native boot/app startup failed: ' + read_bytes(0x2400e000, 128).hex())
+                if time.monotonic() > deadline:
+                    raise TimeoutError('Native boot/app startup timeout')
+                time.sleep(0.05)
+            print('NATIVE CHAIN APP READY: '+('display flicker comparison, 70 seconds.' if display_diagnostic else
+                '75 seconds. Test wheel/ENTER/short EXIT and six analog inputs.')+' Do not press POWER. RF off; no Flash writes.', flush=True)
+            first = read_bytes(0x2400e000, 128)
+            (out / 'mailbox-1.bin').write_bytes(first)
+            report['first'] = decode(first)
+            if ap.read32(0x58020414)&(1<<13):raise RuntimeError('Internal RF power unexpectedly on')
+            report['internal_rf_off']=True
+            report['pll_clock_first'] = {hex(a): hex(v) for a, v in capture_pll128_clock(ap.read32).items()}
+            if display_diagnostic:
+                import display_diagnostics
+                # Incrementally preserve evidence even if a later capture fails.
+                report['display_samples']=[]
+                overlay=display_diagnostics.FrameOverlay(ap,dp)
+                trial=display_diagnostics.BacklightTrial(ap.read32,write) if backlight_diagnostic else None
+                contrast=display_diagnostics.PausedContrast(overlay,trial) if trial else overlay
+                try:
+                    rows=display_diagnostics.observe(ap.read32,write,lambda:wait_bit(1<<17),time.sleep,time.monotonic,
+                        rows=report['display_samples'],overlay=contrast)
+                finally:
+                    report['display_overlay_restored']=overlay.restored
+                    if trial:
+                        report['backlight_restored']=trial.restored
+                        if trial.saved is not None:
+                            report['backlight_recovery_failed']=True
+                    if overlay.original is not None:report['display_recovery_failed']=True
+                report['display_overlay_restored']=overlay.restored
+                report['display_samples']=rows
+                report['display_summary']=display_diagnostics.summarize(rows)
+                print('DISPLAY SUMMARY',report['display_summary'],flush=True)
+            else:
+                # Short waits keep fault detection and host progress responsive.
+                deadline=time.monotonic()+75
+                while time.monotonic()<deadline:
+                    if ap.read32(0x2400e008)!=3:raise RuntimeError('Native application left running state')
+                    time.sleep(0.5)
+            second = read_bytes(0x2400e000, 128)
+            (out / 'mailbox-2.bin').write_bytes(second)
+            report['second'] = decode(second)
+            report['pll_clock_second'] = {hex(a): hex(v) for a, v in capture_pll128_clock(ap.read32).items()}
+            report['power_flash_after'] = {hex(a): hex(ap.read32(a)) for a in safety}
         expected_power = {a: v for a, v in safety.items()}
         for a in (0x58024804, 0x58024818):
             expected_power[a] = expected_power[a] & ~0xc000 | 0xc000
         if report['power_flash_after'] != {hex(a): hex(v) for a, v in expected_power.items()}:
             raise RuntimeError('Unexpected power/Flash register change')
-        report['live'] = is_live(report['second'], report['first'])
+        if not flash_info_only:report['live'] = is_live(report['second'], report['first'])
         report['dhcsr_running'] = hex(ap.read32(DHCSR))
         print('RAM MAILBOX FIRST', report['first'], flush=True)
         print('RAM MAILBOX SECOND', report['second'], flush=True)
@@ -245,8 +280,7 @@ def run(ap, dp, result, display_diagnostic=False, backlight_diagnostic=False):
                 boot_chain.quiesce_thread(ap.read32,write,reg_write,lambda:wait_bit(1<<17),time.sleep)
                 write(0xe000ed28, ap.read32(0xe000ed28))
                 write(0xe000ed2c, ap.read32(0xe000ed2c))
-                report['restored_analog'] = analog_session.restore(ap.read32, write, original_analog)
-                report['restored_display'] = display_session.restore(ap.read32, write, original_display)
+                restore_app_peripherals(ap.read32,write,original_analog,original_display,report,flash_info_only)
                 report['restored_qspi'] = boot_session.restore(ap.read32, write, original_qspi)
                 report['restored_sdram'] = restore_sdram_reset(ap.read32, write, original_sdram)
                 report['restored_clock'] = {hex(a): hex(v) for a, v in restore_pll_clock(ap.read32, write, original_clock).items()}

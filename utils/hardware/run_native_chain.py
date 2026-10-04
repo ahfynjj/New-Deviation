@@ -16,11 +16,16 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--arm', action='store_true')
 parser.add_argument('--display-diagnostic',action='store_true',help='Read LCD state and compare 15-second CPU pause; no LCD configuration writes')
 parser.add_argument('--backlight-diagnostic',action='store_true',help='Fixed 13/101 PWM only during red-strip pause; then restore TIM1/PA10')
+parser.add_argument('--flash-info',action='store_true',help='Small RAM status/SFDP reader only; no application or Flash writes')
 args = parser.parse_args()
+if args.flash_info and (args.display_diagnostic or args.backlight_diagnostic):parser.error('Flash-info is a separate mode')
 if not args.arm: parser.error('Hardware operation requires --arm')
 args.ram_probe=True
 import chain_ram_session as ram_session
-ram_session.validate_image()  # Pin all images and backup before opening probe.
+if args.flash_info:
+    import flash_info_bundle
+    flash_info_bundle.validate(ram_session.REPO)
+else:ram_session.validate_image()  # Pin all images and backup before opening probe.
 
 DHCSR, DEMCR = 0xe000edf0, 0xe000edfc
 DBG3, DBG4 = 0x5c001034, 0x5c001054
@@ -144,7 +149,7 @@ try:
     r['status'] = 'halt_and_power_hold_verified'
     print('HALT AND POWER HOLD VERIFIED', r['after_button_release'], flush=True)
     if args.ram_probe:
-        ram_session.run(ap, dp, r,display_diagnostic=args.display_diagnostic,backlight_diagnostic=args.backlight_diagnostic)
+        ram_session.run(ap, dp, r,display_diagnostic=args.display_diagnostic,backlight_diagnostic=args.backlight_diagnostic,flash_info_only=args.flash_info)
         r['status'] = 'ram_live_verified'
 except Exception as exc:
     r['status'] = 'error'
