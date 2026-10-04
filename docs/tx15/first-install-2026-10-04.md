@@ -1,8 +1,9 @@
 # TX15 MAX 首次 New Deviation 独立安装清单
 
-状态：**等待用户明确同意首次持久写入**。清单和摘要不等于写入许可。
-2026-10-04：RAM完整启动链及恢复入口只读实机通过；真实Flash擦写、恢复写入、
-New Deviation断电启动仍待首次安装验收。闪屏按用户要求后补。
+状态：**首次实际擦写与两区完整读回通过，等待脱离调试器断电启动验收**。
+2026-10-04：原始内部128KiB、外部首1MiB完整核对后，实际外部擦除/编程/读回、
+未改动尾部比较及内部擦除/编程/完整读回全部通过。恢复写入未执行，冷启动另行验收。
+闪屏按用户要求后补；授权记录在本地 `human-approval-20261004T083634Z.json`。
 
 ## 本次安装结果与范围
 
@@ -34,8 +35,8 @@ New Deviation断电启动仍待首次安装验收。闪屏按用户要求后补�
 另存整个kit、完整备份及本仓库工具代码到另一存储位置可离线恢复。
 
 已打包本次冻结kit和Python工具源代码：
-`local/tx15-hardware/install/recovery-kit-20261004.zip`，SHA256
-`c1d3bc36a3f532d0ee29f872e4ec38e853b2f05e2226ac355ac811db84928563`。
+`local/tx15-hardware/install/recovery-kit-20261004-bulk16.zip`，SHA256
+`a477850769cce5cce15996c93e680320e680a2583ddf96a546c7394d747ffaf7`。
 已检查ZIP完整性、六个固定文件摘要，并解压到独立目录成功运行离线清单CLI。
 压缩包不含Python/pyOCD运行环境；这台电脑使用上方已安装环境，异机需另备。
 此项只是恢复包软件/文件验证，不等于真实擦写恢复测试。
@@ -64,13 +65,13 @@ $py = 'D:\DEVI移植\tools\pyocd-venv\Scripts\python.exe'
 首次安装命令，**仅在用户明确同意本清单后执行**：
 
 ```powershell
-& $py utils/hardware/flash_install.py --arm --install --approval 4283f1eb9511a9d646f4215e265dc6e3c0a6bbb292fe4c6fbeefec02dc7c553d --press-window 300
+& $py utils/hardware/flash_install.py --arm --install --approval 4283f1eb9511a9d646f4215e265dc6e3c0a6bbb292fe4c6fbeefec02dc7c553d --press-window 300 --swd-frequency 500000
 ```
 
 恢复原系统命令，发生首次擦写失败或明确要求恢复后使用：
 
 ```powershell
-& $py utils/hardware/flash_install.py --arm --recover --approval 9f4446002472ac11203ce63f56fc4f7c06a77248cffe1491b929d0deb887c289 --press-window 300
+& $py utils/hardware/flash_install.py --arm --recover --approval 9f4446002472ac11203ce63f56fc4f7c06a77248cffe1491b929d0deb887c289 --press-window 300 --swd-frequency 500000
 ```
 
 两条命令共用已验收RAM入口：看到 `ARMED UNDER RESET` 后按住电源**不要松开**，
@@ -95,4 +96,28 @@ Flash比RAM装载慢，保持电池电量和USB连接，等工具明确完成，
 只读几何/两区64B原前缀、最终暂停通过，Flash破坏性命令0；用户断开调试器/电池后
 开机确认原界面恢复。精简结果在 [observation.json](evidence/2026-10-04/recovery-entry/observation.json)。
 
-这些证据证明入口和读取路径；首次写入及真实原生断电启动仍必须现场验收。
+### 首次安装前的读取加速
+
+旧逐字SWD读取导致完整核对耗时过长。确认事务sequence=0、两区dirty=false后，
+停止旧进程并核实CPU仍暂停，未发送Flash擦写命令。新增内部连续AP读取，跨1KiB
+TAR边界拆分；QSPI固定DR地址、每次最多16B，并在异常后恢复AP递增模式。
+实机FIFO在30B处停顿，因此不等待32B；对应失败回归先复现再修复。
+
+44项相关检查通过。500kHz实机只读完整比较内部128KiB和外部首1MiB，均与原备份
+一致，耗时分别2.547s、102.969s，退出暂停通过，Flash破坏性命令0。
+本地证据 `local/tx15-hardware/install/bulk-read-evidence.json`。
+CLI默认仍50kHz；上方安装/恢复命令显式选择已验证的500kHz。
+冻结镜像、许可摘要、写入范围及擦写算法没有改变。
+
+仅使用上方bulk16恢复包；早期 `recovery-kit-20261004-bulk.zip` 含已否决的32B等待，
+不能用作当前恢复工具。旧 `recovery-kit-20261004.zip` 为未加速工具的历史备份。
+
+安装事务 `transaction-c12cf540af724836bbc253806f44d157.json` 已到 `installed`，
+sequence=2316，checkpoints包含external/internal，退出CPU暂停读回通过。
+日志 `local/hardware-session/flash-entry-20261004-173432.json`。
+精简证据：[首次安装](evidence/2026-10-04/first-install/observation.json)、
+[批量读取](evidence/2026-10-04/first-install/bulk-read.json)。
+事务dirty=true表示已替换原内容，不表示安装失败；冻结manifest里的
+`physical_programming_tested=false` 是生成许可摘要时的历史信息，不修改它破坏绑定。
+实际当前擦写证据以上述事务和日志为准。原系统恢复写入仍未经物理测试。
+真实断电启动、菜单/输入和关机再次开机必须由脱离调试器的现场反馈验收。

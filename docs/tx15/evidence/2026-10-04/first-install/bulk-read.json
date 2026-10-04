@@ -1,0 +1,46 @@
+{
+  "frequency_hz": 500000,
+  "flash_mutation_commands": 0,
+  "read_only": true,
+  "pending_sfdp_drained_verified": true,
+  "geometry": {
+    "jedec_id": "0xc84018",
+    "status_hex": "000220",
+    "geometry": {
+      "capacity_bytes": 16777216,
+      "page_bytes": 256,
+      "address_bytes": 3,
+      "erase_types": [
+        [
+          4096,
+          32
+        ],
+        [
+          32768,
+          82
+        ],
+        [
+          65536,
+          216
+        ]
+      ],
+      "bfpt_revision": [
+        1,
+        6
+      ],
+      "bfpt_dwords": 16,
+      "sfdp_sha256": "20a4bebab35f8abb7abb240a2e92180d275422525d9638cbb8f039b1ec859e1c"
+    },
+    "conservative_status_clear": true,
+    "exact_part_suffix": null,
+    "flash_write_authorized": false,
+    "physical_write_recovery_tested": false
+  },
+  "internal_seconds": 2.5469999999913853,
+  "external_seconds": 102.96900000001187,
+  "full_original_matches": true,
+  "original_firmware_executed": null,
+  "cpu_resume_allowed": false,
+  "writes": [],
+  "halt_verified": true
+}

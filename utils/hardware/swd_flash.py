@@ -3,7 +3,8 @@
 Requires the pinned flash-info RAM initializer, halted in thread mode with
 SysTick stopped. check_device and reads never send WREN or FLASH keys.
 Mutation additionally requires a durable, image-bound Journal. A seal is not
-human permission. Physical programming is still untested.
+human permission. The first pinned TX15 install passed physical erase/program
+and full readback on 2026-10-04; original-image recovery writing remains untested.
 
 STM32 register definitions: ST stm32h750xx.h, stm32h7xx_hal_flash{,_ex}.c.
 NOR commands: GD25Q128H Rev1.2 reference (exact suffix is not identified).
@@ -51,6 +52,32 @@ class MemAPIO:
         self.writes.append((address,value))
         self.ap.write32(address,value);self.dp.flush()
     def flush(self):self.dp.flush()
+    def read_internal_bytes(self,address,size):
+        SWDFlash._range(address,size,0x08000000,0x08020000,4)
+        if size%4:raise ValueError('Internal bulk read must be word aligned')
+        if not hasattr(self.dp,'read_ap_multiple'):
+            return b''.join(struct.pack('<I',self.read32(a)) for a in range(address,address+size,4))
+        result=bytearray()
+        self.dp.write_ap(0,0x03000012)
+        while len(result)<size:
+            current=address+len(result)
+            count=min(128,(1024-(current&1023))//4,(size-len(result))//4)
+            self.dp.write_ap(4,current)
+            words=self.dp.read_ap_multiple(12,count)
+            if len(words)!=count:raise RuntimeError('Short bulk internal read')
+            result.extend(struct.pack('<'+'I'*count,*words))
+        return bytes(result)
+    def read_fifo_words(self,count):
+        if type(count) is not int or not 1<=count<=4:raise ValueError('FIFO burst must fit 16 available bytes')
+        if not hasattr(self.dp,'read_ap_multiple'):return [self.read32(Q+32) for _ in range(count)]
+        try:
+            self.dp.write_ap(0,0x03000002) # No address increment: every read is QSPI DR.
+            self.dp.write_ap(4,Q+32)
+            words=self.dp.read_ap_multiple(12,count)
+            if len(words)!=count:raise RuntimeError('Short FIFO burst; never retry consumed data')
+            return words
+        finally:
+            self.dp.write_ap(0,0x03000012);self.dp.flush()
 
 class SWDFlash:
     def __init__(self,io,journal=None,clock=time.monotonic):
@@ -100,14 +127,21 @@ class SWDFlash:
         self._write(Q+20,ccr)
         if address is not None:self._write(Q+24,address)
         result=bytearray()
-        for offset in range(0,size,4):
+        offset=0
+        while offset<size:
             n=min(4,size-offset)
-            if write_data is None:
+            if write_data is None and size-offset>=4 and hasattr(self.io,'read_fifo_words'):
+                n=min(16,size-offset)//4*4 # TX15 SFDP read can stall at FLEVEL=30.
+                self._until(lambda:(self._qsr()>>8&63)>=n)
+                words=self.io.read_fifo_words(n//4)
+                result+=struct.pack('<'+'I'*(n//4),*words)
+            elif write_data is None:
                 self._until(lambda:(self._qsr()>>8&63)>=n)
                 result+=self._read(Q+32).to_bytes(4,'little')[:n]
             else:
                 self._until(lambda:(self._qsr()>>8&63)<=32-n)
                 self._write(Q+32,int.from_bytes(write_data[offset:offset+n],'little'))
+            offset+=n
         self._until(lambda:self._qsr()&0x22==2)
         self._write(Q+12,0x1b)
         return bytes(result)
@@ -134,10 +168,16 @@ class SWDFlash:
             raise ValueError('Out-of-range/unaligned Flash operation')
     def read_external(self,offset,size):
         self._range(offset,size,0,1048576);self._require_checked()
-        return b''.join(self._command(3,min(256,size-i),offset+i) for i in range(0,size,256))
+        result=bytearray()
+        for i in range(0,size,256):
+            if size>=65536 and i%65536==0:print(f'READ EXTERNAL {offset+i:#x}: {i}/{size}',flush=True)
+            result.extend(self._command(3,min(256,size-i),offset+i))
+        return bytes(result)
     def read_internal(self,address,size):
         self._range(address,size,0x08000000,0x08020000,4);self._require_checked()
         if size%4:raise ValueError('Internal read must be word aligned')
+        if size>=65536:print(f'READ INTERNAL {address:#x}: {size} bytes',flush=True)
+        if hasattr(self.io,'read_internal_bytes'):return self.io.read_internal_bytes(address,size)
         return b''.join(struct.pack('<I',self._read(a)) for a in range(address,address+size,4))
     def _intent(self,op,address,value):
         self._require_checked()

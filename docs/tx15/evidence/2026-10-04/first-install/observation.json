@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "status": "verified-halted",
+  "operation": "first-persistent-native-install",
+  "human_approval_received": true,
+  "swd_frequency_hz": 500000,
+  "source_log": "flash-entry-20261004-173432.json",
+  "source_log_sha256": "5bfaa837b100a8cc4385bdf3d866eeed86af721fdb7863f02011f182746d47dc",
+  "transaction": {
+    "schema": 1,
+    "plan_seal": "d60c7a3fa4a02f767c0daf68b76a4b8ced2e9771512fe62319793ca17434a955",
+    "manifest": {
+      "schema": 1,
+      "operation": "transaction-core-no-hardware-backend",
+      "flash_write_authorized": false,
+      "internal_address": "0x08000000",
+      "internal_erase_bytes": 131072,
+      "external_offset": 0,
+      "external_erase_bytes": 532480,
+      "external_slot_bytes": 1048576,
+      "external_erase_command": "0x20",
+      "external_page_bytes": 256,
+      "internal_word_bytes": 32,
+      "boot_sha256": "5241eea8b1761243f3aef4be42793027d64b3dc815c8d24d99e53ae03cbb4ef1",
+      "payload_sha256": "085a9e98960aaa343aeb843cfa927263a48f727ba271ef8ce209c86b433e1546",
+      "original_internal_sha256": "984420d754587cd5561c1b3f3df49ccdd34da868ff785efbdcdc0cff09569ad0",
+      "original_external_sha256": "6f1afac85dd9acaa9e07522f9ace8b4124d68da88df856cb54b1c247dc08b315",
+      "install_order": [
+        "external erase/program/readback",
+        "internal erase/program/readback"
+      ],
+      "recovery_order": [
+        "external full slot/readback",
+        "internal full bank/readback"
+      ],
+      "physical_programming_tested": false
+    },
+    "action": "install",
+    "sequence": 2316,
+    "state": "installed",
+    "external_dirty": true,
+    "internal_dirty": true,
+    "original_resume_forbidden": true,
+    "checkpoints": [
+      "external",
+      "internal"
+    ],
+    "last_intent": {
+      "operation": "internal-program",
+      "address": "0x8001ac0",
+      "bytes": 32,
+      "data_sha256": "d5cc255f81153290b782915c2a246659f756fceb983e17524b194c58cd9ac6b2"
+    },
+    "record_sha256": "84fa5a97d023e85244791dc25e55fbbaf9873eff3e49318db2cacb2f2a585fb6"
+  },
+  "cpu_halt_verified": true,
+  "original_firmware_executed": false,
+  "full_original_compare_passed": true,
+  "external_erased_bytes": 532480,
+  "external_program_bytes": 529920,
+  "external_full_readback_passed": true,
+  "external_untouched_tail_verified": true,
+  "internal_erased_bytes": 131072,
+  "internal_program_bytes": 6880,
+  "internal_full_readback_passed": true,
+  "rf_enabled": false,
+  "independent_power_cycle_acceptance": "pending-user-observation",
+  "shutdown_restart_acceptance": "pending",
+  "physical_original_recovery_write_tested": false,
+  "usb_update_available": false,
+  "models_calibration_persistent": false
+}

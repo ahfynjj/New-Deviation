@@ -32,10 +32,10 @@ def power_held_gate(seconds):
     if isinstance(answer,BaseException):raise RuntimeError('Power-held input unavailable') from answer
     if answer.strip()!='HELD':raise ValueError('Expected exact HELD confirmation; no RAM/Flash load')
 
-def open_probe():
+def open_probe(frequency=50000):
     from pyocd.core.helpers import ConnectHelper
     s=ConnectHelper.session_with_chosen_probe(unique_id=PROBE_UID,blocking=False,auto_open=False,
-        options={'target_override':'cortex_m','frequency':50000,'connect_mode':'attach',
+        options={'target_override':'cortex_m','frequency':frequency,'connect_mode':'attach',
                  'auto_unlock':False,'no_config':True,'resume_on_disconnect':False})
     if s is None:raise RuntimeError('PWLINK2 unavailable')
     try:s.open(init_board=False)
@@ -66,6 +66,7 @@ def main(argv=None):
     parser.add_argument('--approval')
     parser.add_argument('--arm',action='store_true')
     parser.add_argument('--press-window',type=int,default=300)
+    parser.add_argument('--swd-frequency',type=int,choices=(50000,500000),default=50000)
     args=parser.parse_args(argv)
     if not 60<=args.press_window<=600:parser.error('Press window must be 60..600 seconds')
     if args.identify:
@@ -89,9 +90,9 @@ def main(argv=None):
     if args.rehearse and args.approval:parser.error('Rehearsal cannot accept write approval')
     holder=[]
     def opener():
-        context=RecoveryContext(open_probe(),wait=args.press_window,ready_gate=lambda:power_held_gate(args.press_window))
+        context=RecoveryContext(open_probe(args.swd_frequency),wait=args.press_window,ready_gate=lambda:power_held_gate(args.press_window))
         holder.append(context);return context
-    result={'utc':datetime.now(timezone.utc).isoformat(),'mode':'rehearse' if args.rehearse else 'install' if args.install else 'recover'}
+    result={'utc':datetime.now(timezone.utc).isoformat(),'swd_frequency_hz':args.swd_frequency,'mode':'rehearse' if args.rehearse else 'install' if args.install else 'recover'}
     try:
         if args.rehearse:report=install_entry.rehearse(kit,opener)
         else:report=install_entry.authorized_run(kit,result['mode'],args.approval,opener)
