@@ -6,6 +6,10 @@
 #include "../board/power.h"
 #include "../board/display.h"
 #include "handoff.h"
+#ifdef TX15_RAM_CHAIN
+#include "chain_source.h"
+volatile struct tx15_chain_control chain_control __attribute__((aligned(8)));
+#endif
 #define R(a) (*(volatile uint32_t *)(a))
 volatile struct probe_report probe_report __attribute__((section(".mailbox"),aligned(8)));
 static void stop(void) __attribute__((noreturn));
@@ -17,7 +21,16 @@ void Boot_Fault(void) {
 }
 static void fail(uint32_t error) { probe_report.error=error;probe_report.state=PROBE_ERROR;stop(); }
 static int read_image(void *ctx,uint32_t offset,uint8_t *dst,uint32_t bytes) {
-    (void)ctx;return tx15_boot_qspi_read(offset,dst,bytes,1000000u)==TX15_QSPI_OK;
+    (void)ctx;
+#ifdef TX15_RAM_CHAIN
+    uint32_t total=chain_control.bytes;
+    if(chain_control.gate!=TX15_CHAIN_GO || !tx15_chain_range(offset,bytes,total))return 0;
+    const volatile uint8_t *source=(const volatile uint8_t *)TX15_CHAIN_SOURCE;
+    for(uint32_t i=0;i<bytes;i++)dst[i]=source[offset+i];
+    return 1;
+#else
+    return tx15_boot_qspi_read(offset,dst,bytes,1000000u)==TX15_QSPI_OK;
+#endif
 }
 static int copy(void *ctx,const struct tx15_boot_segment *s) {
     (void)ctx;volatile uint32_t *dst=(volatile uint32_t *)s->destination;
@@ -55,6 +68,20 @@ void Boot_Main(void) {
     probe_report.ram_words|=TX15_BOOT_SDRAM;
     uint32_t id=0;enum tx15_qspi_result qspi=tx15_boot_qspi_init(&id,1000000u);
     if(qspi!=TX15_QSPI_OK || id!=0xc84018u) {tx15_boot_qspi_stop();fail(256u|((uint32_t)qspi<<16));}
+#ifdef TX15_RAM_CHAIN
+    // Exercise the actual read-only driver; original NOR remains untouched.
+    uint8_t prefix[64];
+    if(tx15_boot_qspi_read(0,prefix,sizeof(prefix),1000000u)!=TX15_QSPI_OK) {
+        tx15_boot_qspi_stop();fail(256u);
+    }
+    for(unsigned i=0;i<64;i++)chain_control.original_prefix[i]=prefix[i];
+    tx15_boot_qspi_stop();chain_control.jedec=id;
+    __asm volatile("dsb":::"memory");chain_control.ready=TX15_CHAIN_READY;
+    // Host fills a separate source buffer after SDRAM initialization, then
+    // opens the gate. Staging, validation, STRD copies and jump stay native.
+    while(chain_control.gate!=TX15_CHAIN_GO)__asm volatile("nop");
+    __asm volatile("dsb\nisb":::"memory");
+#endif
     struct tx15_boot_io io={0,read_image,copy,verify};uint32_t entry=0;
     enum tx15_boot_load_result load=tx15_boot_load(&io,TX15_BOOT_SLOT_OFFSET,TX15_BOOT_SLOT_BYTES,
         (uint8_t *)TX15_BOOT_STAGING,TX15_BOOT_MAX_BYTES,&entry);

@@ -1,9 +1,13 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-10-03。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-04。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
 ## 当前优先里程碑（2026-10-03调整）
+
+本轮台架等待按键超时，日志 `local/hardware-session/native-chain-20261004-102453.json`；`reset_attempted=false`、写入列表为空，遥控器未被复位或装载。下一次确认用户在旁边后立即启动同一测试，无需重做构建。
+
+- 2026-10-04 完整启动链验收进行中：新增 RAM 重链接的原生启动器，实际初始化电源/时钟/SDRAM/QSPI，核对 JEDEC 与原 NOR 前64字节，再由电脑上传同一独立候选载荷到独立 SDRAM 源缓冲；原生代码执行暂存、完整校验、STRD复制读回、LCD初始化和 V9→V10 跳转。新增公开台架工具 `utils/hardware/run_native_chain.py`，绑定确切镜像哈希、备份、RF关闭和写入白名单。异常只允许 SysTick 正常返回后替换 CPU；非返回 Fault 保持暂停并要求手动断电，避免伪造恢复。90项回归及7项本批检查通过，集中审查未发现其它阻断。实机结果待记录；未写Flash，不宣称真实断电启动或外部槽装载已验收。
 
 完成当前实机台架收尾/恢复后，优先最小正式安装和原生独立冷启动，
 不再等待全部ELRS接收端/外置/触摸功能完善。首次可刷独立启动版初估

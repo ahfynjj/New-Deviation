@@ -80,6 +80,25 @@ python -m unittest discover -s utils/hardware/tests
 
 ## 下一批
 
+2026-10-04 增加完整 RAM 链台架（实机结果待记录）：
+
+```powershell
+python utils/build-tx15-boot.py --ram-chain
+python utils/hardware/chain_ram_session.py
+python utils/hardware/run_native_chain.py --arm
+```
+
+最后一条仅在 TX15/PWLINK2 接好、正常开机并能配合按键时执行。须看到
+ARMED 提示后再按电源键；应用就绪后有75秒操作时间，测试期间不按电源键。
+原 NOR 仍是原固件，台架实际读取 JEDEC/原前缀，但将应用读取来源替换为
+`0xd0200000` 的电脑上传缓冲。`0xd0100000` 暂存、完整CRC/向量校验、
+复制读回和应用交接均执行同一原生实现；电脑不直接装载应用目的地址。
+因此通过只能证明这条装载/交接链，不能证明 NOR 安装或真实 POR 已通过。
+
+正常退出恢复 ADC/LCD/QSPI/SDRAM/时钟/电压及原 CPU；只有活动 SysTick
+允许正常返回。其它活动异常或恢复校验失败时保持 CPU 暂停和供电，禁止
+恢复未核对 PC，此时需要人工断电再开机；Flash未改写。工具不含安装功能。
+
 1. 在不写Flash的条件下验证完整原生启动程序→独立应用链，保留退出恢复。
 2. 核对实时保护/擦除编程几何，完成受限安装/恢复工具及故障退出读回。
 3. 展示最终文件、地址、备份与恢复步骤，再安排首次持久写入。
