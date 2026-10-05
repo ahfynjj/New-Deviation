@@ -156,6 +156,10 @@ struct modelload_obj {
 };
 
 struct modelpage_obj {
+#ifdef TX15_ELRS_RC
+    guiLabel_t module_label[4];
+    guiTextSelect_t module_value[4];
+#endif
     guiLabel_t filelbl;
     guiTextSelect_t file;
     guiLabel_t guilbl;

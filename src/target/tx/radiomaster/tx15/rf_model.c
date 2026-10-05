@@ -14,8 +14,8 @@ void tx15_rf_model_service(uint32_t now) {
     if(!ready)return;
     if(now-started>=180000)expired=1;
     int slot=-1;
-    if(!expired && Model.protocol==PROTOCOL_CRSF && Model.num_channels>=5
-       && Model.num_channels<=16 && Model.proto_opts[0]==1)slot=0;
+    if(!expired && tx15_module_enabled(&Model.tx15_modules[0]) && Model.num_channels>=5
+       && Model.num_channels<=16)slot=0;
     if(slot!=selected) {tx15_rf_rc_select(slot,now);selected=slot;}
     MIXER_CalcChannels();
     if(slot==0) {

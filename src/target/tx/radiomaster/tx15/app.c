@@ -12,13 +12,8 @@
 #include "rf.h"
 #ifdef TX15_ELRS_RC
 #include "rf_model.h"
-static buttonAction_t lua_action;
 static unsigned lua_requested;
-static unsigned request_lua(u32 buttons,unsigned flags,void *data) {
-    (void)buttons;(void)data;
-    if(flags&BUTTON_LONGPRESS) {lua_requested=1;BUTTON_InterruptLongPress();return 1;}
-    return 0;
-}
+void tx15_request_lua(void) { lua_requested=1; }
 #endif
 #include "../../../../../hardware/tx15/board/analog.h"
 #include "../../../../../hardware/tx15/board/controls.h"
@@ -42,9 +37,6 @@ void tx15_app_main(void) {
     GUI_DrawScreen();
 #ifdef TX15_ELRS_RC
     tx15_rf_model_start(CLOCK_getms());
-    /* Long PAGE (mapped RIGHT) opens the official Lua tool from the native UI. */
-    BUTTON_RegisterCallback(&lua_action,CHAN_ButtonMask(BUT_RIGHT),
-        BUTTON_LONGPRESS|BUTTON_PRIORITY,request_lua,NULL);
 #endif
 #ifdef TX15_ELRS_DISCOVERY
     tx15_rf_discovery_init(CLOCK_getms());

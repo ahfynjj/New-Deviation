@@ -745,6 +745,12 @@ int assign_int(void* ptr, const struct struct_map *map, int map_size)
             return 1;
         }
     }
+#ifdef TX15_RAM_APPLICATION
+    if (MATCH_SECTION("internal_rf") || MATCH_SECTION("external_rf")) {
+        unsigned slot=MATCH_SECTION("external_rf") ? 1 : 0;
+        return tx15_module_parse(&m->tx15_modules[slot],name,value);
+    }
+#endif
     if (MATCH_SECTION(SECTION_RADIO)) {
         if (MATCH_KEY(RADIO_PROTOCOL)) {
             for (i = 0; i < PROTOCOL_COUNT; i++) {
@@ -1316,6 +1322,14 @@ u8 CONFIG_WriteModel(u8 model_num) {
     fprintf(fh, "%s=%s\n", RADIO_TX_POWER, radio_tx_power_val(m->radio, m->tx_power));
     fprintf(fh, "\n");
     write_proto_opts(fh, m);
+#ifdef TX15_RAM_APPLICATION
+    for(unsigned slot=0;slot<2;slot++) {
+        fprintf(fh,"[%s]\nenabled=%u\nprotocol=%s\n\n",
+          slot ? "external_rf" : "internal_rf",m->tx15_modules[slot].enabled==1,
+          m->tx15_modules[slot].protocol==1 ? "CRSF" : "None");
+    }
+#endif
+
     struct Limit default_limit;
     memset(&default_limit, 0, sizeof(default_limit));
     MIXER_SetDefaultLimit(&default_limit);

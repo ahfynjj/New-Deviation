@@ -3,6 +3,10 @@
 更新：2026-10-05。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
+## 2026-10-05 用户调整：ELRS优先
+
+触摸与USB后移。按用户已确认方案开发MAIN MENU独立ELRS Lua入口，Model setup内/外置RF启停及CRSF选择，随后实现模型持久存储、双模块路由和持续RC输出。当前菜单与字段/INI读写、内置路由已实现，124对象ARM构建和配置/路由两项执行测试通过；尚未刷入。外置串口、存储、双开时Lua目标选择及台架限制移除仍待完成。详见[ELRS集成](docs/tx15/elrs-integration-2026-10-05.md)。
+
 ## 当前优先里程碑（2026-10-03调整）
 
 - 用户报告全部物理开关/微调不可用，本轮优先补齐：新增I2C4读取两颗扩展器、SA–SF和六段按键映射、八个微调按钮及默认模型trim1–4；73项检查和98对象ARM构建通过，集中只读审查无阻断项。仅外部应用更新、完整读回及内部启动器未改比较已通过；2026-10-05用户确认正常开机，开关、六个前面板按键与四组微调测试正常。详见[开关与微调](docs/tx15/controls-2026-10-04.md)。本轮验收完成，下一阶段USB调试与更新。

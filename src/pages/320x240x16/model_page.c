@@ -41,6 +41,19 @@ static const char *_mixermode_cb(guiObject_t *obj, int dir, void *data)
 }
 #endif //HAS_STANDARD_GUI
 
+#ifdef TX15_ELRS_RC
+static const char *module_value_cb(guiObject_t *obj,int dir,void *data)
+{
+    (void)obj;
+    unsigned field=(unsigned)(long)data;
+    struct tx15_module_setting *m=&Model.tx15_modules[field/2];
+    u8 *value=field%2 ? &m->protocol : &m->enabled;
+    if(dir) *value=dir>0 ? 1 : 0;
+    if(field%2) return *value==1 ? "CRSF (ELRS)" : "None";
+    return *value==1 ? "On" : "Off";
+}
+#endif
+
 void PAGE_ModelInit(int page)
 {
     (void)page;
@@ -82,6 +95,17 @@ void PAGE_ModelInit(int page)
     GUI_CreateLabelBox(&gui->ppmlbl, COL1, row, LABEL_WIDTH, 18, &LABEL_FONT, GUI_Localize, NULL, _tr_noop("PPM In"));
     GUI_CreateTextSelect(&gui->ppm, COL2, row, TEXTSELECT_96, ppmin_press_cb, ppmin_select_cb, NULL);
 
+#ifdef TX15_ELRS_RC
+    const char *labels[]={"Internal RF","Internal protocol","External RF","External protocol"};
+    for(unsigned i=0;i<4;i++) {
+        row+=20;
+        GUI_CreateLabelBox(&gui->module_label[i],COL1,row,LABEL_WIDTH,18,&LABEL_FONT,NULL,NULL,labels[i]);
+        GUI_CreateTextSelect(&gui->module_value[i],COL2,row,TEXTSELECT_96,NULL,module_value_cb,(void *)(long)i);
+    }
+    row+=20;
+    GUI_CreateLabelBox(&gui->numchlbl,COL1,row,LABEL_WIDTH,18,&LABEL_FONT,GUI_Localize,NULL,_tr_noop("# Channels"));
+    GUI_CreateTextSelect(&gui->numch,COL2,row,TEXTSELECT_96,NULL,numchanselect_cb,NULL);
+#else
     row += 20;
     GUI_CreateLabelBox(&gui->protolbl, COL1, row, LABEL_WIDTH, 18, &LABEL_FONT, GUI_Localize, NULL, _tr_noop("Protocol"));
     GUI_CreateTextSelect(&gui->proto, COL2, row, TEXTSELECT_96, proto_press_cb, protoselect_cb, NULL);
@@ -104,6 +128,7 @@ void PAGE_ModelInit(int page)
     GUI_CreateButton(&gui->fixedid, COL2, row, BUTTON_96x16, show_text_cb, fixedid_cb, mp->fixed_id);
     GUI_CreateButton(&gui->bind, COL3, row, BUTTON_64x16, show_bindtext_cb, bind_cb, NULL);
     configure_bind_button();
+#endif
 }
 
 /* Button callbacks */

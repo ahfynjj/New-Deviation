@@ -20,19 +20,19 @@ void tx15_rf_rc_update(const int32_t *ch,unsigned count,int ok,uint32_t now) {
 }
 void MIXER_CalcChannels(void) {mixed++;}
 int main(void) {
-    Model.protocol=PROTOCOL_CRSF;Model.num_channels=7;tx15_analog_status=4;
+    Model.protocol=PROTOCOL_CRSF;Model.tx15_modules[0].protocol=1;Model.num_channels=7;tx15_analog_status=4;
     tx15_rf_model_service(0);assert(!opened && !mixed);
     tx15_rf_model_start(1);tx15_rf_model_service(5);assert(!opened && mixed==1);
-    Model.proto_opts[0]=1;tx15_rf_model_service(10);assert(opened==1 && published==1);
+    Model.tx15_modules[0].enabled=1;tx15_rf_model_service(10);assert(opened==1 && published==1);
     tx15_rf_model_service(15);assert(opened==1 && published==2);
     tx15_rf_model_reset();assert(!enabled);
     tx15_rf_model_service(20);assert(opened==2);
-    Model.proto_opts[0]=2;tx15_rf_model_service(25);assert(!enabled && opened==2);
-    Model.proto_opts[0]=1;Model.num_channels=4;tx15_rf_model_service(30);assert(!enabled);
+    Model.tx15_modules[0].enabled=2;tx15_rf_model_service(25);assert(!enabled && opened==2);
+    Model.tx15_modules[0].enabled=1;Model.num_channels=4;tx15_rf_model_service(30);assert(!enabled);
     Model.num_channels=7;tx15_rf_model_service(35);assert(opened==3);
-    Model.protocol=PROTOCOL_NONE;tx15_rf_model_service(40);assert(!enabled);
-    Model.protocol=PROTOCOL_CRSF;tx15_rf_model_service(45);assert(enabled);
+    Model.tx15_modules[0].protocol=0;tx15_rf_model_service(40);assert(!enabled);
+    Model.tx15_modules[0].protocol=1;tx15_rf_model_service(45);assert(enabled);
     tx15_rf_model_service(180001);assert(!enabled);
-    Model.proto_opts[0]=0;tx15_rf_model_service(180005);
-    Model.proto_opts[0]=1;tx15_rf_model_service(180010);assert(!enabled && closed);
+    Model.tx15_modules[0].enabled=0;tx15_rf_model_service(180005);
+    Model.tx15_modules[0].enabled=1;tx15_rf_model_service(180010);assert(!enabled && closed);
 }

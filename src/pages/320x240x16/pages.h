@@ -59,6 +59,9 @@ void PAGE_SplashExit();
 
 // Menu
 void PAGE_MenuInit(int page);
+#ifdef TX15_ELRS_RC
+void PAGE_ElrsLuaInit(int page);
+#endif
 void PAGE_MenuExit();
 void PAGE_TxMenuInit(int page);
 void PAGE_ModelMenuInit(int page);

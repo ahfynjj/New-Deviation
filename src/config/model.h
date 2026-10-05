@@ -27,7 +27,13 @@ extern const char MODEL_TEMPLATE[];
 #define NUM_PROTO_OPTS 8
 #define VIRT_NAME_LEN 10
 
+#ifdef TX15_RAM_APPLICATION
+#include "rf_settings.h"
+#endif
 struct Model {
+#ifdef TX15_RAM_APPLICATION
+    struct tx15_module_setting tx15_modules[2];
+#endif
     u32 fixed_id;
     enum ModelType type;
     enum Protocols protocol;

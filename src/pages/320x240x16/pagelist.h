@@ -35,6 +35,10 @@ PAGEDEF(PAGEID_USB,      PAGE_USBInit,         PAGE_USBEvent,         PAGE_USBEx
 PAGEDEF(PAGEID_DEBUGLOG, PAGE_DebuglogInit,    PAGE_DebuglogEvent,    NULL,               MAIN_MENU,   _tr_noop("Debuglog"))
 #endif
 
+#ifdef TX15_ELRS_RC
+PAGEDEF(PAGEID_ELRSLUA, PAGE_ElrsLuaInit, NULL, NULL, MAIN_MENU, _tr_noop("ELRS Lua"))
+#endif
+
 //Model menu
 //----------
 PAGEDEF(PAGEID_MODEL,    PAGE_ModelInit,       PAGE_ModelEvent,       NULL,               MODEL_MENU,  _tr_noop("Model setup"))
