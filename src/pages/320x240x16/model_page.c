@@ -42,6 +42,9 @@ static const char *_mixermode_cb(guiObject_t *obj, int dir, void *data)
 #endif //HAS_STANDARD_GUI
 
 #ifdef TX15_ELRS_RC
+#ifdef TX15_ELRS_PRODUCT
+#include "target/tx/radiomaster/tx15/rf_model.h"
+#endif
 static const char *module_value_cb(guiObject_t *obj,int dir,void *data)
 {
     (void)obj;
@@ -50,6 +53,9 @@ static const char *module_value_cb(guiObject_t *obj,int dir,void *data)
     u8 *value=field%2 ? &m->protocol : &m->enabled;
     if(dir) *value=dir>0 ? 1 : 0;
     if(field%2) return *value==1 ? "CRSF (ELRS)" : "None";
+#ifdef TX15_ELRS_PRODUCT
+    if(*value==1 && (tx15_rf_throttle_wait&(1u<<(field/2))))return "On (THR)";
+#endif
     return *value==1 ? "On" : "Off";
 }
 #endif

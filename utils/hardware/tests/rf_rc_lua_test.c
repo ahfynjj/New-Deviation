@@ -18,6 +18,7 @@ int tx15_rf_uart_send(const uint8_t *data,unsigned size) {
 int main(void) {
     struct crsf_link *link=tx15_rf_lua_init();assert(link->slot==-1 && !stopped);
     assert(tx15_rf_rc_select(0,now));link=tx15_rf_lua_init();assert(link->slot==0);
+    assert(tx15_rf_lua_select(1)->slot==0 && !stopped && tx15_rf_rc_enabled());
     int32_t ch[7]={0,0,-10000,0,-10000,0,0};
     tx15_rf_rc_update(ch,7,1,now);tx15_rf_rc_tick(now);assert(rc_frames==1);
     uint8_t ping[]={0,0xea};assert(crsf_link_push(link,0x28,ping,2));

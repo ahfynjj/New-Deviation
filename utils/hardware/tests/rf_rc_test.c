@@ -26,7 +26,12 @@ int main(void) {
     assert(tx15_rf_rc_select(0,1));
     tx15_rf_rc_update(ch,7,1,1);tx15_rf_rc_tick(1);
     assert(frames==1 && crsf_frame_valid(&frame));
-    assert(ticks(0)==1792 && ticks(1)==192 && ticks(2)==192 && ticks(4)==192 && ticks(13)==192);
+    assert(ticks(0)==1792 && ticks(1)==192 && ticks(2)==192);
+#ifdef TX15_ELRS_PRODUCT
+    assert(ticks(4)==1792 && ticks(13)==992);
+#else
+    assert(ticks(4)==192 && ticks(13)==192);
+#endif
     for(now=2;now<99;now++)tx15_rf_rc_tick(now);
     assert(frames==25);
     tx15_rf_rc_update(ch,7,0,99);tx15_rf_rc_tick(101);assert(frames==25);

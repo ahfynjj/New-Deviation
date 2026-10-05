@@ -76,6 +76,8 @@ def checklist(kit):
         recovery_external_bytes=1048576,recovery_internal_bytes=131072,
         file_sha256=kit.manifest['files'],install_approval=kit.approval('install'),
         recovery_approval=kit.approval('recover'),flash_write_authorized=False,
-        success_exit='CPU halted; manual battery power cycle',rf_enabled=False,
+        success_exit='CPU halted; manual battery power cycle',rf_enabled=kit.manifest.get("rf_enabled",False),
+        persistent_settings=kit.manifest.get("persistent_settings",False),
+        settings_region=kit.manifest.get("settings_region"),
         limitations=(['Updated app hardware acceptance and native rollback untested'] if preserved else
-            ['First physical programming/recovery and POR untested'])+['No USB updater','No persistent model/calibration storage'])
+            ['First physical programming/recovery and POR untested'])+['No USB updater']+(['Model1 NOR storage untested; calibration not stored'] if kit.manifest.get('persistent_settings') else ['No persistent model/calibration storage']))

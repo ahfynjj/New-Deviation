@@ -126,7 +126,10 @@ void tx15_lua_tool(void)
                 break;
             }
         }
-        if(leave || tool.state==ND_LUA_EXITED || ms-started>=120000) break;
+        if(leave || tool.state==ND_LUA_EXITED)break;
+#ifndef TX15_ELRS_PRODUCT
+        if(ms-started>=120000)break;
+#endif
     }
     nd_lua_close(&tool);tx15_rf_lua_stop();BUTTON_UnregisterCallback(&action);
     LCD_SetFont(DEFAULT_FONT.font);LCD_SetFontColor(DEFAULT_FONT.font_color);

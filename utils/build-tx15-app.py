@@ -6,7 +6,10 @@ sys.stdout.reconfigure(encoding="utf-8",errors="replace")
 from pathlib import Path
 root=Path(__file__).resolve().parents[1]
 standalone=os.environ.get('TX15_STANDALONE')=='1'
-if standalone and any(os.environ.get(n)=='1' for n in ('TX15_ELRS_LUA','TX15_ELRS_RC',
+product=os.environ.get('TX15_ELRS_PRODUCT')=='1'
+if product and any(os.environ.get(n)!='1' for n in ('TX15_ELRS_RC','TX15_ELRS_LUA','TX15_ELRS_WRITE')):
+ raise ValueError('ELRS product build requires RC, Lua and parameter writes')
+if standalone and not product and any(os.environ.get(n)=='1' for n in ('TX15_ELRS_LUA','TX15_ELRS_RC',
  'TX15_ELRS_WRITE','TX15_ELRS_DISCOVERY','TX15_ELRS_PARAMETERS')):
  raise ValueError('Standalone first-boot build keeps RF disabled; validate cold boot before adding RF modes')
 out=root/'local/tx15-hardware'/('app-standalone' if standalone else 'app'); out.mkdir(parents=True,exist_ok=True)
@@ -24,6 +27,8 @@ flags=['-isystem',str(root.parent/'tools/arm8/lib/gcc/arm-none-eabi/8.2.1/includ
  '-Wall','-Wextra','-Werror=implicit-function-declaration','-Werror=undef',
  '-DTX15_INPUT_TRACE=1','-DBUILD_TYPE=0','-DSTATUS_SCREEN',
  '-DHGVERSION="New Deviation TX15"' if standalone else '-DHGVERSION="New Deviation TX15 RAM"']
+if product:flags.append('-DTX15_ELRS_PRODUCT=1')
+if os.environ.get('TX15_PERSISTENCE')=='1':flags.append('-DTX15_PERSISTENCE=1')
 if standalone:flags.append('-DTX15_STANDALONE=1')
 if os.environ.get('TX15_ELRS_DISCOVERY') == '1':
  flags.append('-DTX15_ELRS_DISCOVERY=1')
@@ -56,7 +61,7 @@ if os.environ.get('TX15_ELRS_LUA') == '1':
              ('lua.c','luac.c','linit.c','liolib.c','loslib.c','loadlib.c','ldblib.c','lcorolib.c')]
 from tx15_resources import generate
 sources.append(generate(root,out))
-sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c','analog.c','rf_uart.c','controls.c','control_decode.c')]
+sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c','analog.c','rf_uart.c','controls.c','control_decode.c','settings_store.c','settings_nor.c','rf_external.c')]
 sources.append(root/'hardware/tx15/app/startup.S')
 if standalone:
  sources += [root/'hardware/tx15/boot'/n for n in ('handoff.c','power_button.c')]
@@ -101,11 +106,12 @@ print('Linked and checked RAM load map:',elf,'entry',hex(entry))
 from hardware.boot_image import pack
 payload=out/'tx15-app.nd15'
 payload.write_bytes(pack(elf.read_bytes()))
+if len(payload.read_bytes())>0xf0000:raise ValueError('Application overlaps native settings region')
 (out/'build.json').write_text(json.dumps({'schema':1,
- 'mode':'standalone-first-boot-rf-off' if standalone else 'ram-bench',
+ 'mode':'standalone-elrs-candidate' if standalone and product else ('standalone-first-boot-rf-off' if standalone else 'ram-bench'),
  'elf_sha256':hashlib.sha256(elf.read_bytes()).hexdigest(),
  'payload_sha256':hashlib.sha256(payload.read_bytes()).hexdigest(),
  'rf_enabled':any(os.environ.get(n)=='1' for n in ('TX15_ELRS_LUA','TX15_ELRS_DISCOVERY','TX15_ELRS_RC')),
- 'persistent_settings':False},indent=2),encoding='utf8')
+ 'persistent_settings':os.environ.get('TX15_PERSISTENCE')=='1'},indent=2),encoding='utf8')
 print('Checked native boot payload:',payload,'(requires cold-start loader; not directly flashable)')
 print('No device accessed; hardware acceptance remains pending.')

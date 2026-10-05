@@ -12,7 +12,11 @@ app_vectors:
  .word App_Fault
  .endr
  .word SysTick_Handler
- .rept 71
+ .rept 37
+ .word App_Fault
+ .endr
+ .word USART1_IRQHandler
+ .rept 33
  .word App_Fault
  .endr
  .word USART6_IRQHandler

@@ -10,4 +10,5 @@ void tx15_rf_lua_poll(void);
 void tx15_rf_lua_stop(void);
 int tx15_rf_lua_authorize(uint8_t,const uint8_t *,unsigned);
 int tx15_rf_lua_writes_enabled(void);
+int tx15_rf_tools_slot(void);
 #endif

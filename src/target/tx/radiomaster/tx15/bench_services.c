@@ -21,6 +21,12 @@ unsigned PWR_ReadVoltage(void) { return 0; } /* Unmeasured, not a fabricated bat
 int PWR_CheckPowerSwitch(void) { return 0; }
 void PWR_Shutdown(void) {
 #ifdef TX15_STANDALONE
+#ifdef TX15_PERSISTENCE
+#ifdef TX15_ELRS_RC
+    tx15_rf_model_reset();
+#endif
+    CONFIG_SaveModelIfNeeded();
+#endif
     /* First standalone build is RF-disabled and has no persistent settings.
      * Cut backlight/module/PH12; if the button still supplies power, wait for
      * its release without returning to the application or reasserting hold. */

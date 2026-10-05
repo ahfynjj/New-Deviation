@@ -1,0 +1,10 @@
+{
+  "software_tests": 45,
+  "software_result": "passed",
+  "arm_objects": 130,
+  "hardware_tested": false,
+  "flash_written": false,
+  "archive_sha256": "0cddc966d75f1d53cc9ab1dc124d727a78aae21e4c7396821a468acad8034816",
+  "archive_integrity": "passed",
+  "extracted_kit_validation": "passed"
+}

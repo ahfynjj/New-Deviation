@@ -4,4 +4,7 @@
 void tx15_rf_model_start(uint32_t now);
 void tx15_rf_model_reset(void);
 void tx15_rf_model_service(uint32_t now);
+#ifdef TX15_ELRS_PRODUCT
+extern volatile uint32_t tx15_rf_throttle_wait;
+#endif
 #endif

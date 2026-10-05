@@ -8,6 +8,9 @@
 #endif
 #include "protocol/transport/crsf_tools.h"
 #include "../../../../../hardware/tx15/board/rf_uart.h"
+#ifdef TX15_ELRS_PRODUCT
+#include "../../../../../hardware/tx15/board/rf_external.h"
+#endif
 static struct crsf_link lua_link={.slot=CRSF_SLOT_OFF};
 static struct crsf_stream lua_stream;
 static struct crsf_tools tools;
@@ -17,8 +20,16 @@ static unsigned active;
 extern uint32_t CLOCK_getms(void);
 struct crsf_link *tx15_rf_lua_select(int slot)
 {
+#ifdef TX15_ELRS_PRODUCT
+    if(slot<CRSF_SLOT_OFF || slot>CRSF_SLOT_EXTERNAL)return &lua_link;
+#else
+    if(slot!=CRSF_SLOT_OFF && slot!=CRSF_SLOT_INTERNAL)return &lua_link;
+#endif
     tx15_rf_lua_shutdown();
-    crsf_link_init(&lua_link);memset(&lua_stream,0,sizeof(lua_stream));
+    #ifndef TX15_ELRS_PRODUCT
+    crsf_link_init(&lua_link);
+#endif
+    memset(&lua_stream,0,sizeof(lua_stream));
 #ifdef TX15_ELRS_WRITE
     crsf_tools_init(&tools,1);
 #else
@@ -26,10 +37,17 @@ struct crsf_link *tx15_rf_lua_select(int slot)
 #endif
     tx15_rf_write_report=tools.report;
     tx15_rf_report=(struct tx15_rf_report){0};errors=dropped=0;
+#ifdef TX15_ELRS_PRODUCT
+    if(slot<0 || slot>1 || !tx15_rf_module_active(slot))return &lua_link;
+    uint8_t discard;
+    for(unsigned n=0;n<256;n++) if(!(slot ? tx15_rf_external_read(&discard) : tx15_rf_uart_read(&discard)))break;
+    active=1;crsf_link_select(&lua_link,slot);tx15_rf_report.state=7;
+#else
     if(slot!=CRSF_SLOT_INTERNAL)return &lua_link;
     active=tx15_rf_uart_init();
     if(active) {crsf_link_select(&lua_link,CRSF_SLOT_INTERNAL);tx15_rf_report.state=7;}
     else tx15_rf_report.state=4;
+#endif
     return &lua_link;
 }
 struct crsf_link *tx15_rf_lua_init(void)
@@ -43,12 +61,18 @@ struct crsf_link *tx15_rf_lua_init(void)
 void tx15_rf_lua_shutdown(void)
 {
     if(!active) return;
-    tx15_rf_uart_stop();crsf_link_select(&lua_link,CRSF_SLOT_OFF);active=0;
+#ifndef TX15_ELRS_PRODUCT
+    tx15_rf_uart_stop();
+#endif
+    crsf_link_select(&lua_link,CRSF_SLOT_OFF);active=0;
     crsf_tools_cancel(&tools);tx15_rf_write_report=tools.report;
     tx15_rf_report.state=2;
 }
 void tx15_rf_lua_stop(void)
 {
+#ifdef TX15_ELRS_PRODUCT
+    tx15_rf_lua_shutdown();return;
+#endif
 #ifdef TX15_ELRS_RC
     if(tx15_rf_rc_enabled()) {
         crsf_tools_cancel(&tools);tx15_rf_write_report=tools.report;
@@ -60,7 +84,7 @@ void tx15_rf_lua_stop(void)
 static int send(void *ctx,int slot,uint32_t generation,const uint8_t *data,unsigned size)
 {
     (void)ctx;
-    if(slot!=0 || generation!=lua_link.generation) return 0;
+    if(slot!=lua_link.slot || generation!=lua_link.generation) return 0;
     int kind=size>=6?crsf_tools_kind(&tools,data[2],data+3,size-4):0;
     /* Reject permanently forbidden frames without blocking subsequent reads.
      * Busy still returns zero and retains an otherwise authorized frame. */
@@ -81,17 +105,28 @@ static int send(void *ctx,int slot,uint32_t generation,const uint8_t *data,unsig
 void tx15_rf_lua_poll(void)
 {
     if(!active) return;
+#ifdef TX15_ELRS_PRODUCT
+    if(!tx15_rf_module_active(lua_link.slot)) {tx15_rf_lua_shutdown();return;}
+    const volatile struct tx15_rf_uart_stats *stats=lua_link.slot ? &tx15_rf_external_stats : &tx15_rf_uart_stats;
+#else
+    const volatile struct tx15_rf_uart_stats *stats=&tx15_rf_uart_stats;
+#endif
     crsf_tools_tick(&tools,CLOCK_getms());
-    tx15_rf_report.rx_bytes=tx15_rf_uart_stats.rx_bytes;tx15_rf_report.tx_bytes=tx15_rf_uart_stats.tx_bytes;
-    tx15_rf_report.errors=tx15_rf_uart_stats.errors;tx15_rf_report.dropped=tx15_rf_uart_stats.rx_dropped;
+    tx15_rf_report.rx_bytes=stats->rx_bytes;tx15_rf_report.tx_bytes=stats->tx_bytes;
+    tx15_rf_report.errors=stats->errors;tx15_rf_report.dropped=stats->rx_dropped;
     if(errors!=tx15_rf_report.errors || dropped!=tx15_rf_report.dropped) {
         lua_stream.size=0;errors=tx15_rf_report.errors;dropped=tx15_rf_report.dropped;
     }
     uint8_t byte;struct crsf_frame frame;
-    for(unsigned n=0;n<256 && tx15_rf_uart_read(&byte);n++) {
+    for(unsigned n=0;n<256;n++) {
+#ifdef TX15_ELRS_PRODUCT
+        if(!(lua_link.slot ? tx15_rf_external_read(&byte) : tx15_rf_uart_read(&byte)))break;
+#else
+        if(!tx15_rf_uart_read(&byte))break;
+#endif
         if(!crsf_stream_feed(&lua_stream,byte,CLOCK_getms(),&frame)) continue;
         tx15_rf_report.frames++;
-        if(!crsf_link_receive(&lua_link,0,lua_link.generation,&frame)) continue;
+        if(!crsf_link_receive(&lua_link,lua_link.slot,lua_link.generation,&frame)) continue;
         struct crsf_message message={.type=frame.bytes[2],.size=frame.size-4};
         memcpy(message.payload,frame.bytes+3,message.size);
         crsf_tools_receive(&tools,&message,CLOCK_getms());
@@ -103,5 +138,6 @@ void tx15_rf_lua_poll(void)
 }
 int tx15_rf_lua_authorize(uint8_t type,const uint8_t *data,unsigned size)
 { return active && crsf_tools_kind(&tools,type,data,size)!=0; }
+int tx15_rf_tools_slot(void) {return active ? lua_link.slot : CRSF_SLOT_OFF;}
 int tx15_rf_lua_writes_enabled(void) {return tools.enabled;}
 #endif

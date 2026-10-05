@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "board": "TX15 MAX STM32H750",
+  "device_uid": "1c0039000e51333234363236",
+  "internal_address": "0x08000000",
+  "internal_erase_bytes": 0,
+  "internal_program_bytes": 0,
+  "internal_full_read_bytes": 131072,
+  "external_offset": 0,
+  "external_erase_bytes": 696320,
+  "external_program_bytes": 692736,
+  "recovery_external_bytes": 1048576,
+  "recovery_internal_bytes": 131072,
+  "file_sha256": {
+    "boot.bin": "5241eea8b1761243f3aef4be42793027d64b3dc815c8d24d99e53ae03cbb4ef1",
+    "payload.bin": "6b47a87b48cbc7a02d88ca57e23ad6407690f9749ffaeefbebaa07fb52c90c65",
+    "original-internal.bin": "762b8483524abf815e1a008754055240a5eb0d9347044863492613a5f050529e",
+    "original-external.bin": "1ed0f5d634219b59c82f29887c71c8b3a889cdb6e9b15f01bea7b0349b2cd0f8",
+    "reader.elf": "7df17ec5959416d7ce527600309db744af76ded319d88ba5b12a7aa54a3d8265",
+    "reader.bin": "d097c3f89118eab9576a27eca2d8d7a6df8c9d868ff71063344889085b8f00ad",
+    "app.elf": "44747eed6e0ced8e9538a6a29efc1aa4c6a378c922859a0aa202ad145dfab473",
+    "boot.elf": "11fc37ebaeac50fb03226a16c31165e1e6ee75c6b63d6081bbb5244b70194571",
+    "build.json": "1325f77c256e91dbed8459be53167b79dd774504a148c097cb9867faf5dd7590",
+    "baseline-installed.json": "48b291f7a92008e7982810120ab5092e210ee1869c4d22e5fca60e489d56b129"
+  },
+  "install_approval": "a793222d74d339f9305da6ff04ea831b4aea8893c843c6a5829eb9dfa7e6a207",
+  "recovery_approval": "b85fa6adde39582d92b2d522d6147bb32cad10a27042a29725d5a1a81fd038b1",
+  "flash_write_authorized": false,
+  "success_exit": "CPU halted; manual battery power cycle",
+  "rf_enabled": true,
+  "persistent_settings": true,
+  "settings_region": {
+    "offset": 983040,
+    "bytes": 65536,
+    "preserve_on_update": true
+  },
+  "limitations": [
+    "Updated app hardware acceptance and native rollback untested",
+    "No USB updater",
+    "Model1 NOR storage untested; calibration not stored"
+  ]
+}

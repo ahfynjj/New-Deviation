@@ -1,4 +1,7 @@
 #ifdef TX15_ELRS_RC
+#ifdef TX15_ELRS_PRODUCT
+#include "rf_product.inc"
+#else
 #include "rf_rc.h"
 #include "rf_lua.h"
 #include "../../../../../hardware/tx15/board/rf_uart.h"
@@ -30,7 +33,9 @@ void tx15_rf_rc_update(const int32_t *ch,unsigned count,int analog_ok,uint32_t n
     if(!analog_ok || !ch || count<5 || count>16 || !rc.report.active)return;
     int32_t safe[16]={0};
     for(unsigned i=0;i<count;i++)safe[i]=ch[i];
-    safe[4]=safe[13]=-10000; /* Bench only: never arm CH5 or CH14. */
+#ifndef TX15_ELRS_PRODUCT
+    safe[4]=safe[13]=-10000; /* Retain explicit restrictions in RAM benches. */
+#endif
     /* Encode outside the critical section; publish only a complete frame. */
     struct crsf_rc packed;crsf_rc_init(&packed);crsf_rc_select(&packed,0,now);
     crsf_rc_publish(&packed,safe,16,now);
@@ -49,4 +54,6 @@ int tx15_rf_rc_send_tool(const uint8_t *data,unsigned size,uint32_t now) {
     int accepted=crsf_rc_tools_ready(&rc,now) && tx15_rf_uart_send(data,size);
     unlock(old);return accepted;
 }
+#endif
+
 #endif

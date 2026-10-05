@@ -1284,7 +1284,21 @@ static void write_proto_opts(FILE *fh, struct Model *m)
     fprintf(fh, "\n");
 }
 
+#ifdef TX15_PERSISTENCE
+#include "../../hardware/tx15/board/settings_nor.h"
+#ifdef TX15_ELRS_RC
+#include "target/tx/radiomaster/tx15/rf_model.h"
+#endif
+static struct Model stored_model;
+#endif
 u8 CONFIG_WriteModel(u8 model_num) {
+#ifdef TX15_PERSISTENCE
+#ifdef TX15_ELRS_RC
+    tx15_rf_model_reset();
+#endif
+    return tx15_settings_save(model_num,&Model,sizeof(Model));
+#endif
+
 #ifdef STRICT_MODEL_INPUTS
     if (model_save_blocked) {
         snprintf(model_load_error, sizeof(model_load_error), "Save blocked: load a valid model or reset first");
@@ -1581,6 +1595,13 @@ u8 CONFIG_ReadModel(u8 model_num) {
     auto_map = 0;
     get_model_file(file, model_num);
     int parse_result = CONFIG_IniParse(file, ini_handler, &Model);
+#ifdef TX15_PERSISTENCE
+    if(model_num==1 && tx15_settings_load(model_num,&stored_model,sizeof(stored_model))) {
+        Model=stored_model;
+        parse_result=0;
+    }
+#endif
+
     if (parse_result) {
         printf("Failed to parse Model file: %s\n", file);
     }
@@ -1642,9 +1663,8 @@ u8 CONFIG_SaveModelIfNeeded() {
         return 0;
 #endif
     if (CONFIG_IsModelChanged()) {
+        if(!CONFIG_WriteModel(Transmitter.current_model))return 0;
         crc32 = Crc(&Model, sizeof(Model));
-        //printf("Saving model, page %d\n", PAGE_GetID());
-        CONFIG_WriteModel(Transmitter.current_model);
     }
     return 1;
 }

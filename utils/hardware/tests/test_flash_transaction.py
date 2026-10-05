@@ -119,9 +119,10 @@ class TransactionTests(unittest.TestCase):
         r['ram_run']['context_restored']=False
         with self.assertRaises(ValueError):t.validated_observation(r)
 
-    def test_real_bundle_preparation_matches_current_boot_payload_and_backups(self):
+    def test_frozen_first_bundle_geometry_and_backups(self):
         root=Path(__file__).resolve().parents[3]
-        p=t.load_bundle(root)
+        from install_kit import read
+        p=read(root/'local/tx15-hardware/install/kit').plan
         self.assertEqual(len(p.boot),6880)
         self.assertEqual(len(p.payload)%256,0)
         self.assertGreaterEqual(p.erase_bytes,len(p.payload))

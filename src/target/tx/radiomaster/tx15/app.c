@@ -12,8 +12,9 @@
 #include "rf.h"
 #ifdef TX15_ELRS_RC
 #include "rf_model.h"
+#include "rf_lua.h"
 static unsigned lua_requested;
-void tx15_request_lua(void) { lua_requested=1; }
+void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #endif
 #include "../../../../../hardware/tx15/board/analog.h"
 #include "../../../../../hardware/tx15/board/controls.h"
@@ -54,7 +55,10 @@ void tx15_app_main(void) {
 #ifndef TX15_ELRS_RC
             MIXER_CalcChannels();
 #else
-            if(lua_requested) {lua_requested=0;tx15_lua_tool();}
+            if(lua_requested) {
+                unsigned slot=lua_requested-1;lua_requested=0;
+                if(tx15_rf_lua_select(slot)->slot==(int)slot)tx15_lua_tool();
+            }
 #endif
             PAGE_Event(); GUI_RefreshScreen();
         }

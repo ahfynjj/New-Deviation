@@ -9,4 +9,10 @@ void tx15_rf_rc_update(const int32_t *ch,unsigned count,int analog_ok,uint32_t n
 void tx15_rf_rc_tick(uint32_t now);
 int tx15_rf_rc_tools_ready(uint32_t now);
 int tx15_rf_rc_send_tool(const uint8_t *data,unsigned size,uint32_t now);
+#ifdef TX15_ELRS_PRODUCT
+extern volatile struct crsf_rc_report tx15_rf_module_reports[2];
+int tx15_rf_module_enable(unsigned slot,int on,uint32_t now);
+int tx15_rf_module_active(unsigned slot);
+void tx15_rf_module_update(unsigned slot,const int32_t *,unsigned,int,uint32_t);
+#endif
 #endif
