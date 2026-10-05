@@ -21,6 +21,7 @@ static unsigned request_lua(u32 buttons,unsigned flags,void *data) {
 }
 #endif
 #include "../../../../../hardware/tx15/board/analog.h"
+#include "../../../../../hardware/tx15/board/controls.h"
 #ifdef TX15_STANDALONE
 const char DeviationVersion[33]="New Deviation TX15";
 #else
@@ -35,6 +36,7 @@ void tx15_app_main(void) {
     Model.protocol=PROTOCOL_NONE;
 #endif
     tx15_analog_init();
+    tx15_controls_init();
     LCD_SetFont(DEFAULT_FONT.font); LCD_SetFontColor(DEFAULT_FONT.font_color);
     GUI_HandleButtons(1); MIXER_Init(); PAGE_Init(); PAGE_ChangeByID(PAGEID_MAIN,0);
     GUI_DrawScreen();

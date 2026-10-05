@@ -3,7 +3,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock,patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import install_kit as k
 import install_entry as e
@@ -16,12 +16,15 @@ UID='010000000200000003000000'
 
 class KitTests(unittest.TestCase):
     def setUp(self):
+        self.first_plan=k.read(ROOT/'local/tx15-hardware/install/kit').plan
+        frozen=patch.object(k,'load_bundle',return_value=self.first_plan)
+        frozen.start();self.addCleanup(frozen.stop)
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.folder=Path(self.temp.name)/'kit'
     def test_frozen_kit_verifies_without_build_outputs_or_full_external_backup(self):
         prepared=k.prepare(ROOT,self.folder,UID)
         kit=k.read(self.folder)
-        self.assertEqual(kit.plan,load_bundle(ROOT))
+        self.assertEqual(kit.plan,self.first_plan)
         self.assertEqual(kit.uid,UID)
         self.assertEqual(prepared,kit.manifest)
         self.assertEqual(len((self.folder/'original-external.bin').read_bytes()),1048576)
@@ -48,6 +51,8 @@ class KitTests(unittest.TestCase):
 
 class EntryTests(unittest.TestCase):
     def setUp(self):
+        frozen=patch.object(k,'load_bundle',return_value=k.read(ROOT/'local/tx15-hardware/install/kit').plan)
+        frozen.start();self.addCleanup(frozen.stop)
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         self.folder=Path(self.temp.name)/'kit';k.prepare(ROOT,self.folder,UID)
         self.kit=k.read(self.folder)

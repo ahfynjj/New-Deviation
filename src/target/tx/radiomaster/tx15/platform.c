@@ -39,7 +39,10 @@ u32 ScanButtons(void) {
         queued+=(queued>0)?-1:1; phase=1; until=now+100;
     }
     unsigned raw=tx15_inputs_state();
-    return pulse | ((raw&TX15_ENTER)?CHAN_ButtonMask(BUT_ENTER):0)
+    u32 trims=0;
+    for(unsigned i=0;i<8;i++) if(raw&(1u<<(i+4))) trims|=1u<<i;
+    /* First eight capability buttons are the original physical trim pairs. */
+    return pulse | trims | ((raw&TX15_ENTER)?CHAN_ButtonMask(BUT_ENTER):0)
         | ((raw&TX15_EXIT)?CHAN_ButtonMask(BUT_EXIT):0)
         | ((raw&TX15_PREV)?CHAN_ButtonMask(BUT_LEFT):0)
         | ((raw&TX15_NEXT)?CHAN_ButtonMask(BUT_RIGHT):0);

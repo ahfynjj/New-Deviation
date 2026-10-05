@@ -68,11 +68,14 @@ def read(folder):
     return Kit(folder,plan,contents['reader.bin'],int(layout['entry'],16),manifest['device_uid'],manifest)
 
 def checklist(kit):
+    preserved=kit.plan.original_internal==kit.plan.boot+b'\xff'*(131072-len(kit.plan.boot))
     return dict(schema=1,board=kit.manifest['board'],device_uid=kit.uid,
-        internal_address='0x08000000',internal_erase_bytes=131072,internal_program_bytes=len(kit.plan.boot),
+        internal_address='0x08000000',internal_erase_bytes=0 if preserved else 131072,
+        internal_program_bytes=0 if preserved else len(kit.plan.boot),internal_full_read_bytes=131072,
         external_offset=0,external_erase_bytes=kit.plan.erase_bytes,external_program_bytes=len(kit.plan.payload),
         recovery_external_bytes=1048576,recovery_internal_bytes=131072,
         file_sha256=kit.manifest['files'],install_approval=kit.approval('install'),
         recovery_approval=kit.approval('recover'),flash_write_authorized=False,
         success_exit='CPU halted; manual battery power cycle',rf_enabled=False,
-        limitations=['First physical programming/recovery and POR untested','No USB updater','No persistent model/calibration storage'])
+        limitations=(['Updated app hardware acceptance and native rollback untested'] if preserved else
+            ['First physical programming/recovery and POR untested'])+['No USB updater','No persistent model/calibration storage'])

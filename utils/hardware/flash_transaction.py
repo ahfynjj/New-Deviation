@@ -87,8 +87,15 @@ def install(plan,backend,authorization):
         if backend.read_external(plan.erase_bytes,1048576-plan.erase_bytes)!=plan.original_external[plan.erase_bytes:]:
             raise RuntimeError('External bytes outside erase range changed')
         if hasattr(backend,'verified_stage'):backend.verified_stage('external')
-        internal_dirty=True  # mark BEFORE issuing a potentially interrupted erase
-        _internal(backend,plan.boot)
+        expected_internal=plan.boot+b'\xff'*(131072-len(plan.boot))
+        if expected_internal==plan.original_internal:
+            # Native application update: preserve the already installed loader.
+            # Recheck the entire bank after external writes before checkpointing.
+            if backend.read_internal(0x08000000,131072)!=expected_internal:
+                raise RuntimeError('Unchanged internal loader readback failed')
+        else:
+            internal_dirty=True  # mark BEFORE issuing a potentially interrupted erase
+            _internal(backend,plan.boot)
         if hasattr(backend,'verified_stage'):backend.verified_stage('internal')
     except BaseException as error:
         # Ctrl+C/SystemExit after an erase is also a partial replacement.

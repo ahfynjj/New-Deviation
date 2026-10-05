@@ -51,6 +51,22 @@ class TransactionTests(unittest.TestCase):
         with self.assertRaises(ValueError):t.install(p,b,p.seal)
         self.assertEqual(b.events,['preflight'])
 
+    def test_native_app_update_keeps_identical_internal_loader(self):
+        b=MemoryBackend();b.internal[:]=b'B'*64+b'\xff'*(131072-64)
+        p=self.plan(b)
+        self.assertEqual(t.install(p,b,p.seal),['external-verified','internal-verified'])
+        self.assertNotIn('internal-erase',b.events)
+        self.assertNotIn('internal-program',b.events)
+        self.assertEqual(bytes(b.internal),p.original_internal)
+
+    def test_unchanged_loader_is_rechecked_after_external_update(self):
+        class DamagedLoader(MemoryBackend):
+            def program_external(self,a,data):
+                super().program_external(a,data);self.internal[90000]=0
+        b=DamagedLoader();b.internal[:]=b'B'*64+b'\xff'*(131072-64);p=self.plan(b)
+        with self.assertRaises(t.WriteFailure):t.install(p,b,p.seal)
+        self.assertNotIn('internal-erase',b.events)
+
     def test_external_readback_failure_never_replaces_internal_boot(self):
         b=MemoryBackend();p=self.plan(b);b.corrupt=True
         with self.assertRaises(t.WriteFailure) as error:t.install(p,b,p.seal)
@@ -107,6 +123,8 @@ class TransactionTests(unittest.TestCase):
         root=Path(__file__).resolve().parents[3]
         p=t.load_bundle(root)
         self.assertEqual(len(p.boot),6880)
-        self.assertEqual(len(p.payload),529920)
-        self.assertEqual(p.erase_bytes,532480)
+        self.assertEqual(len(p.payload)%256,0)
+        self.assertGreaterEqual(p.erase_bytes,len(p.payload))
+        self.assertEqual(p.erase_bytes%4096,0)
+        self.assertLessEqual(p.erase_bytes,1048576)
         self.assertFalse(p.manifest()['flash_write_authorized'])

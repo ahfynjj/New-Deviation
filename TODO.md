@@ -1,9 +1,11 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-10-04。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-05。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
 ## 当前优先里程碑（2026-10-03调整）
+
+- 用户报告全部物理开关/微调不可用，本轮优先补齐：新增I2C4读取两颗扩展器、SA–SF和六段按键映射、八个微调按钮及默认模型trim1–4；73项检查和98对象ARM构建通过，集中只读审查无阻断项。仅外部应用更新、完整读回及内部启动器未改比较已通过；2026-10-05用户确认正常开机，开关、六个前面板按键与四组微调测试正常。详见[开关与微调](docs/tx15/controls-2026-10-04.md)。本轮验收完成，下一阶段USB调试与更新。
 
 - 2026-10-04 首次独立安装验收全部通过：用户明确“同意首次刷入”后，完整核对原内部128KiB/外部首1MiB；外部130扇区擦除/应用编程/完整读回/未改动尾部及内部128KiB擦除/启动程序编程/完整读回全部通过。事务 `transaction-c12cf540af724836bbc253806f44d157.json` state=installed、sequence=2316，退出CPU暂停验证通过；日志 `flash-entry-20261004-173432.json`。用户脱离调试器断电开机进入Deviation，随后确认菜单/六路输入与关机再次开机“所有都正常，没有闪屏了”。当前持久运行未见闪屏，本次未改显示驱动、台架闪屏根因未定，不追加显示测试。下一阶段优先USB更新/日志，再做持久模型/校准、ELRS合入；原系统恢复写入未做物理测试。
 - 完整读取已加速：内部AP连续读跨1KiB拆分，QSPI固定地址16B批量读取；44项检查通过，500kHz只读实机完整原备份比较通过，内部2.547s、外部102.969s。可用恢复包为 `recovery-kit-20261004-bulk16.zip`，详情见[首次安装](docs/tx15/first-install-2026-10-04.md)。旧等待许可记录以下保留为历史。

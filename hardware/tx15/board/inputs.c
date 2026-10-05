@@ -3,6 +3,7 @@
  * No EXTI/timer configuration; GPIOs are covered by existing session recovery.
  */
 #include "inputs.h"
+#include "controls.h"
 #define R(a) (*(volatile uint32_t *)(a))
 static struct tx15_input_filter filter;
 static volatile unsigned pending;
@@ -20,7 +21,8 @@ static void input(unsigned p,unsigned pin) {
 static unsigned keys(void) {
     unsigned a=R(0x58020010u),g=R(0x58021810u);
     return ((g&(1u<<12))?0:TX15_ENTER)|((g&8)?0:TX15_EXIT)
-        |((g&128)?0:TX15_PREV)|((a&256)?0:TX15_NEXT);
+        |((g&128)?0:TX15_PREV)|((a&256)?0:TX15_NEXT)
+        |(tx15_controls.trims<<4);
 }
 static unsigned phase(void) {
     return ((R(0x58022010u)>>7)&1)|((R(0x58022410u)>>7)&2);

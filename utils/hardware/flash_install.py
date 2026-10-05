@@ -57,7 +57,7 @@ def identify():
             return dict(schema=1,device_uid=uid,mode='non-halting-read-only-uid',flash_mutation_commands=0)
         finally:s.close()
 
-def main(argv=None):
+def main(argv=None,kit_reader=install_kit.read):
     parser=argparse.ArgumentParser(description=__doc__)
     modes=parser.add_mutually_exclusive_group()
     for mode in ('identify','prepare','rehearse','install','recover'):modes.add_argument('--'+mode,action='store_true')
@@ -80,7 +80,7 @@ def main(argv=None):
     if args.prepare:
         if args.approval or args.arm:parser.error('Prepare opens no device')
         install_kit.prepare(ROOT,args.kit,args.device_uid)
-    kit=install_kit.read(args.kit)
+    kit=kit_reader(args.kit)
     if not (args.rehearse or args.install or args.recover):
         checklist=install_kit.checklist(kit)
         (kit.folder/'checklist.json').write_text(json.dumps(checklist,indent=2)+'\n',encoding='utf8')

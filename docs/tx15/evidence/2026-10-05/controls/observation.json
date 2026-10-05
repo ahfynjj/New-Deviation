@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-05",
+  "user_observation": "测试了 正常",
+  "accepted_by_user": [
+    "normal boot",
+    "four trim groups",
+    "SA-SF",
+    "six front-panel buttons"
+  ],
+  "transaction_state": "installed",
+  "sequence": 2120,
+  "external_dirty": true,
+  "internal_dirty": false,
+  "checkpoints": [
+    "external",
+    "internal"
+  ],
+  "rf_enabled": false,
+  "persistent_settings": false,
+  "physical_rollback_tested": false,
+  "files": [
+    {
+      "path": "local/hardware-session/flash-entry-20261004-184706.json",
+      "sha256": "fa636a3bf9ea407ac7c45beea3a39cb7bbaadadfac0e3775ad46a7346545de56"
+    },
+    {
+      "path": "local/tx15-hardware/install/controls-kit/transaction-d3c8f98197984362bf69f438f739bce7.json",
+      "sha256": "48b291f7a92008e7982810120ab5092e210ee1869c4d22e5fca60e489d56b129"
+    }
+  ]
+}

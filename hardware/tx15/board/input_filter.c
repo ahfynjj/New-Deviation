@@ -1,12 +1,12 @@
 /* New Deviation TX15; GPL-3.0-or-later. */
 #include "inputs.h"
 void tx15_input_filter_init(struct tx15_input_filter *f,unsigned keys,unsigned phase) {
-    f->stable=f->candidate=keys&15; f->phase=phase&3; f->partial=0;
-    for(unsigned i=0;i<4;i++) f->age[i]=0;
+    f->stable=f->candidate=keys&4095; f->phase=phase&3; f->partial=0;
+    for(unsigned i=0;i<12;i++) f->age[i]=0;
 }
 struct tx15_input_event tx15_input_filter_step(struct tx15_input_filter *f,unsigned keys,unsigned phase) {
     struct tx15_input_event e={0,0};
-    for(unsigned i=0;i<4;i++) {
+    for(unsigned i=0;i<12;i++) {
         unsigned mask=1u<<i;
         if((keys^f->candidate)&mask) { f->candidate^=mask; f->age[i]=0; }
         if(f->age[i]<20) f->age[i]++;

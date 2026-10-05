@@ -5,7 +5,7 @@
 enum { TX15_ENTER=1, TX15_EXIT=2, TX15_PREV=4, TX15_NEXT=8 };
 struct tx15_input_event { unsigned pressed; int rotation; };
 struct tx15_input_filter {
-    unsigned stable, candidate, age[4], phase;
+    unsigned stable, candidate, age[12], phase;
     int partial;
 };
 void tx15_input_filter_init(struct tx15_input_filter *f,unsigned keys,unsigned phase);
