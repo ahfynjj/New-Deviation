@@ -1,6 +1,7 @@
 /* Services shared by the main loop and original blocking calibration page. */
 #include "common.h"
 #include "runtime.h"
+#include "../../../../../hardware/tx15/board/battery.h"
 #include "rf.h"
 #ifdef TX15_ELRS_LUA
 #include "rf_lua.h"
@@ -11,6 +12,9 @@
 #include "../../../../../hardware/tx15/board/analog.h"
 #include "../../../../../hardware/tx15/board/controls.h"
 int tx15_runtime_poll(unsigned now) {
+#ifdef TX15_STANDALONE
+    tx15_battery_poll(now);
+#endif
 #ifdef TX15_ELRS_LUA
     tx15_rf_lua_poll();
 #endif

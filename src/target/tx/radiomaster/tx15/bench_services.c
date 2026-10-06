@@ -17,7 +17,8 @@ const u8 EATRG0[PROTO_MAP_LEN]={INP_ELEVATOR,INP_AILERON,INP_THROTTLE,INP_RUDDER
 const u8 *CurrentProtocolChannelMap=EATRG0;
 void MCU_InitModules(void) { memset(Transmitter.module_enable,0,sizeof(Transmitter.module_enable)); }
 int MCU_SetPin(struct mcu_pin *p,const char *name) { (void)p;(void)name;return 0; }
-unsigned PWR_ReadVoltage(void) { return 0; } /* Unmeasured, not a fabricated battery voltage. */
+#include "../../../../../hardware/tx15/board/battery.h"
+unsigned PWR_ReadVoltage(void) { return tx15_battery_mv; }
 int PWR_CheckPowerSwitch(void) { return 0; }
 void PWR_Shutdown(void) {
 #ifdef TX15_STANDALONE

@@ -82,6 +82,9 @@ struct mainlayout_obj {
 };
 
 struct mainpage_obj {
+#ifdef TX15_ELRS_PRODUCT
+    guiLabel_t link_status;
+#endif
     guiButton_t optico;
     guiButton_t modelico;
     guiLabel_t name;

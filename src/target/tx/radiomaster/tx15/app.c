@@ -17,6 +17,7 @@ static unsigned lua_requested;
 void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #endif
 #include "../../../../../hardware/tx15/board/analog.h"
+#include "../../../../../hardware/tx15/board/battery.h"
 #include "../../../../../hardware/tx15/board/controls.h"
 #ifdef TX15_STANDALONE
 const char DeviationVersion[33]="New Deviation TX15";
@@ -32,6 +33,9 @@ void tx15_app_main(void) {
     Model.protocol=PROTOCOL_NONE;
 #endif
     tx15_analog_init();
+#ifdef TX15_STANDALONE
+    tx15_battery_init();
+#endif
     tx15_controls_init();
     LCD_SetFont(DEFAULT_FONT.font); LCD_SetFontColor(DEFAULT_FONT.font_color);
     GUI_HandleButtons(1); MIXER_Init(); PAGE_Init(); PAGE_ChangeByID(PAGEID_MAIN,0);

@@ -21,6 +21,18 @@
 #include "config/tx.h"
 #include "telemetry.h"
 #include "rtc.h"
+#ifdef TX15_ELRS_PRODUCT
+#include "../../../../hardware/tx15/board/status.h"
+extern struct tx15_link_status tx15_link_status[2];
+static char link_text[80];
+static const char *link_status_cb(guiObject_t *obj,const void *data) {
+ (void)obj;(void)data;unsigned slot=tx15_module_enabled(&Model.tx15_modules[0]) ? 0 : 1;
+ if(!tx15_module_enabled(&Model.tx15_modules[slot]))sprintf(link_text,"RF OFF");
+ else if(!tx15_status_connected(&tx15_link_status[slot],CLOCK_getms()))sprintf(link_text,"%s: NO LINK",slot ? "EXT" : "INT");
+ else sprintf(link_text,"%s RSSI %d dBm  LQ %u%%",slot ? "EXT" : "INT",tx15_link_status[slot].rssi_dbm,tx15_link_status[slot].lq);
+ return link_text;
+}
+#endif
 
 enum {
     VTRIM_W      = 10,
@@ -89,6 +101,9 @@ void PAGE_MainInit(int page)
                         mp->battery < Transmitter.batt_alarm ? &BATTALARM_FONT : &BATTERY_FONT,
                         voltage_cb, NULL, NULL);
     }
+#ifdef TX15_ELRS_PRODUCT
+    GUI_CreateLabelBox(&gui->link_status,110,34,LCD_WIDTH-120,20,&TINY_FONT,link_status_cb,NULL,NULL);
+#endif
     //TxPower
     GUI_CreateImageOffset(&gui->pwr, LCD_WIDTH - left_offset - 50,4, 48, 24, 48 * Model.tx_power, 0, "media/txpower" IMG_EXT, NULL, NULL);
 }
@@ -101,6 +116,10 @@ void PAGE_MainExit()
 static void _check_voltage(guiLabel_t *obj)
 {
     (void)obj;
+#ifdef TX15_ELRS_PRODUCT
+    static u32 link_redraw;
+    if((u32)(CLOCK_getms()-link_redraw)>=250) {link_redraw=CLOCK_getms();GUI_Redraw(&gui->link_status);}
+#endif
     s16 batt = PWR_ReadVoltage();
     if (batt / 10 != mp->battery / 10 && batt / 10 != mp->battery / 10 + 1) {
         

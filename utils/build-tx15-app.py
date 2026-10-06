@@ -61,7 +61,7 @@ if os.environ.get('TX15_ELRS_LUA') == '1':
              ('lua.c','luac.c','linit.c','liolib.c','loslib.c','loadlib.c','ldblib.c','lcorolib.c')]
 from tx15_resources import generate
 sources.append(generate(root,out))
-sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c','analog.c','rf_uart.c','controls.c','control_decode.c','settings_store.c','settings_nor.c','rf_external.c')]
+sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c','analog.c','battery.c','rf_uart.c','controls.c','control_decode.c','settings_store.c','settings_nor.c','rf_external.c')]
 sources.append(root/'hardware/tx15/app/startup.S')
 if standalone:
  sources += [root/'hardware/tx15/boot'/n for n in ('handoff.c','power_button.c')]

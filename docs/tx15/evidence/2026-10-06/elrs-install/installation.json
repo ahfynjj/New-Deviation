@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-06",
+  "status": "verified-halted",
+  "log": "local\\hardware-session\\flash-entry-20261006-091247.json",
+  "transaction": "transaction-8e0a223270ee4cb79e85e477819005eb.json",
+  "sequence": 2776,
+  "state": "installed",
+  "internal_modified": false,
+  "external_modified": true,
+  "checkpoints": [
+    "external",
+    "internal"
+  ],
+  "payload_sha256": "6b47a87b48cbc7a02d88ca57e23ad6407690f9749ffaeefbebaa07fb52c90c65",
+  "external_erase_bytes": 696320,
+  "external_program_bytes": 692736,
+  "settings_region_preserved": true,
+  "cpu_halt_verified": true,
+  "cold_boot_acceptance": "user-confirmed-running",
+  "lua_acceptance": "user-confirmed-working",
+  "model_storage_acceptance": "user-confirmed-working",
+  "user_observation": "模型保存和elrs lua没问题",
+  "pending_issues": [
+    "Battery voltage acquisition/display",
+    "ELRS RSSI/LQ home display"
+  ]
+}

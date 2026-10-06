@@ -13,6 +13,12 @@
 #endif
 static struct crsf_link lua_link={.slot=CRSF_SLOT_OFF};
 static struct crsf_stream lua_stream;
+#ifdef TX15_ELRS_PRODUCT
+#include "../../../../../hardware/tx15/board/status.h"
+static struct crsf_stream module_streams[2];
+struct tx15_link_status tx15_link_status[2];
+static uint32_t module_errors[2],module_drops[2];
+#endif
 static struct crsf_tools tools;
 volatile struct crsf_tool_report tx15_rf_write_report;
 static uint32_t errors,dropped;
@@ -104,6 +110,36 @@ static int send(void *ctx,int slot,uint32_t generation,const uint8_t *data,unsig
 }
 void tx15_rf_lua_poll(void)
 {
+#ifdef TX15_ELRS_PRODUCT
+    uint32_t now=CLOCK_getms();
+    for(unsigned slot=0;slot<2;slot++) {
+        if(!tx15_rf_module_active(slot)) {
+            memset(&module_streams[slot],0,sizeof(module_streams[slot]));
+            memset(&tx15_link_status[slot],0,sizeof(tx15_link_status[slot]));continue;
+        }
+        const volatile struct tx15_rf_uart_stats *st=slot ? &tx15_rf_external_stats : &tx15_rf_uart_stats;
+        if(module_errors[slot]!=st->errors || module_drops[slot]!=st->rx_dropped)module_streams[slot].size=0;
+        module_errors[slot]=st->errors;module_drops[slot]=st->rx_dropped;
+        uint8_t byte;struct crsf_frame f;
+        for(unsigned n=0;n<256;n++) {
+            if(!(slot ? tx15_rf_external_read(&byte) : tx15_rf_uart_read(&byte)))break;
+            if(!crsf_stream_feed(&module_streams[slot],byte,now,&f))continue;
+            tx15_status_frame(&tx15_link_status[slot],&f,now);
+            if(!active || lua_link.slot!=(int)slot)continue;
+            tx15_rf_report.frames++;
+            if(!crsf_link_receive(&lua_link,slot,lua_link.generation,&f))continue;
+            struct crsf_message m={.type=f.bytes[2],.size=f.size-4};
+            memcpy(m.payload,f.bytes+3,m.size);crsf_tools_receive(&tools,&m,now);
+            struct crsf_device d;if(crsf_device_info(&f,&d))tx15_rf_report.device=d;
+        }
+    }
+    if(active && !tx15_rf_module_active(lua_link.slot))tx15_rf_lua_shutdown();
+    if(active) {
+        crsf_tools_tick(&tools,now);crsf_link_service(&lua_link,send,NULL);
+        tx15_rf_write_report=tools.report;
+    }
+    return;
+#endif
     if(!active) return;
 #ifdef TX15_ELRS_PRODUCT
     if(!tx15_rf_module_active(lua_link.slot)) {tx15_rf_lua_shutdown();return;}

@@ -3,6 +3,10 @@
 更新：2026-10-05。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
+## 2026-10-06 状态显示
+
+ELRS已持久安装，用户确认模型保存及Lua正常。电池ADC3和主页面RSSI/LQ已实现软件候选，18项检查和131对象ARM构建通过；待新版本更新/恢复包及实机测量。详见[状态显示](docs/tx15/status-display-2026-10-06.md)。
+
 ## 2026-10-05 用户调整：ELRS优先
 
 触摸与USB后移。MAIN MENU独立ELRS Lua、内/外置RF启停与CRSF、双模块路由、启动油门门槛、持续RC和模型1双记录NOR保存已完成软件实现；45项离线检查与130对象ARM构建通过。更新包及当前controls版本恢复包已冻结并离线验证，尚未刷入。下一步一次合并验收内置Lua及关机后模型保存；外置待实物、接收端RC待单独验收，校准存储和绑定/WiFi命令后补。详见[ELRS集成](docs/tx15/elrs-integration-2026-10-05.md)。

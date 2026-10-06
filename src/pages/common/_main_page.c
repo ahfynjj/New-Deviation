@@ -258,8 +258,12 @@ void PAGE_MainEvent()
                 break;
         }
     }
+#ifdef TX15_ELRS_PRODUCT
+    _check_voltage(NULL); /* Status refresh also runs with physical navigation. */
+#else
     if(HAS_TOUCH)  //FIXME: Hack to let 320x240 GUI continue to work
         _check_voltage(NULL);
+#endif
 #if HAS_RTC
     if(Display.flags & SHOW_TIME) {
         u32 time = RTC_GetValue() / 60;
