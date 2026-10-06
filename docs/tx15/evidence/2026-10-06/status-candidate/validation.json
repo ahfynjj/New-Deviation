@@ -1,0 +1,10 @@
+{
+  "tests_passed": 41,
+  "arm_objects": 131,
+  "archive_sha256": "25fa534e6182b6bca6a64f9e446d66d76c16198ccdf4e461e55ca5fed4a31d9f",
+  "archive_extracted_validation": "passed",
+  "capture": "local/hardware-session/status-snapshot-20261006-095157.json",
+  "flash_mutation_commands": 0,
+  "settings_sha256": "7d66b222a25e93b96dbde8d9e319718387f9aade0884f15b2a512411ea4b5425",
+  "hardware_display_acceptance": "pending"
+}
