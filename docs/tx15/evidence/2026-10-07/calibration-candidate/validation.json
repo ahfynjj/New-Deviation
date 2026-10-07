@@ -1,0 +1,9 @@
+{
+  "tests_passed": 47,
+  "arm_objects": 131,
+  "snapshot_log": "local/hardware-session/status-snapshot-20261007-212045.json",
+  "flash_writes": 0,
+  "recovery_archive_sha256": "1ee8fe416ca0c3da5cee2ce989eff8a8825a4f26e1ca2f8fb529ab9f6e416679",
+  "archive_and_extracted_kit": "passed",
+  "calibration_persistence_hardware_acceptance": "pending"
+}
