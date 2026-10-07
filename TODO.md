@@ -3,6 +3,10 @@
 更新：2026-10-05。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
+## 2026-10-07 校准保存
+
+实机断链定位为校准全0导致最低油门未过门槛、RC不输出，重新校准后用户确认恢复连接。已实现模型1与操纵模式/六路校准联合双记录保存及旧记录回退；131对象ARM构建通过，待现场快照、冻结更新包及重启验收。详见[校准保存](docs/tx15/calibration-persistence-2026-10-07.md)。
+
 ## 2026-10-06 状态显示
 
 ELRS已持久安装，用户确认模型保存及Lua正常。电池ADC3和主页面RSSI/LQ已实现软件候选，18项检查和131对象ARM构建通过；现场模型区只读备份及status-kit更新/恢复包已冻结验证，41项相关检查通过；待具体清单确认后的刷入及实机测量。详见[状态显示](docs/tx15/status-display-2026-10-06.md)。

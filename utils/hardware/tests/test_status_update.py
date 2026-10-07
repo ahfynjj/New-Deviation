@@ -35,5 +35,14 @@ class UpdateTests(unittest.TestCase):
    folder=Path(d);(folder/j.name).write_bytes(j.read_bytes());fake=replace(b,folder=folder)
    for pointer in ({'schema':9,'journal':j.name},{'schema':1,'journal':'../'+j.name}):
     (folder/'active.json').write_text(json.dumps(pointer))
-    with patch.object(u.elrs_update,'read',return_value=fake):
+    with patch.object(u,'read_native',return_value=fake):
      with self.assertRaises(ValueError):u.baseline(ROOT)
+
+ def test_next_update_accepts_installed_status_and_preserves_models(self):
+  folder0=ROOT/'local/tx15-hardware/install/status-kit'
+  base=u.read(folder0);internal,external=native_update.baseline_images(base)
+  external=external[:0xf0000]+bytes(range(256))*256
+  with tempfile.TemporaryDirectory() as d:
+   folder=Path(d)/'next';kit=u.prepare(ROOT,folder,internal,external,folder0)
+   self.assertEqual(kit.plan.original_external,external)
+   self.assertEqual(u.read(folder).approval('recover'),kit.approval('recover'))

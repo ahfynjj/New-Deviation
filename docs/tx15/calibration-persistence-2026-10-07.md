@@ -1,0 +1,9 @@
+# TX15 校准持久化修复
+
+实机只读诊断：校准全0，物理最低油门归一化约-9008，未过-9500门槛；模块开启但RC published/frames为0。重新校准后门槛通过，约250 RC帧/秒，短时监测LQ100且UART错误不增加，用户确认恢复连接。日志local/hardware-session/rf-live-20261007-210606.json和rf-live-after-calibration.json。该结果不是长时间可靠性或接收机通道控制验收。
+
+修复将操纵模式和六路max/min/zero与模型1合为原双记录存储中的单次提交。52字节版本头含magic/version/model长度/mode及六路校准，拒绝非法mode和非零错误校准。可读取旧模型记录，正常保存时迁移；保存失败仍保留待保存状态。仅改变校准或模式也会触发正常关机保存。油门门槛不变。
+
+131对象ARM构建通过；实质测试直接调用真实CONFIG_SaveModelIfNeeded、CONFIG_IsModelChanged和CONFIG_WriteModel，检查校准/模式单独变化与失败重试；双记录存储测试覆盖断写保护。集中只读审查无阻断项。旧模型读取迁移经代码审查，尚未进行真实NOR升级验收。
+
+更新工具增加--baseline明确选择当前已安装status-kit，验证其事务和首0xf0000已安装镜像；完整保留模型区现场快照。旧更新包仍可校验，不能覆盖已有kit。下一步只读捕获当前状态，冻结calibration-kit和回退包，获得具体清单确认后刷入。首次新版启动后需校准一次，再正常关机/开机核对校准、模型和接收机连接；本轮未写Flash。

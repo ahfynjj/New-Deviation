@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-06",
+  "status": "verified-halted",
+  "log": "local\\hardware-session\\flash-entry-20261006-101238.json",
+  "transaction": "transaction-5291d1f4230f4145838c2f55ea7a6b0e.json",
+  "sequence": 2779,
+  "state": "installed",
+  "internal_modified": false,
+  "external_modified": true,
+  "checkpoints": [
+    "external",
+    "internal"
+  ],
+  "payload_sha256": "1795e5355d5cf027915b75eef47e9b1ef57ec8f07137a29eda75ca1b8081a36c",
+  "external_erase_bytes": 696320,
+  "external_program_bytes": 693504,
+  "settings_region_preserved": true,
+  "halt_verified": true,
+  "boot_display_acceptance": "user-confirmed-running",
+  "battery_precision_acceptance": "pending-multimeter-comparison",
+  "receiver_signal_acceptance": "pending",
+  "battery_display_volts": 8.18,
+  "model_retention_acceptance": "user-confirmed-retained",
+  "user_observation": "电压显示8.18 ，模型设置有"
+}
