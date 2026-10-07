@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "board": "TX15 MAX",
+  "failed_install": {
+    "journal": "transaction-3f9675b7cd2641c19a3557bf3925b7ab.json",
+    "state": "failed",
+    "sequence": 1466,
+    "external_dirty": true,
+    "internal_dirty": false,
+    "error": "[WinError 5] 拒绝访问。: 'local\\\\tx15-hardware\\\\install\\\\calibration-kit\\\\transaction-3f9675b7cd2641c19a3557bf3925b7ab.json.a7c65ac2f837444a8e507cbb1cc7ad4f.tmp' -> 'local\\\\tx15-hardware\\\\install\\\\calibration-kit\\\\transaction-3f9675b7cd2641c19a3557bf3925b7ab.json'"
+  },
+  "recovery": {
+    "journal": "transaction-7915105005c944b891d6ec089c797f42.json",
+    "state": "recovered",
+    "sequence": 4229,
+    "checkpoints": [
+      "external",
+      "internal"
+    ],
+    "result": [
+      "original-external-verified",
+      "original-internal-verified"
+    ],
+    "halt_verified": true,
+    "external_dirty": false,
+    "internal_dirty": false,
+    "external_sha256": "7dd0d368d7330f8200716881f8799a8e9f05e10d35b7516664e590da72f8da9b",
+    "internal_sha256": "762b8483524abf815e1a008754055240a5eb0d9347044863492613a5f050529e"
+  },
+  "package": {
+    "path": "local\\tx15-hardware\\install\\calibration-recovery-20261007-v2.zip",
+    "sha256": "6bd61faab0e031212c24b50b0bb0d9f4344a1f17be9483221fc77f73216e80b0",
+    "zip_integrity_passed": true,
+    "extracted_kit_validation_passed": true
+  },
+  "host_tests": {
+    "flash_checks": 41,
+    "install_entry_checks": 12,
+    "swd_backend_checks": 12,
+    "all_passed": true,
+    "complete_suite": {
+      "run": 201,
+      "failures": 1,
+      "errors": 7,
+      "passed": false
+    }
+  },
+  "power_cycle_acceptance": "pending",
+  "calibration_candidate_installed": false
+}

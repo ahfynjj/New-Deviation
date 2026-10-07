@@ -8,6 +8,7 @@ import copy
 import hashlib
 import json
 import os
+import time
 from pathlib import Path
 import uuid
 
@@ -49,7 +50,19 @@ class Journal:
         try:
             with temp.open('x',encoding='utf8') as stream:
                 json.dump(record,stream,indent=2);stream.flush();os.fsync(stream.fileno())
-            os.replace(temp,self.path)
+            # Windows readers/virus scanners may briefly deny replacement.
+            # Retry only that OS failure, before any new hardware command;
+            # persistent denial still leaves the previous durable intent intact.
+            for attempt in range(10):
+                if self.read(self.path)!=self.record:
+                    raise ValueError('Journal changed by another process')
+                try:
+                    os.replace(temp,self.path)
+                    break
+                except PermissionError as error:
+                    if getattr(error,'winerror',None) not in (5,32,33) or attempt==9:
+                        raise
+                    time.sleep(0.05)
             self.record=record
         finally:
             if temp.exists():temp.unlink()

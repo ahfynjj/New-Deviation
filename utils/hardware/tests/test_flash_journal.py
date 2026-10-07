@@ -7,7 +7,8 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from flash_transaction import Transaction
 from flash_journal import Journal
 from flash_journal import execute
-from unittest.mock import Mock
+from unittest.mock import Mock,patch
+import os
 
 class JournalTests(unittest.TestCase):
     def setUp(self):
@@ -70,5 +71,47 @@ class JournalTests(unittest.TestCase):
         self.assertEqual(r['state'],'failed')
         self.assertTrue(r['external_dirty']);self.assertTrue(r['internal_dirty'])
         self.assertTrue(r['original_resume_forbidden'])
+    def test_transient_windows_replace_denial_preserves_durable_intent(self):
+        j=Journal.create(self.path,self.plan,'install',self.plan.seal)
+        replace=os.replace
+        denial=PermissionError('Windows sharing conflict');denial.winerror=5
+        attempts=[]
+        def transient(source,destination):
+            attempts.append(1)
+            if len(attempts)<3:raise denial
+            return replace(source,destination)
+        with patch('flash_journal.os.replace',side_effect=transient):
+            j.before('external-erase',0,4096)
+        self.assertEqual(Journal.read(self.path),j.record)
+        self.assertEqual(j.record['state'],'intent')
+        self.assertEqual(len(attempts),3)
+    def test_permanent_replace_denial_is_bounded_and_keeps_previous_record(self):
+        j=Journal.create(self.path,self.plan,'install',self.plan.seal)
+        original=Journal.read(self.path)
+        denial=PermissionError('Windows sharing conflict');denial.winerror=5
+        with patch('flash_journal.os.replace',side_effect=denial) as replace:
+            with self.assertRaises(PermissionError):j.before('external-erase',0,4096)
+        self.assertEqual(replace.call_count,10)
+        self.assertEqual(Journal.read(self.path),original)
+        self.assertEqual(j.record,original)
+        self.assertEqual(list(self.path.parent.glob('*.tmp')),[])
+    def test_retry_does_not_overwrite_another_valid_record(self):
+        import flash_journal
+        j=Journal.create(self.path,self.plan,'install',self.plan.seal)
+        changed=dict(j.record);changed['sequence']=99
+        changed['record_sha256']=flash_journal._digest(changed)
+        denial=PermissionError('Windows sharing conflict');denial.winerror=32
+        def changed_during_replace(source,destination):
+            self.path.write_text(json.dumps(changed),encoding='utf8')
+            raise denial
+        with patch('flash_journal.os.replace',side_effect=changed_during_replace):
+            with self.assertRaisesRegex(ValueError,'changed by another process'):
+                j.before('external-erase',0,4096)
+        self.assertEqual(Journal.read(self.path),changed)
+    def test_non_windows_permission_error_is_not_retried(self):
+        j=Journal.create(self.path,self.plan,'install',self.plan.seal)
+        with patch('flash_journal.os.replace',side_effect=PermissionError('permission')) as replace:
+            with self.assertRaises(PermissionError):j.before('external-erase',0,4096)
+        self.assertEqual(replace.call_count,1)
 
 if __name__=='__main__':unittest.main()

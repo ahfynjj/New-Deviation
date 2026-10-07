@@ -57,11 +57,16 @@ class WriteFailure(RuntimeError):
 def _external(backend,data,erase_bytes):
     if not 0<len(data)<=erase_bytes<=1048576 or erase_bytes%4096 or len(data)%256:
         raise ValueError('External range/page violation')
-    for offset in range(0,erase_bytes,4096):backend.erase_external(offset,4096)
+    for offset in range(0,erase_bytes,4096):
+        backend.erase_external(offset,4096)
+        if (offset+4096)%65536==0 or offset+4096==erase_bytes:
+            print(f'ERASE EXTERNAL {offset+4096}/{erase_bytes}',flush=True)
     if backend.read_external(0,erase_bytes)!=b'\xff'*erase_bytes:raise RuntimeError('External erase readback failed')
     for offset in range(0,len(data),256):
         page=data[offset:offset+256]
         if page!=b'\xff'*256:backend.program_external(offset,page)
+        if (offset+256)%65536==0 or offset+256==len(data):
+            print(f'PROGRAM EXTERNAL {offset+256}/{len(data)}',flush=True)
     expected=data+b'\xff'*(erase_bytes-len(data))
     if backend.read_external(0,erase_bytes)!=expected:raise RuntimeError('External program readback failed')
 
