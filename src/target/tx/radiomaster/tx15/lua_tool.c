@@ -20,6 +20,7 @@ static unsigned events[8],head,count,leave;
 static void service(void *ctx) { (void)ctx;tx15_runtime_poll(CLOCK_getms()); }
 static uint32_t now(void *ctx) { (void)ctx;return CLOCK_getms(); }
 static void stop(void *ctx) { (void)ctx;tx15_rf_lua_stop(); }
+static const char *tool_error(void *ctx) { (void)ctx;return tx15_rf_lua_error(); }
 static int authorize(void *ctx,uint8_t type,const uint8_t *data,unsigned size)
 { (void)ctx;return tx15_rf_lua_authorize(type,data,size); }
 static u8 select_font(unsigned flags)
@@ -94,12 +95,12 @@ void tx15_lua_tool(void)
     for(size_t i=0;i<tx15_resource_count;i++) if(!strcmp(tx15_resources[i].path,"scripts/elrs.lua")) script=&tx15_resources[i];
     if(!script) return;
     struct nd_lua_host host={.clock_ms=now,.service=service,.clear=clear,.text=text,
-        .size_text=dimensions,.rect=rect,.line=line,.stop=stop,.authorize=authorize};
+        .size_text=dimensions,.rect=rect,.line=line,.stop=stop,.authorize=authorize,.error=tool_error};
     head=count=leave=0;
     BUTTON_RegisterCallback(&action,CHAN_ButtonMask(BUT_ENTER)|CHAN_ButtonMask(BUT_EXIT)|
         CHAN_ButtonMask(BUT_UP)|CHAN_ButtonMask(BUT_DOWN)|CHAN_ButtonMask(BUT_LEFT)|CHAN_ButtonMask(BUT_RIGHT),
         BUTTON_PRESS|BUTTON_RELEASE|BUTTON_LONGPRESS|BUTTON_PRIORITY,button,NULL);
-    u32 started=CLOCK_getms(),previous=started;
+    u32 started=CLOCK_getms(),previous=started;unsigned error_drawn=0;
     nd_lua_start(&tool,heap.bytes,sizeof(heap.bytes),&host,tx15_rf_lua_init(),(const char *)script->data,script->size);
     tool.allow_writes=tx15_rf_lua_writes_enabled();
     for(;;) {
@@ -111,6 +112,8 @@ void tx15_lua_tool(void)
 #endif
             unsigned event=0;
             if(count) {event=events[head];head=(head+1)%8;count--;}
+            service(NULL);
+            if(tool.state==ND_LUA_ERROR && event==ND_EVT_EXIT)leave=1;
             nd_lua_run(&tool,event);
             tx15_lua_report.state=tool.state;tx15_lua_report.runs=tool.runs;
             tx15_lua_report.used=tool.arena.used;tx15_lua_report.peak=tool.arena.peak;
@@ -121,9 +124,9 @@ void tx15_lua_tool(void)
             tx15_lua_report.gc_ms=tool.gc_ms;tx15_lua_report.gc_calls=tool.gc_calls;
             tx15_lua_report.draw_ms=tool.draw_ms;tx15_lua_report.service_ms=tool.service_ms;
             tx15_lua_report.instructions=tool.instructions;tx15_lua_report.drawing_ops=tool.drawing_ops;
-            if(tool.state==ND_LUA_ERROR) {
+            if(tool.state==ND_LUA_ERROR && !error_drawn) {
                 clear(NULL);text(NULL,5,50,"Lua stopped",ND_BOLD,0);text(NULL,5,90,tool.error,0,0);
-                break;
+                text(NULL,5,130,"Press EXIT to return",0,0);error_drawn=1;
             }
         }
         if(leave || tool.state==ND_LUA_EXITED)break;

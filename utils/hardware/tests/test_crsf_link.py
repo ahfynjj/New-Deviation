@@ -21,6 +21,8 @@ class CrsfLinkTests(unittest.TestCase):
                    ['-DTX15_ELRS_LUA=1','-DTX15_ELRS_RC=1','-DTX15_RC_TEST=1'])
     def test_tool_write_readback(self):
         self.run_c('crsf_tools_test.c', ['crsf_tools.c'])
+    def test_command_start_confirm_query_cancel(self):
+        self.run_c('crsf_commands_test.c', ['crsf_tools.c'])
     def test_lua_rf_session(self):
         self.run_c('rf_lua_test.c', ['crsf_link.c','crsf_stream.c','crsf_tools.c'],
                    ['src/target/tx/radiomaster/tx15/rf_lua.c'], ['-DTX15_ELRS_LUA=1'])

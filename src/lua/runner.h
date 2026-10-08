@@ -19,6 +19,7 @@ struct nd_lua_host {
     void (*line)(void *,int,int,int,int,uint16_t);
     void (*stop)(void *); /* Close selected bench link on failure/exit. */
     int (*authorize)(void *,uint8_t,const uint8_t *,unsigned); /* Optional stricter platform policy. */
+    const char *(*error)(void *); /* Terminal transport failure; stop the tool, not RC. */
 };
 struct nd_lua {
     struct nd_arena arena;

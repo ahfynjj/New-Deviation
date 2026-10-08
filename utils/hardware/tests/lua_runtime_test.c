@@ -13,6 +13,10 @@ static unsigned captured_sizes[64], captured_count;
 static uint64_t completed_fields;
 static struct crsf_tools policy;
 static unsigned use_policy,busy_until,deferred_reads;
+static unsigned command_mode,starts,confirms,queries,cancels,command_status,popup_seen,silent,multipart;
+static void command_reply(unsigned id,unsigned status)
+;
+static void command_chunk(unsigned id,unsigned status,unsigned chunk);
 static uint32_t clock_ms(void *ctx) { (void)ctx; return now; }
 static void clear(void *ctx) { (void)ctx; clears++;now+=draw_cost; }
 static void text(void *ctx,int x,int y,const char *s,unsigned flags,uint16_t color)
@@ -23,10 +27,12 @@ static void text(void *ctx,int x,int y,const char *s,unsigned flags,uint16_t col
     if (!strcmp(s,"Packet Rate")) names|=2;
     if (!strncmp(s,"> TX Power",10)) names|=4;
     if (!strcmp(s,"Max Power")) names|=8;
+    if (strstr(s,"Confirm WiFi?") || strstr(s,"Running command")) popup_seen++;
 }
 static void dimensions(void *ctx,const char *s,unsigned flags,int *w,int *h)
 { (void)ctx;(void)flags;*w=(int)strlen(s)*10;*h=21; }
 static void stop(void *ctx) { (void)ctx;stops++; }
+static const char *tool_error(void *ctx) { (void)ctx;return crsf_tools_error(&policy); }
 static int authorize(void *ctx,uint8_t type,const uint8_t *data,unsigned n)
 {
     (void)ctx;
@@ -34,11 +40,11 @@ static int authorize(void *ctx,uint8_t type,const uint8_t *data,unsigned n)
     return type!=0x2d || (n==4 && data[0]==0xee && data[1]==0xea
         && ((!data[2] && !data[3]) || (data[2]==4 && data[3]<=1)));
 }
-static const struct nd_lua_host host={.clock_ms=clock_ms,.clear=clear,.text=text,.size_text=dimensions,.stop=stop,.authorize=authorize};
+static const struct nd_lua_host host={.clock_ms=clock_ms,.clear=clear,.text=text,.size_text=dimensions,.stop=stop,.authorize=authorize,.error=tool_error};
 static void start(const char *source)
 {
     nd_lua_close(&runner);crsf_link_init(&link);crsf_link_select(&link,CRSF_SLOT_INTERNAL);
-    assert(nd_lua_start(&runner,memory.bytes,sizeof(memory.bytes),&host,&link,source,strlen(source)));
+    assert(nd_lua_start(&runner,memory.bytes,command_mode?160*1024:sizeof(memory.bytes),&host,&link,source,strlen(source)));
 }
 static void reply(unsigned type,const unsigned char *payload,unsigned size)
 {
@@ -53,9 +59,10 @@ static int send(void *ctx,int slot,uint32_t generation,const uint8_t *frame,unsi
 {
     (void)ctx;assert(slot==0 && generation==link.generation);assert(size<=64);
     if(use_policy) {
-        int kind=crsf_tools_kind(&policy,frame[2],frame+3,size-4);assert(kind);
+        int kind=crsf_tools_kind(&policy,frame[2],frame+3,size-4);
+        if(!kind) {policy.report.denied++;return 1;} /* Same queue-time recheck as the product. */
         if(crsf_tools_defer(&policy,frame[2],frame+3,size-4,now)) {deferred_reads++;return 0;}
-        if(kind==CRSF_TOOL_WRITE) {
+        if(kind==CRSF_TOOL_WRITE || (kind==CRSF_TOOL_COMMAND && frame[6]==1)) {
             if(!busy_until)busy_until=now+40;
             if(now<busy_until)return 0;
             busy_until=0;
@@ -66,6 +73,7 @@ static int send(void *ctx,int slot,uint32_t generation,const uint8_t *frame,unsi
         unsigned char info[]={0xea,0xee,'T','e','s','t',' ','E','L','R','S',0,
             0x45,0x4c,0x52,0x53,0,0,0,0,0,4,1,0,4,0};
         if(captured_count) info[sizeof(info)-2]=(unsigned char)captured_count;
+        else if(command_mode)info[sizeof(info)-2]=6;
         reply(0x29,info,sizeof(info));
     } else if (frame[2]==0x2c) {
         unsigned id=frame[5];requests++;
@@ -81,6 +89,7 @@ static int send(void *ctx,int slot,uint32_t generation,const uint8_t *frame,unsi
             if(!data[3]) completed_fields|=(uint64_t)1<<(id-1);
             memcpy(data+4,captured[id-1]+offset,n);reply(0x2b,data,4+n);return 1;
         }
+        if(command_mode && id>=5) {command_chunk(id,command_status,frame[6]);return 1;}
         assert(id>=1 && id<=4);unsigned char data[60]={0xea,0xee,(unsigned char)id,0};
         memcpy(data+4,fields[id-1],sizes[id-1]);
         if(id==4)data[4+sizeof(f4)-5]=(uint8_t)power_index;
@@ -88,9 +97,58 @@ static int send(void *ctx,int slot,uint32_t generation,const uint8_t *frame,unsi
     } else {
         assert(frame[2]==0x2d);
         if(frame[5]==0 && frame[6]==0)stats++;
+        else if(command_mode && frame[5]>=5) {
+            unsigned id=frame[5],op=frame[6];
+            if(op==1) {starts++;command_status=id==5?3:2;}
+            else if(op==4) {confirms++;assert(command_status==3);command_status=2;queries=0;}
+            else if(op==5) {cancels++;command_status=0;}
+            else {assert(op==6);queries++;if(command_status==2 && queries>=2)command_status=0;}
+            if(!silent)command_reply(id,command_status);
+        }
         else {assert(frame[5]==4 && frame[6]<=1);power_index=frame[6];writes++;}
     }
     return 1;
+}
+static void command_reply(unsigned id,unsigned status)
+{ command_chunk(id,status,0); }
+static void command_chunk(unsigned id,unsigned status,unsigned chunk)
+{
+    unsigned char field[180]={0,13};
+    const char *name=id==5?"WiFi":"Bind";
+    unsigned at=2,n=(unsigned)strlen(name)+1;memcpy(field+at,name,n);at+=n;
+    field[at++]=(unsigned char)status;field[at++]=10;
+    const char *info=status==3?"Confirm WiFi?":status==2?"Running command":"";
+    n=(unsigned)strlen(info);memcpy(field+at,info,n);at+=n;
+    if(multipart && status) {
+        const char *detail=" - a long module progress message requiring multiple CRSF parameter chunks";
+        n=(unsigned)strlen(detail);memcpy(field+at,detail,n);at+=n;
+    }
+    field[at++]=0;
+    unsigned offset=chunk*40;assert(offset<at);n=at-offset;if(n>40)n=40;
+    unsigned char data[60]={0xea,0xee,(unsigned char)id,(unsigned char)((at-offset-1)/40)};
+    memcpy(data+4,field+offset,n);reply(0x2b,data,n+4);
+}
+static void step(int event)
+{
+    now+=10;assert(nd_lua_run(&runner,event)==ND_LUA_RUNNING);
+    crsf_tools_tick(&policy,now);
+    uint8_t payload[4];struct crsf_frame frame;
+    if(crsf_tools_command_chunk(&policy,payload)) {
+        assert(crsf_frame_build(&frame,0xee,0x2c,payload,4));send(NULL,link.slot,link.generation,frame.bytes,frame.size);
+    }
+    crsf_link_service(&link,send,0);
+}
+static void command_start(const char *script,unsigned id)
+{
+    command_mode=1;starts=confirms=queries=cancels=command_status=popup_seen=0;
+    silent=0;
+    busy_until=0;crsf_tools_init(&policy,1);start(script);runner.allow_writes=1;
+    for(unsigned i=0;i<1500;i++)step(0);
+    step(ND_EVT_NEXT);step(ND_EVT_NEXT);step(ND_EVT_NEXT);
+    if(id==6)step(ND_EVT_NEXT);
+    step(ND_EVT_ENTER);assert(!starts && policy.report.state==CRSF_WRITE_IDLE);
+    for(unsigned i=0;i<8;i++)step(0);
+    assert(starts==1 && popup_seen && policy.report.state==CRSF_WRITE_WAIT);
 }
 int main(int argc,char **argv)
 {
@@ -176,7 +234,7 @@ int main(int argc,char **argv)
         }
         fclose(capture);
     }
-    use_policy=1;crsf_tools_init(&policy,1);start(script);free(script);
+    use_policy=1;crsf_tools_init(&policy,1);start(script);
     for (unsigned i=0;i<2500;i++) {
         now+=10;assert(nd_lua_run(&runner,0)==ND_LUA_RUNNING);crsf_link_service(&link,send,0);
     }
@@ -195,7 +253,27 @@ int main(int argc,char **argv)
         for(unsigned i=0;i<300;i++) {now+=10;assert(nd_lua_run(&runner,0)==ND_LUA_RUNNING);crsf_link_service(&link,send,0);}
         assert(writes==2 && power_index==0);
         assert(policy.report.verified==2 && deferred_reads>0);
+        /* Execute the unmodified official script, including real popups and
+         * an actual policy/UART-backpressure boundary. */
+        command_start(script,5);
+        for(unsigned i=0;i<400;i++)step(0); /* Wait >3s for human confirmation. */
+        assert(!confirms && !queries && policy.report.state==CRSF_WRITE_WAIT);
+        step(ND_EVT_ENTER);for(unsigned i=0;i<80;i++)step(0);
+        assert(confirms==1 && queries>=2 && starts==1 && policy.report.completed==1);
+        command_start(script,5);step(ND_EVT_EXIT);for(unsigned i=0;i<40;i++)step(0);
+        assert(cancels==1 && !confirms && policy.report.state==CRSF_WRITE_CANCELLED);
+        command_start(script,6);step(ND_EVT_EXIT);for(unsigned i=0;i<40;i++)step(0);
+        assert(cancels==1 && starts==1 && policy.report.state==CRSF_WRITE_CANCELLED);
+        command_start(script,6);for(unsigned i=0;i<80;i++)step(0);
+        assert(starts==1 && queries>=2 && policy.report.completed==1);
+        multipart=1;command_start(script,5);step(ND_EVT_ENTER);for(unsigned i=0;i<100;i++)step(0);
+        assert(confirms==1 && queries>=2 && starts==1 && policy.report.completed==1);multipart=0;
+        command_start(script,6);silent=1;
+        for(unsigned i=0;i<285;i++)step(0);
+        now+=200;crsf_tools_tick(&policy,now);unsigned old_stops=stops;
+        assert(nd_lua_run(&runner,0)==ND_LUA_ERROR && strstr(runner.error,"timeout") && stops==old_stops+1);
     }
+    free(script);
     printf("Official Lua init/run, %u fields, folder, route guards, error/budget/OOM; peak %u bytes\n",captured_count?captured_count:4,(unsigned)runner.arena.peak);
     nd_lua_close(&runner);assert(runner.arena.used==0 && stops>=5);
     return 0;

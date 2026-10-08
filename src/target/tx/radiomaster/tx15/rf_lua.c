@@ -1,4 +1,4 @@
-/* Internal CRSF Lua session; GPL-3.0-or-later. No RC; selection writes opt-in. */
+/* Selected-module CRSF Lua tools; GPL-3.0-or-later. Writes opt-in, RC independent. */
 #ifdef TX15_ELRS_LUA
 #include <string.h>
 #include "rf.h"
@@ -108,6 +108,13 @@ static int send(void *ctx,int slot,uint32_t generation,const uint8_t *data,unsig
     else if(kind==CRSF_TOOL_READ)tx15_rf_report.requests++;
     return 1;
 }
+static void service_tools(void)
+{
+    uint8_t payload[4];struct crsf_frame frame;
+    if(crsf_tools_command_chunk(&tools,payload) && crsf_frame_build(&frame,0xee,0x2c,payload,4))
+        send(NULL,lua_link.slot,lua_link.generation,frame.bytes,frame.size);
+    crsf_link_service(&lua_link,send,NULL);
+}
 void tx15_rf_lua_poll(void)
 {
 #ifdef TX15_ELRS_PRODUCT
@@ -135,7 +142,7 @@ void tx15_rf_lua_poll(void)
     }
     if(active && !tx15_rf_module_active(lua_link.slot))tx15_rf_lua_shutdown();
     if(active) {
-        crsf_tools_tick(&tools,now);crsf_link_service(&lua_link,send,NULL);
+        crsf_tools_tick(&tools,now);service_tools();
         tx15_rf_write_report=tools.report;
     }
     return;
@@ -169,11 +176,12 @@ void tx15_rf_lua_poll(void)
         struct crsf_device device;
         if(crsf_device_info(&frame,&device)) tx15_rf_report.device=device;
     }
-    crsf_link_service(&lua_link,send,NULL);
+    service_tools();
     tx15_rf_write_report=tools.report;
 }
 int tx15_rf_lua_authorize(uint8_t type,const uint8_t *data,unsigned size)
 { return active && crsf_tools_kind(&tools,type,data,size)!=0; }
 int tx15_rf_tools_slot(void) {return active ? lua_link.slot : CRSF_SLOT_OFF;}
 int tx15_rf_lua_writes_enabled(void) {return tools.enabled;}
+const char *tx15_rf_lua_error(void) {return crsf_tools_error(&tools);}
 #endif

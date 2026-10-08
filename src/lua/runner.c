@@ -302,6 +302,10 @@ int nd_lua_run(struct nd_lua *r,int event)
 {
     if(!r || r->state!=ND_LUA_RUNNING) return r?r->state:ND_LUA_ERROR;
     if(r->link->generation!=r->generation || r->link->slot!=r->slot) {fail(r,"Module session changed");return r->state;}
+    if(r->host.error) {
+        const char *error=r->host.error(r->host.context);
+        if(error) {fail(r,error);return r->state;}
+    }
     r->time_limit=RUN_TIME_LIMIT;r->event=event;begin(r);lua_pushcfunction(r->L,invoke_run);
     if(!protected_call(r,0,1)) return r->state;
     int result=(int)lua_tointeger(r->L,-1);lua_settop(r->L,0);r->runs++;

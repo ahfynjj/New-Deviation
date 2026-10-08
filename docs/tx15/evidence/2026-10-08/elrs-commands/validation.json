@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "date": "2026-10-08",
+  "stage": "software-candidate-not-installed",
+  "base_commit": "4f139b00",
+  "application": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "94ef4a79b00d57873bab624b167ceca25205194f9305a984fbb6b219edd551ea",
+    "payload_sha256": "dcfbf4aafc8dcdfcd50ed1824d3ce0f03afdfa8ce522e8801802b413367868c1",
+    "rf_enabled": true,
+    "persistent_settings": true
+  },
+  "payload_bytes": 694768,
+  "program_bytes": 694784,
+  "erase_bytes": 696320,
+  "loader_unchanged": true,
+  "internal_erase_bytes": 0,
+  "settings_offset": 983040,
+  "settings_bytes": 65536,
+  "official_lua_sha256": "c52bed26ff02f84e5857f01b8c88dbac95029e8f46e6e6cef398419ad91f0e14",
+  "official_lua_modified": false,
+  "arm_objects": 131,
+  "tests": {
+    "focused": {
+      "run": 46,
+      "failed": 0
+    },
+    "update_preservation": {
+      "run": 6,
+      "failed": 0
+    },
+    "full_suite": {
+      "run": 202,
+      "failed": 8,
+      "failures": [
+        "test_host_write_allowlist_excludes_destinations_and_persistent_storage (test_boot_chain.BootChainTests.test_host_write_allowlist_excludes_destinations_and_persistent_storage)",
+        "test_pinned_candidate_and_halted_upload_gate (test_boot_chain.BootChainTests.test_pinned_candidate_and_halted_upload_gate)",
+        "test_freezes_current_native_baseline_and_preserves_loader (test_native_update.NativeUpdateTests.test_freezes_current_native_baseline_and_preserves_loader)",
+        "test_rejects_altered_native_baseline_even_with_matching_digest (test_native_update.NativeUpdateTests.test_rejects_altered_native_baseline_even_with_matching_digest)",
+        "test_rejects_rf_metadata_even_with_matching_file_digest (test_native_update.NativeUpdateTests.test_rejects_rf_metadata_even_with_matching_file_digest)",
+        "test_next_update_accepts_installed_status_and_preserves_models (test_status_update.UpdateTests.test_next_update_accepts_installed_status_and_preserves_models)",
+        "test_preserves_live_models_and_freezes_recovery (test_status_update.UpdateTests.test_preserves_live_models_and_freezes_recovery)",
+        "test_pixel_order_and_real_deviation_font_via_romfs (test_app_adapter.AdapterTests.test_pixel_order_and_real_deviation_font_via_romfs)"
+      ]
+    }
+  },
+  "review": {
+    "important": 1,
+    "fixed": 1,
+    "minor": 0,
+    "fix": "actual official Lua multipart RED to GREEN; host continuation and action deferral"
+  },
+  "hardware_accessed": false,
+  "flash_mutation_commands": 0,
+  "live_settings_snapshot_pending": true,
+  "hardware_acceptance_pending": [
+    "command confirmation/cancel",
+    "WiFi/bind result if requested",
+    "RX channels/failsafe",
+    "external module",
+    "RSSI numeric interpretation"
+  ]
+}
