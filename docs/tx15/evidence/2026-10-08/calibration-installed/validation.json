@@ -35,7 +35,14 @@
     "previous_full_suite_unresolved_checks": 8
   },
   "new_firmware_cold_boot_acceptance": "pending",
-  "calibration_saved_after_normal_shutdown_and_restart": "pending",
+  "calibration_saved_after_normal_shutdown_and_restart": "user confirmed: calibration retained",
   "six_input_acceptance_after_restart": "pending",
-  "elrs_link_after_restart": "pending"
+  "elrs_link_after_restart": "pending",
+  "user_acceptance": {
+    "client_date": "2026-10-08",
+    "statement": "校准保留了",
+    "verified_scope": "calibration retention across shutdown/restart",
+    "six_inputs_separately_confirmed": false,
+    "elrs_link_separately_confirmed": false
+  }
 }
