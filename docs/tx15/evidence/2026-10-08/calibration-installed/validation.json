@@ -36,13 +36,21 @@
   },
   "new_firmware_cold_boot_acceptance": "pending",
   "calibration_saved_after_normal_shutdown_and_restart": "user confirmed: calibration retained",
-  "six_input_acceptance_after_restart": "pending",
-  "elrs_link_after_restart": "pending",
+  "six_input_acceptance_after_restart": "user preliminary confirmation: should all be normal",
+  "elrs_link_after_restart": "user preliminary confirmation: should all be normal",
   "user_acceptance": {
     "client_date": "2026-10-08",
     "statement": "校准保留了",
     "verified_scope": "calibration retention across shutdown/restart",
     "six_inputs_separately_confirmed": false,
     "elrs_link_separately_confirmed": false
+  },
+  "user_followup": {
+    "client_date": "2026-10-08",
+    "statement": "应该都正常",
+    "requested_check": "six analog inputs and internal ELRS connection after restart",
+    "acceptance_level": "preliminary user observation",
+    "measured_duration_seconds": null,
+    "receiver_channel_measurement_performed": false
   }
 }
