@@ -1,7 +1,11 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-10-05。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-08。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
+
+## 2026-10-08 校准保存版已安装
+
+同一已授权冻结校准保存版成功刷入：完整核对旧内容后更新694016字节应用，应用/未改动尾部及内部启动器全部读回一致，模型区保持原样；事务`transaction-a661ae37b3cd488dbdf15d68c66e7056.json` installed，未改启动器。28项相关检查通过；此前完整套件8项构建/测试依赖问题未修复。当前下一步是用户首次新版开机、完成六路校准并正常关机/重启，验收校准保存和六路输入；随后确认重启后内置ELRS稳定连接。详见[校准保存](docs/tx15/calibration-persistence-2026-10-07.md)。以下日期段落保留历史状态。
 
 ## 2026-10-07 校准保存
 

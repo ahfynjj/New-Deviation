@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "client_date": "2026-10-08",
+  "board": "TX15 MAX",
+  "kit": "local/tx15-hardware/install/calibration-kit",
+  "payload_bytes": 694016,
+  "erase_bytes": 696320,
+  "payload_sha256": "b3b34cd791e8ed9d7efe393653f007b0ce33c090d54c946ecf8c1c23a25ac0f5",
+  "log": "local/hardware-session/flash-entry-20261008-212226.json",
+  "journal": "transaction-a661ae37b3cd488dbdf15d68c66e7056.json",
+  "state": "installed",
+  "sequence": 2794,
+  "checkpoints": [
+    "external",
+    "internal"
+  ],
+  "transaction_result": [
+    "external-verified",
+    "internal-verified"
+  ],
+  "halt_verified": true,
+  "internal_dirty": false,
+  "old_images_compared_before_erase": true,
+  "application_full_readback_verified": true,
+  "outside_erase_range_compared_to_backup": true,
+  "loader_unchanged_and_full_bank_verified": true,
+  "calibration_candidate_installed": true,
+  "host_checks": {
+    "calibration_snapshot": 2,
+    "settings_store": 1,
+    "flash_journal": 12,
+    "flash_transaction": 13,
+    "all_selected_checks_passed": true,
+    "full_suite_rerun": false,
+    "previous_full_suite_unresolved_checks": 8
+  },
+  "new_firmware_cold_boot_acceptance": "pending",
+  "calibration_saved_after_normal_shutdown_and_restart": "pending",
+  "six_input_acceptance_after_restart": "pending",
+  "elrs_link_after_restart": "pending"
+}

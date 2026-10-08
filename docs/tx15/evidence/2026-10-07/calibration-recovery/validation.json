@@ -45,6 +45,7 @@
       "passed": false
     }
   },
-  "power_cycle_acceptance": "pending",
-  "calibration_candidate_installed": false
+  "power_cycle_acceptance": "user confirmed normal boot after recovery",
+  "calibration_candidate_installed": false,
+  "restored_version_calibration": "user reports calibration lost after shutdown and restart; restored version lacks persistence"
 }

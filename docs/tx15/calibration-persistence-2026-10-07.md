@@ -1,5 +1,7 @@
 # TX15 校准持久化修复
 
+最新状态（2026-10-08）：已成功安装冻结校准保存版，应用区完整读回、未改动外部尾部（含模型区）及内部启动器核对均通过。用户校准后正常关机/开机的实机保存验收仍待回复；下方未安装记录为此前状态。
+
 实机只读诊断：校准全0，物理最低油门归一化约-9008，未过-9500门槛；模块开启但RC published/frames为0。重新校准后门槛通过，约250 RC帧/秒，短时监测LQ100且UART错误不增加，用户确认恢复连接。日志local/hardware-session/rf-live-20261007-210606.json和rf-live-after-calibration.json。该结果不是长时间可靠性或接收机通道控制验收。
 
 修复将操纵模式和六路max/min/zero与模型1合为原双记录存储中的单次提交。52字节版本头含magic/version/model长度/mode及六路校准，拒绝非法mode和非零错误校准。可读取旧模型记录，正常保存时迁移；保存失败仍保留待保存状态。仅改变校准或模式也会触发正常关机保存。油门门槛不变。
@@ -23,3 +25,13 @@
 后续更新增加每64KiB擦除/编程标准输出进度，不再轮询正在替换的事务文件。重试须使用已冻结的calibration-kit（payload SHA256 `b3b34cd791e8ed9d7efe393653f007b0ce33c090d54c946ecf8c1c23a25ac0f5`），不能使用完整套件测试生成的RF-off工作构建；standalone构建测试会覆盖工作输出目录，是合并运行后status_update两项元数据错误的原因。
 
 含修正工具和失败/恢复事务证据的新回退包为`local/tx15-hardware/install/calibration-recovery-20261007-v2.zip`；ZIP完整性、解包后的冻结kit及恢复令牌均校验通过。证据见[evidence/2026-10-07/calibration-recovery/validation.json](evidence/2026-10-07/calibration-recovery/validation.json)。
+
+用户确认恢复后正常开机，并报告重新校准、关机开机后校准值仍丢失。这是当前恢复的上一版尚未实现校准持久化的已知行为，不能作为校准候选失败的证据。已离线重新核对冻结候选、既有安装授权、recovered状态和41项Flash检查；下一步接回调试器后继续安装同一已授权校准保存版。
+
+## 2026-10-08 安装成功，待重启验收
+
+继续执行用户先前的安装授权，冻结载荷694016字节、擦除696320字节；安装前完整内部128KiB/外部1MiB与现场备份一致。安装日志为`local/hardware-session/flash-entry-20261008-212226.json`，事务`transaction-a661ae37b3cd488dbdf15d68c66e7056.json`为installed、sequence=2794、checkpoints=[external,internal]、internal_dirty=false，退出CPU暂停确认通过。应用区与冻结镜像逐字节一致，更新范围之外的外部内容与备份一致，内部128KiB未改；此次没有写入启动器。未复现此前Windows事务替换拒绝访问错误。
+
+安装结束后重新执行校准快照、双记录存储、事务记录和事务核心共28项检查，全部通过；没有重复完整套件，先前8项构建/测试依赖问题仍保留。证据见[evidence/2026-10-08/calibration-installed/validation.json](evidence/2026-10-08/calibration-installed/validation.json)。
+
+已提示断开调试器USB并断电5秒后开机，重新校准四轴及S1/S2一次，看到Calibration done后用电源键正常关机并再次开机，直接观察六路中心和端点。此验收待用户回复，刷写读回通过不能替代校准跨重启保存的实机结果。接收机目前按约定断电，重启后的ELRS连接也尚未验收。
