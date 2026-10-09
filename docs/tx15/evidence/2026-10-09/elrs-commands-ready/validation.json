@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "date": "2026-10-09",
+  "stage": "ready-not-authorized-not-installed",
+  "source_commit": "9d1d4796",
+  "tests": {
+    "full_suite": {
+      "run": 202,
+      "failed": 0,
+      "log": "local/tx15-hardware/elrs-commands/full-suite-20261009-final.log"
+    }
+  },
+  "hardware_snapshot": {
+    "path": "local\\hardware-session\\status-snapshot-20261009-212552.json",
+    "sha256": "3fda63b035e8b1bab163a4dc34919036ae1407b48ff3b0ac0f465943f1c780d6",
+    "status": "snapshot-verified",
+    "flash_mutation_commands": 0,
+    "user_boot_confirmation": "normal Deviation boot"
+  },
+  "candidate": {
+    "elf_sha256": "94ef4a79b00d57873bab624b167ceca25205194f9305a984fbb6b219edd551ea",
+    "nd15_sha256": "dcfbf4aafc8dcdfcd50ed1824d3ce0f03afdfa8ce522e8801802b413367868c1",
+    "payload_bytes": 694768,
+    "program_bytes": 694784,
+    "erase_bytes": 696320,
+    "internal_erase_bytes": 0,
+    "settings_region": {
+      "offset": 983040,
+      "bytes": 65536,
+      "preserve_on_update": true
+    }
+  },
+  "recovery_archive": {
+    "path": "local\\tx15-hardware\\install\\elrs-commands-recovery-20261009.zip",
+    "sha256": "577b035330e0f28aea0f841701902202bc155198bb3ed76c061db5ba365678dd",
+    "bytes": 9610275,
+    "crc_and_extracted_kit_validated": true,
+    "physical_recovery_executed": false
+  },
+  "review": {
+    "critical": 0,
+    "important": 0,
+    "minor_deferred": 1,
+    "minor": "External generated-C compile failure reporting can mask compiler error; compile.log retains diagnostics"
+  },
+  "hardware_acceptance_pending": [
+    "command confirmation/cancel",
+    "WiFi or binding only if requested",
+    "receiver channels/failsafe",
+    "external module hardware",
+    "RSSI numeric interpretation"
+  ],
+  "arm_objects": 131,
+  "rebuilt_matches_frozen_candidate": true,
+  "snapshot_halted_verified": true
+}

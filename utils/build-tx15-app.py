@@ -12,7 +12,8 @@ if product and any(os.environ.get(n)!='1' for n in ('TX15_ELRS_RC','TX15_ELRS_LU
 if standalone and not product and any(os.environ.get(n)=='1' for n in ('TX15_ELRS_LUA','TX15_ELRS_RC',
  'TX15_ELRS_WRITE','TX15_ELRS_DISCOVERY','TX15_ELRS_PARAMETERS')):
  raise ValueError('Standalone first-boot build keeps RF disabled; validate cold boot before adding RF modes')
-out=root/'local/tx15-hardware'/('app-standalone' if standalone else 'app'); out.mkdir(parents=True,exist_ok=True)
+out=Path(os.environ.get('TX15_BUILD_DIR',str(root/'local/tx15-hardware'/('app-standalone' if standalone else 'app')))).resolve()
+out.mkdir(parents=True,exist_ok=True)
 arm=Path(os.environ['TEMP'])/'new-deviation-arm8/bin'
 if os.environ.get('TX15_ELRS_RC')=='1' and os.environ.get('TX15_ELRS_LUA')!='1':
  raise ValueError('RC bench requires the shared Lua RF session build')
@@ -69,7 +70,9 @@ if standalone:
 objects=[]
 with (out/'compile.log').open('w',encoding='utf-8') as log:
  for src in sources:
-  obj=out/('_'.join(src.relative_to(root).parts)+'.o')
+  try: parts=src.relative_to(root).parts
+  except ValueError: parts=('generated',src.name)
+  obj=out/('_'.join(parts)+'.o')
   r=subprocess.run([str(arm/'arm-none-eabi-gcc.exe'),*flags,'-c',str(src),'-o',str(obj)],stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding="utf-8",errors="replace")
   log.write(r.stdout)
   if r.returncode:

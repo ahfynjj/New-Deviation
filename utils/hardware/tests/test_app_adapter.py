@@ -16,7 +16,10 @@ class AdapterTests(unittest.TestCase):
 #include "buttons.h"
 #include "runtime.h"
 #include "config/tx.h"
+#include "hardware/tx15/board/controls.h"
 struct Transmitter Transmitter;
+struct tx15_controls tx15_controls;
+void tx15_controls_poll(unsigned now) { (void)now; } /* Host boundary: no I2C registers. */
 volatile uint16_t tx15_analog_raw[6];
 volatile uint32_t tx15_analog_status,tx15_analog_frames;
 volatile u8 priority_ready;
@@ -110,7 +113,7 @@ int main(void) {
    for d in ('src','src/target/tx/radiomaster/tx15','src/target/drivers/filesystems','src/gui/320x240x16','src/pages/320x240x16'):
     includes+=['-I',str(ROOT/d)]
    env=dict(os.environ,PATH=str(gcc.parent)+os.pathsep+os.environ.get('PATH',''))
-   cmd=[str(gcc),'-DUSE_OWN_PRINTF=0',*includes,str(src),str(ROOT/'src/target/tx/radiomaster/tx15/lcd.c'),str(ROOT/'src/target/tx/radiomaster/tx15/romfs.c'),str(ROOT/'src/screen/font.c'),str(ROOT/'src/buttons.c'),str(ROOT/'src/target/tx/radiomaster/tx15/analog.c'),str(ROOT/'src/target/tx/radiomaster/tx15/runtime.c'),'-o',str(exe)]
+   cmd=[str(gcc),'-DUSE_OWN_PRINTF=0',*includes,str(src),str(ROOT/'src/target/tx/radiomaster/tx15/lcd.c'),str(ROOT/'src/target/tx/radiomaster/tx15/romfs.c'),str(ROOT/'src/screen/font.c'),str(ROOT/'src/buttons.c'),str(ROOT/'src/target/tx/radiomaster/tx15/analog.c'),str(ROOT/'src/target/tx/radiomaster/tx15/runtime.c'),str(ROOT/'hardware/tx15/board/control_decode.c'),'-o',str(exe)]
    r=subprocess.run(cmd,capture_output=True,text=True,encoding="utf-8",errors="replace",env=env)
    self.assertEqual(r.returncode,0,r.stdout+r.stderr)
    subprocess.run([str(exe)],check=True,env=env)

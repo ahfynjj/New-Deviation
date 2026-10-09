@@ -1,9 +1,34 @@
-import hashlib, struct, subprocess, sys, unittest
+import hashlib, json, shutil, struct, subprocess, sys, tempfile, unittest
+from contextlib import contextmanager
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT/'utils/hardware'))
 import boot_chain
-from unittest.mock import Mock
+from unittest.mock import Mock,patch
+from utils.hardware.tests.build_fixtures import candidate_root
+
+@contextmanager
+def reviewed_unit_bundle():
+    """Real ELF + frozen RF-off app, locally approved ONLY inside this test.
+
+    Production pin constants stay unchanged. Current application builds must
+    never become implicitly approved for an old hardware RAM experiment.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        root=candidate_root(tmp,False)
+        target=root/'local/tx15-hardware/boot-chain'
+        target.mkdir()
+        for name in ('boot-chain.elf','boot-chain.bin','build.json'):
+            shutil.copy2(ROOT/'local/tx15-hardware/boot-chain'/name,target/name)
+        # Loader still uses its actual reviewed pins, not a computed approval.
+        assert hashlib.sha256((target/'boot-chain.elf').read_bytes()).hexdigest()==boot_chain.ELF_SHA
+        assert hashlib.sha256((target/'boot-chain.bin').read_bytes()).hexdigest()==boot_chain.BIN_SHA
+        backup=Path('local/backups/tx15-external-20261003-155621/external-mapped-90000000-read1.bin')
+        (root/backup).parent.mkdir(parents=True)
+        shutil.copy2(ROOT/backup,root/backup)
+        meta=json.loads((root/'local/tx15-hardware/app-standalone/build.json').read_text())
+        with patch.multiple(boot_chain,APP_SHA=meta['elf_sha256'],PAYLOAD_SHA=meta['payload_sha256']):
+            yield root
 
 class BootChainTests(unittest.TestCase):
     def test_cleanup_drains_only_systick_and_retains_active_fault_evidence(self):
@@ -23,11 +48,21 @@ class BootChainTests(unittest.TestCase):
         self.assertFalse(any(a in (0xe000ed28,0xe000ed2c) for a,_ in writes))
 
     def test_pinned_candidate_and_halted_upload_gate(self):
-        binary,layout,payload,prefix=boot_chain.validate_bundle(ROOT)
-        self.assertGreater(len(binary),704)
-        self.assertEqual(len(payload),529872)
-        self.assertEqual(len(prefix),64)
-        self.assertEqual(layout['entry'],hex(struct.unpack_from('<I',binary,4)[0]))
+        original=boot_chain.APP_SHA
+        with reviewed_unit_bundle() as root:
+            binary,layout,payload,prefix=boot_chain.validate_bundle(root)
+            self.assertGreater(len(binary),704)
+            self.assertEqual(payload,(root/'local/tx15-hardware/app-standalone/tx15-app.nd15').read_bytes())
+            self.assertEqual(len(prefix),64)
+            self.assertEqual(layout['entry'],hex(struct.unpack_from('<I',binary,4)[0]))
+            for name in ('boot-chain/boot-chain.elf','boot-chain/boot-chain.bin',
+                         'app-standalone/tx15-app.elf','app-standalone/tx15-app.nd15'):
+                p=root/'local/tx15-hardware'/name;old=p.read_bytes()
+                p.write_bytes(bytes([old[0]^1])+old[1:])
+                with self.assertRaisesRegex(ValueError,'Candidate differs'):
+                    boot_chain.validate_bundle(root)
+                p.write_bytes(old)
+        self.assertEqual(boot_chain.APP_SHA,original)
         ap=Mock();dp=Mock();ap.read32.return_value=0
         with self.assertRaises(RuntimeError):boot_chain.upload(ap,dp,payload)
         dp.write_ap.assert_not_called()
@@ -37,7 +72,8 @@ class BootChainTests(unittest.TestCase):
 
     def test_host_write_allowlist_excludes_destinations_and_persistent_storage(self):
         import chain_ram_session as session
-        image,_=session.validate_image()
+        with reviewed_unit_bundle() as root,patch.object(session,'REPO',root):
+            image,_=session.validate_image()
         for address in (0x08000000,0x90000000,0xd0100000,0xd0200000,0x24010000,
                         0xd0080000,0x2400f000,boot_chain.CONTROL,boot_chain.CONTROL+12):
             self.assertFalse(session.allowed_ram_word(address,len(image)))

@@ -22,13 +22,17 @@ class StandaloneAppTests(unittest.TestCase):
                 subprocess.run([str(exe)],check=True,env=env)
 
     def test_standalone_arm_build_and_rf_opt_ins_refused(self):
-        env={k:v for k,v in os.environ.items() if k not in ('TX15_STANDALONE','TX15_ELRS_LUA',
-             'TX15_ELRS_RC','TX15_ELRS_WRITE','TX15_ELRS_DISCOVERY','TX15_ELRS_PARAMETERS')}
+        env={k:v for k,v in os.environ.items() if not k.startswith('TX15_')}
         env['TX15_STANDALONE']='1'
+        tmp=tempfile.TemporaryDirectory();self.addCleanup(tmp.cleanup)
+        out=Path(tmp.name)/'rf-off';env['TX15_BUILD_DIR']=str(out)
+        working=ROOT/'local/tx15-hardware/app-standalone'
+        before={name:(working/name).read_bytes() for name in ('build.json','tx15-app.elf','tx15-app.nd15')}
         r=subprocess.run([sys.executable,str(ROOT/'utils/build-tx15-app.py')],cwd=ROOT,env=env,
                          capture_output=True,text=True,encoding='utf8',errors='replace')
         self.assertEqual(r.returncode,0,r.stdout+r.stderr)
-        out=ROOT/'local/tx15-hardware/app-standalone'
+        self.assertTrue((out/'tx15-app.elf').exists(), 'Build must honor isolated output directory')
+        self.assertEqual(before,{name:(working/name).read_bytes() for name in before})
         entry,segments=parse((out/'tx15-app.elf').read_bytes())
         other,stored=unpack((out/'tx15-app.nd15').read_bytes())
         self.assertEqual((entry,segments),(other,stored))

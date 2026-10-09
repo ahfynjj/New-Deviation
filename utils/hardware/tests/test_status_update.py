@@ -2,18 +2,22 @@ import json,tempfile,unittest
 from pathlib import Path
 import status_update as u,elrs_update,native_update
 from flash_transaction import sha
+from utils.hardware.tests.build_fixtures import candidate_root
 ROOT=Path(__file__).resolve().parents[3]
 class UpdateTests(unittest.TestCase):
+ def setUp(self):
+  tmp=tempfile.TemporaryDirectory();self.addCleanup(tmp.cleanup)
+  self.root=candidate_root(tmp.name,True)
  def test_preserves_live_models_and_freezes_recovery(self):
   base=elrs_update.read(ROOT/'local/tx15-hardware/install/elrs-kit')
   internal,external=native_update.baseline_images(base)
   external=external[:0xf0000]+bytes(range(256))*256
   with tempfile.TemporaryDirectory() as d:
-   folder=Path(d)/'kit';u.prepare(ROOT,folder,internal,external)
+   folder=Path(d)/'kit';u.prepare(self.root,folder,internal,external)
    kit=u.read(folder);self.assertEqual(kit.plan.original_external,external)
    self.assertLessEqual(kit.plan.erase_bytes,0xf0000)
    self.assertEqual(kit.plan.original_internal,internal)
-   with self.assertRaises(FileExistsError):u.prepare(ROOT,folder,internal,external)
+   with self.assertRaises(FileExistsError):u.prepare(self.root,folder,internal,external)
    p=folder/'original-external.bin';bad=b'!'+external[1:];p.write_bytes(bad)
    m=kit.manifest;m['files'][p.name]=sha(bad)
    (folder/'kit.json').write_text(json.dumps(m))
@@ -43,6 +47,6 @@ class UpdateTests(unittest.TestCase):
   base=u.read(folder0);internal,external=native_update.baseline_images(base)
   external=external[:0xf0000]+bytes(range(256))*256
   with tempfile.TemporaryDirectory() as d:
-   folder=Path(d)/'next';kit=u.prepare(ROOT,folder,internal,external,folder0)
+   folder=Path(d)/'next';kit=u.prepare(self.root,folder,internal,external,folder0)
    self.assertEqual(kit.plan.original_external,external)
    self.assertEqual(u.read(folder).approval('recover'),kit.approval('recover'))

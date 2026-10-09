@@ -1,7 +1,15 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-10-08。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-09。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
+
+## 2026-10-09 ELRS 命令版已准备，待刷入授权
+
+完整202项软件检查通过，8项旧测试产物/依赖失败已收尾：RF关闭构建使用独立临时目录，更新测试使用冻结的真实基线，主机界面链接实际开关解码器；生产候选哈希和Flash写入门禁未放宽。131对象产品版重新构建，ELF/ND15/元数据与冻结候选逐字节一致。
+
+实机只读捕获当前内部128KiB及外部1MiB，包含最新模型和校准；Flash擦写命令0，退出暂停通过，用户断电后确认“正常进入了”。冻结包`local/tx15-hardware/install/elrs-commands-kit`及恢复ZIP已完成哈希、压缩校验和解包后实际kit验证。应用694768B、编程694784B、擦除696320B，内部启动器写入0，`0xF0000`起64KiB设置区保留；尚未取得本包刷入许可，现机仍为校准保存版。
+
+下一步：取得本包具体清单授权，更新后合并验收Lua命令确认/取消与现有模型/校准；不主动执行绑定/WiFi。接收端通道/失联行为、外置实物、RSSI解释仍待做，触摸和USB后移。审查无Critical/Important；暂缓1项Minor：外部生成C文件编译失败时，终端报错路径可能掩盖编译器错误，`compile.log`仍保存诊断，不影响本次成功构建或固件。详见[更新准备](docs/tx15/elrs-commands-ready-2026-10-09.md)。以下保留历史记录。
 
 ## 2026-10-08 校准保存版已安装
 

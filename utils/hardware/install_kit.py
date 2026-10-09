@@ -80,4 +80,4 @@ def checklist(kit):
         persistent_settings=kit.manifest.get("persistent_settings",False),
         settings_region=kit.manifest.get("settings_region"),
         limitations=(['Updated app hardware acceptance and native rollback untested'] if preserved else
-            ['First physical programming/recovery and POR untested'])+['No USB updater']+(['Model1 NOR storage untested; calibration not stored'] if kit.manifest.get('persistent_settings') else ['No persistent model/calibration storage']))
+            ['First physical programming/recovery and POR untested'])+['No USB updater']+(['Updated application persistence requires hardware acceptance'] if kit.manifest.get('persistent_settings') else ['No persistent model/calibration storage']))
