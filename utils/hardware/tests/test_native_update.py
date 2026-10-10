@@ -27,7 +27,7 @@ class NativeUpdateTests(unittest.TestCase):
             self.assertNotEqual(kit.approval('install'),kit.approval('recover'))
             self.assertFalse(kit.manifest['rf_enabled'])
             self.assertEqual(kit.plan.original_external[:64],(ROOT/'local/tx15-hardware/install/kit/payload.bin').read_bytes()[:64])
-            with self.assertRaises(FileExistsError):module.prepare(ROOT,folder)
+            with self.assertRaises(FileExistsError):module.prepare(self.root,folder)
 
     def test_rejects_rf_metadata_even_with_matching_file_digest(self):
         module=self.module()
