@@ -1,7 +1,13 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-10-09。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-10。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
+
+## 2026-10-10 用户优先 USB 自助更新
+
+用户改为优先USB更新入口，并选择“专用更新工具，优先操作简单”。已核对内部启动器128KiB容量/6880B现有BIN、ND15校验与暂存、模型区边界、板级USB和EXIT引脚依据，形成[USB更新设计](docs/superpowers/specs/2026-10-10-tx15-usb-update-design.md)，待用户审阅。拟采用常驻原生更新器、EXIT+开机入口、USB CDC和Windows小工具；完整接收/校验后才写外部应用，模型/校准与未触及尾部逐字节核对，应用损坏时自动进入恢复更新模式。首次安装仍需PWLINK2，之后日常应用更新走遥控器USB。
+
+本轮只做设计和代码/资料核对，无USB实机测试、产品实现或Flash写入；此前ELRS命令版冻结包仍未由本任务刷入。下一步设计审阅后分步实施USB枚举/受限更新/电脑工具及一次性启动器安装。触摸、TF、USB摇杆和日志保持后补。
 
 ## 2026-10-09 ELRS 命令版已准备，待刷入授权
 
