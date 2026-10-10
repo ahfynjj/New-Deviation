@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "projects": {
+    "tinyusb": {
+      "repo": "hathach/tinyusb",
+      "commit": "86ad6e56c1700e85f1c5678607a762cfe3aa2f47",
+      "version": "0.18.0"
+    },
+    "stm32h7": {
+      "repo": "STMicroelectronics/cmsis-device-h7",
+      "commit": "6dac8c24d7b38ab20806d27dd7d8285a6433b8f7",
+      "version": "1.10.3"
+    },
+    "cmsis": {
+      "repo": "ARM-software/CMSIS_5",
+      "commit": "2b7495b8535bdcb306dac29b9ded4cfb679d7e5c",
+      "version": "5.9.0"
+    }
+  },
+  "files": {
+    "cmsis/cachel1_armv7.h": "2e336a64f60a9c0eaf5a08e2c4845d94da86c3fd84d219d0d0c9f530e63bc9c3",
+    "cmsis/cmsis_compiler.h": "b51963d271c1571ca3463654c76aa7ea50c4eac5d0a2710df10414ac64d9e0f8",
+    "cmsis/cmsis_gcc.h": "43bfd1fe69fbbc2ca70aaf7d43cc3e20f16e0c7f66e1bdef9b51af6dc14b2617",
+    "cmsis/cmsis_version.h": "184c19fd3ee73632edf35a0b4d49cd48be75fbf49e6ccb19d9db05fa83bea4b3",
+    "cmsis/core_cm7.h": "e974d0a91752487d0154457cd422c37667328e9ddb7ba4fa2fed479a63577f63",
+    "cmsis/LICENSE.txt": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "cmsis/mpu_armv7.h": "29206b52ee02290ed6f5a5415ebd4187de802cf176d9b3cb844390d8e5571372",
+    "stm32h7/LICENSE.md": "49d37f1f2e5c1f9fc9da194b44ffbfa41f966b7cf446fbab4d1e2b0c1e3d20df",
+    "stm32h7/stm32h750xx.h": "ecb2c90639033bd9e625c1de589f7d8dda00c5f5a4c8499642c94af9aa27a960",
+    "stm32h7/stm32h7xx.h": "a5d0e63407e3d06fa2786adb701c423830df43c7f783fae13477eda5ce531fc0",
+    "stm32h7/system_stm32h7xx.h": "65c5ffcfb00d87d8157d4f6a134e7bf4a626253ddb6d25789a6faa5b6624eb01",
+    "tinyusb/LICENSE": "b171720e8a442e7a3957d83c62cd3299dbb29da3db534cc626f9dded0de2ca44",
+    "tinyusb/src/tusb.c": "93dac601cb6976d1f1931109d59e0649d6aa876b7222c58885b77cefa671eb7e",
+    "tinyusb/src/tusb.h": "dff6fad4682282e13f1a68fcd860099d378dbaf6674a72f8e3786def9a07e7b4",
+    "tinyusb/src/tusb_option.h": "25557fc8407fd5844b67b2cd81a99529e4358940b94c00ca9490b70a69df4f77",
+    "tinyusb/src/class/cdc/cdc.h": "fda9b7ef8ec0eb2cd83d59e366a928253968b823bb14b09befb6b82019353cdf",
+    "tinyusb/src/class/cdc/cdc_device.c": "4560ccdb2869a5d2dfdfbaebd50479518dd802beb56a9da188980c6796bb04f5",
+    "tinyusb/src/class/cdc/cdc_device.h": "6ce3c03452edbddf75fb3ffeff4511e86efecc8b0651e4c583717de0566c52a6",
+    "tinyusb/src/class/cdc/cdc_rndis.h": "f5fd31ee42c17b71f7459b730bde4488207ba863954318e29761538a1316e7d6",
+    "tinyusb/src/class/cdc/cdc_rndis_host.c": "695f7ffd209b05127655c99dbd5b42410953dc28f64336f1611487e0da7bf84e",
+    "tinyusb/src/class/cdc/cdc_rndis_host.h": "62c8c6122ce6165640300ff0cc38fd4f3d61d18cb4c4725f4276ffe42c220ce1",
+    "tinyusb/src/common/tusb_common.h": "c0c7b28252306237e743f47cf93b993d1d6748bbf5c0dddc4a15ca5beb670380",
+    "tinyusb/src/common/tusb_compiler.h": "67c0d328da1fce878e8424345927608f72bd229c75cab004ef870b8337835dfd",
+    "tinyusb/src/common/tusb_debug.h": "8b7524672bfd66d0074ddebf7580c6c38d1fcc66aab35f7839f55f80de1b0b6f",
+    "tinyusb/src/common/tusb_fifo.c": "15bc124f43163e9f3edb9d581ab62af05a9b4342522f0712e6b9f4ca694227f5",
+    "tinyusb/src/common/tusb_fifo.h": "b2ffb668fb6f0dee1bb42684a340b99604440bb9d2ae7df22becf7f53467c4d9",
+    "tinyusb/src/common/tusb_mcu.h": "16436eb8a980d8695a03cddaed144c90939f07b824a0778e1e7090d42c310a96",
+    "tinyusb/src/common/tusb_private.h": "cc4506fcc3dfbc7434e7ac480abec7b45adb42ee08c411837a791f6e5a955d12",
+    "tinyusb/src/common/tusb_types.h": "e1bcf0b177d2ab350432e71b63948690fcde0b2a903ac9919bd421c40441bb4d",
+    "tinyusb/src/common/tusb_verify.h": "ce951c9250ed0183fa7e5814f5ad13af865d28b8da5bf32efdffc82728252768",
+    "tinyusb/src/device/dcd.h": "6c1e262648c70347ce37bf086ac48fc428560464162217b808065ddaec5104a1",
+    "tinyusb/src/device/usbd.c": "f15a6da11eca127b792bd04d3270e6ea3901b0a29c24f462d5687d63da1df6cb",
+    "tinyusb/src/device/usbd.h": "ba2b0a19932a9ef3373e343d79a0188b78702500050b265a8b13e770c117784f",
+    "tinyusb/src/device/usbd_control.c": "f22f7a5b833670e2736dbdbffc00d7cd081b934d54e191aafd25375ee2427ee3",
+    "tinyusb/src/device/usbd_pvt.h": "b64096863ca06f8e10b85e1b4a185485482b3a4e05a898acf77cf5815e7e25ec",
+    "tinyusb/src/osal/osal.h": "a8c4430e85fa638ad03100d21702ec15d854fbb9bbf342c151500e4b1bbc4af2",
+    "tinyusb/src/osal/osal_none.h": "565131db716ff4e713f151a7c5ddcd7f760c89eedae4db3b7acc327602720941",
+    "tinyusb/src/portable/synopsys/dwc2/dcd_dwc2.c": "f8abed46a3aad4e9d5c68eb070e63cbe8e4fa21b5aa9be15f822a7fa4d810cfe",
+    "tinyusb/src/portable/synopsys/dwc2/dwc2_common.c": "21a004ed85b54a87c6aec2874c7d678f8d95e1402927342213e2acbd49895392",
+    "tinyusb/src/portable/synopsys/dwc2/dwc2_common.h": "7e4fa06726c5bb8217b5e517aee3709aec729966ce15c609c4be0feff9644da9",
+    "tinyusb/src/portable/synopsys/dwc2/dwc2_stm32.h": "af3a64e33bccb21fd400f45de18ed5f7992968a98af00c81dce689b223186923",
+    "tinyusb/src/portable/synopsys/dwc2/dwc2_type.h": "ede7289584d4a0a560be729c3b63d2b4d6845de2f2ce18db9f2b517edc31ced5"
+  }
+}
