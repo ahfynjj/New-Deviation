@@ -1,6 +1,6 @@
 # New Deviation TX15 MAX USB 更新设计
 
-日期：2026-10-10。状态：待用户审阅的设计，尚未实现、尚未访问或改写实机。
+日期：2026-10-10。状态：用户回复“同意设计”；实施计划待审阅，尚未实现、尚未访问或改写实机。
 
 ## 用户目标与已确定范围
 
@@ -25,7 +25,7 @@
 - ND15镜像解析、CRC、段范围、176项向量和入口校验已有 `hardware/tx15/boot/image.c`，完整暂存/加载逻辑已有 `loader.c`。
 - 固定板级资料：USB DM=PA11、DP=PA12、AF10、VBUS检测=PH5。EXIT=PG3低有效，原生按键驱动已有使用；USB映射需要实机枚举验证，不能当成已运行证据。
 - `early_supply.S`在RAM/栈访问前建立PH12供电保持，更新模式沿用；内部PB13及外部PD4均明确置为模块关闭。
-- 现有启动路径使用PLL1=128MHz；显示驱动使用PLL3。USB独立48MHz时钟拟从HSE派生PLL2Q，不能改动PLL1、PLL3及正常应用时钟契约；最终参数和USB供电位按ST手册检查并实测。
+- 现有启动路径使用PLL1=128MHz；显示驱动使用PLL3。USB使用HSI48配合USB SOF同步校准，不能改动PLL1、PLL3及正常应用时钟契约。规划复核修正原草案的PLL2Q选择：H750的USB时钟选择器不提供PLL2Q；依据[ST官方USB时钟定义](https://github.com/STMicroelectronics/stm32h7xx-hal-driver/blob/master/Inc/stm32h7xx_hal_rcc_ex.h)，可选PLL1Q、PLL3Q或HSI48。用户操作与模块边界不变，具体寄存器和USB供电位在实现中按ST手册检查并实测。
 
 USB引脚仅核对已有固定板级资料，应用仍为原生New Deviation。参考固定文件：`D:/DEVI移植/tools/reference/edgetx/radio/src/targets/tx15/hal.h`，固定来源提交见现有 `hardware/tx15/board/power-notes.md`。
 
