@@ -136,3 +136,16 @@ VALIDATING with no error while servicing the host, until an actual failure or
 the erase phase. This changed only the tested transaction core; the RAM probe
 does not link that core. The runtime regression failed first, then passed, and
 the transaction failure-injection test passed.
+
+## One-time resident boot installation
+
+User explicitly approved the concrete kit. Initial probe opens failed before
+reset/write; direct PC USB connection restored PWLINK2 enumeration. The armed
+held-power/release procedure then established power hold. Complete live internal
+128KiB/external1MiB bytes matched the reused snapshot before the first erase.
+The same installed app was programmed, full external readback and untouched
+tail/model/calibration checks passed, then the new internal boot was programmed
+and the entire 128KiB bank verified. Journal state=installed, sequence3647,
+checkpoints external/internal; final halt verified. No new snapshot was saved.
+Curated evidence: [usb-installed-swd.json](evidence/2026-10-11/usb-installed-swd.json).
+Normal cold boot, EXIT USB entry and full USB Flash update remain pending.

@@ -1,6 +1,6 @@
 # TX15 MAX 首次安装 USB 启动器清单
 
-目前是待批准的安装包，尚未写入遥控器。安装完成并通过实机验收后，日常更新可改用数据 USB 和专用 Windows 工具。
+2026-10-11 用户批准后，已使用 PWLINK2 安装并完整读回验证通过，CPU 安全暂停。正常断电开机、EXIT 入口及 USB 更新验收尚待完成。安装完成并通过实机验收后，日常更新可改用数据 USB 和专用 Windows 工具。
 
 本次按用户要求不再新增现场备份。使用已验证的 `elrs-commands-kit` 中的**更新前原始快照**，并与已安装校准版的事务记录核对；不会安装该目录中的 ELRS 命令版候选。冻结包为 `local/tx15-hardware/install/usb-boot-kit`，回退包为同目录旁的 `usb-boot-kit.recovery.zip`，已解包并重新通过全部清单和文件验证。
 
@@ -19,4 +19,4 @@
 
 安装后合并验收：正常开机及模型/校准、EXIT 加开机进入 USB UPDATE、Windows 工具连接、一次真实 USB 更新及 DONE、正常关机开机、输入和内置 ELRS。软件测试及 RAM USB 接收已通过；常驻入口、NOR 实际擦写和 USB 更新后重启尚未验收。首次安装失败时需使用 PWLINK2 和冻结回退包恢复。
 
-日常操作说明见 [USB 更新工具](usb-update.md)。本清单没有授权任何写入，也不代表已完成首次安装。
+日常操作说明见 [USB 更新工具](usb-update.md)。本清单本身不是写入许可；本次用户已在会话明确批准。实际安装记录见 [SWD 证据](evidence/2026-10-11/usb-installed-swd.json)，不代表 USB 更新整体验收完成。

@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "date": "2026-10-11",
+  "scope": "one-time SWD resident USB boot installation; cold boot and USB acceptance pending",
+  "source_session": "local/hardware-session/flash-entry-20261011-112951.json",
+  "source_journal": "transaction-14f8905fc9654a878e8a4b91ec9f61f1.json",
+  "transaction": {
+    "state": "installed",
+    "sequence": 3647,
+    "checkpoints": [
+      "external",
+      "internal"
+    ],
+    "plan_seal": "ac9a06380e23a01bdb44665ecf576484586d1b441b9a91bb91052b3c6a9e66c5"
+  },
+  "application_unchanged": true,
+  "preserved_settings_and_tail_verified": true,
+  "live_snapshot_match_verified": true,
+  "fresh_backup_performed": false,
+  "internal_erase_bytes": 131072,
+  "internal_program_bytes": 27264,
+  "external_erase_bytes": 696320,
+  "external_program_bytes": 694016,
+  "program_file_sha256": {
+    "boot.bin": "737940be15412eca5b494cd190e01ea545d4929f6ee031d8db3945fb533c1de3",
+    "payload.bin": "b3b34cd791e8ed9d7efe393653f007b0ce33c090d54c946ecf8c1c23a25ac0f5"
+  },
+  "ram_reader_verified": true,
+  "halt_verified": true,
+  "proof": {
+    "swd_internal_external_write_readback_verified": true,
+    "normal_cold_boot_verified": false,
+    "resident_usb_entry_verified": false,
+    "usb_flash_update_verified": false
+  }
+}
