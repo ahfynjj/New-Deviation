@@ -1,6 +1,6 @@
 # TX15 MAX 首次安装 USB 启动器清单
 
-2026-10-11 用户批准后，已使用 PWLINK2 安装并完整读回验证通过，CPU 安全暂停。用户断开调试器并断电后已确认正常开机、模型/校准和滚轮/六路输入正常。EXIT 入口及 USB 更新验收尚待完成。安装完成并通过实机验收后，日常更新可改用数据 USB 和专用 Windows 工具。
+2026-10-11 用户批准后，已使用 PWLINK2 安装并完整读回验证通过，CPU 安全暂停。用户断开调试器并断电后已确认正常开机、模型/校准和滚轮/六路输入正常。EXIT 入口和一次真实 USB 应用更新也已由用户完成验收。安装完成并通过实机验收后，日常更新可改用数据 USB 和专用 Windows 工具。
 
 本次按用户要求不再新增现场备份。使用已验证的 `elrs-commands-kit` 中的**更新前原始快照**，并与已安装校准版的事务记录核对；不会安装该目录中的 ELRS 命令版候选。冻结包为 `local/tx15-hardware/install/usb-boot-kit`，回退包为同目录旁的 `usb-boot-kit.recovery.zip`，已解包并重新通过全部清单和文件验证。
 
@@ -17,6 +17,6 @@
 
 冻结启动器原始 BIN SHA256：`ed12230e1db8acf6ccc46096106bc2da6cd81d58e4b3f17fb431b91a308a4465`；对齐后实际编程文件 SHA256：`737940be15412eca5b494cd190e01ea545d4929f6ee031d8db3945fb533c1de3`。安装和回退许可分别绑定此包、设备身份和全部快照，不能复用此前应用更新许可。
 
-安装后合并验收：正常开机及模型/校准、EXIT 加开机进入 USB UPDATE、Windows 工具连接、一次真实 USB 更新及 DONE、正常关机开机、输入和内置 ELRS。软件测试及 RAM USB 接收已通过；常驻入口、NOR 实际擦写和 USB 更新后重启尚未验收。首次安装失败时需使用 PWLINK2 和冻结回退包恢复。
+安装后合并验收：正常开机及模型/校准、EXIT 加开机进入 USB UPDATE、Windows 工具连接、一次真实 USB 更新及 DONE、正常关机开机、输入和内置 ELRS。软件测试及 RAM USB 接收已通过；常驻入口、专用工具实际 USB 更新和更新后正常重启已由用户确认，证据见 [GUI USB 验收](evidence/2026-10-11/usb-gui-acceptance.json)。首次安装失败时需使用 PWLINK2 和冻结回退包恢复。
 
-日常操作说明见 [USB 更新工具](usb-update.md)。本清单本身不是写入许可；本次用户已在会话明确批准。实际安装记录见 [SWD 证据](evidence/2026-10-11/usb-installed-swd.json)，不代表 USB 更新整体验收完成。
+日常操作说明见 [USB 更新工具](usb-update.md)。本清单本身不是写入许可；本次用户已在会话明确批准。实际安装记录见 [SWD 证据](evidence/2026-10-11/usb-installed-swd.json)，首次 GUI USB 更新已另外记录；损坏应用恢复及破坏性掉电实机测试仍未完成。

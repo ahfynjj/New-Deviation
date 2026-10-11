@@ -3,13 +3,15 @@
 更新：2026-10-11。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
-## 2026-10-11 USB 启动器已安装，待整体验收
+## 2026-10-11 USB 自助更新首次验收通过
 
 用户已批准设计和实施计划。包/协议/RAM 接收、TinyUSB CDC、受限 NOR 事务和硬件后端、常驻启动入口及屏幕、Windows GUI 与 EXE 已完成软件实现。最终完整 **244 项检查通过（80.397 秒）**；ARM 启动器原始 BIN 27240 字节，内部 128 KiB 和 RAM 布局/向量检查通过。EXE 在 PATH 仅保留 Windows 的新进程启动，窗口可见、更新按钮禁用，无自动连接或刷写。独立审查提出的只读错误入口和文件选择残留两项问题已按 RED→GREEN 修复；旧启动测试改用临时目录，原冻结 ELF/BIN 哈希恢复且未放宽许可。
 
 此前只读实机已通过 COM36、UID/HELLO、完整更新包接收/READY 及 READ_ONLY 拒绝刷写，用户断电后恢复 Deviation。此前软件收尾没有打开调试器或写 Flash。随后用户批准具体 USB 启动器安装，换到电脑直连 USB 口后识别 PWLINK2：现场内部128KiB/外部1MiB与既有快照完全一致，相同应用重写、未触及尾部/模型/校准比较、新内部启动器写入及全部读回通过；事务 state=installed、sequence=3647、checkpoints=external/internal，最终 halt_verified=true。日志 `flash-entry-20261011-112951.json`。用户随后断开调试器并断电，确认正常进入 Deviation、模型/校准和滚轮/六路输入正常。 用户要求跳过新增备份，已复用现有已验证快照生成 `usb-boot-kit` 和回退 ZIP，解包验证通过；实际安装仍先完整比较现场，任何模型/校准差异在擦除前停止。包重写相同已安装应用前缀，并替换内部 128 KiB 启动器，不安装待批准 ELRS 命令版。
 
-下一步：EXIT 入口 → 一次真实 USB 更新和模型/校准/输入/ELRS 合并验收。USB 拔插、USB 后端实际擦写、损坏应用恢复仍待实测。详见 [用户操作](docs/tx15/usb-update.md)、[首次安装清单](docs/tx15/usb-boot-install-2026-10-11.md) 和 [证据](docs/tx15/usb-progress-2026-10-11.md)。
+EXIT 更新入口实测通过，COM36 的 HELLO/STATUS 确认 UID/API1/ABI1、JEDEC c84018、16MiB/256B/4KiB、SR000220、SFDP有效，设备可写。用户使用独立打包 EXE 更新同一已安装应用，工具显示更新完成；自动64KiB设置备份SHA和会话正确，与首次安装前设置一致。用户在追加DONE查询前已自行重启，故没有二次读取设备完成包；工具本身要求DONE验证标志及镜像长度/CRC一致才成功。用户最终确认系统、模型、校准、输入和内置ELRS均正常。日常应用更新现在可用USB，PWLINK2保留启动器升级/恢复。源码及证据已推送开发分支。
+
+后续：定向完成错误包/取消/拔插及损坏应用恢复实机验证，再用USB推进新的ELRS功能。外置模块仍待实物，不重复基础输入测试；触摸和TF继续后移。详见 [用户操作](docs/tx15/usb-update.md)、[首次安装清单](docs/tx15/usb-boot-install-2026-10-11.md) 和 [GUI 验收证据](docs/tx15/evidence/2026-10-11/usb-gui-acceptance.json)。
 
 ## 2026-10-10 用户优先 USB 自助更新（设计阶段记录）
 

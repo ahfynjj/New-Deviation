@@ -154,3 +154,19 @@ The user subsequently disconnected the debugger, battery-cycled and confirmed
 normal Deviation boot, retained models/calibration and working rotary/six
 inputs. The receiver stayed off, so this does not verify RF. EXIT USB entry
 and actual USB update acceptance remain pending.
+
+## First dedicated GUI USB update acceptance
+
+User observed EXIT USB UPDATE entry and connected a reliable data cable with
+PWLINK2 disconnected. Actual COM36 HELLO/STATUS verified UID/API/ABI, writable
+geometry/status and IDLE/error0. The packaged Windows tool was launched, then
+the user connected, selected the verified same installed calibration .ndu and
+clicked update. The user reported update complete and closed the tool. An
+independent DONE query found no port because the user had already restarted
+into the normal application; it did not send a mutation or diagnose a USB fault.
+The actual 64KiB GUI backup was validated by SHA/session and matches the
+pre-install settings exactly. The user confirmed normal restart, retained
+models/calibration, working rotary/six inputs and internal ELRS/RSSI/LQ normal.
+This accepts the first full GUI USB update workflow; physical cancellation,
+unplug/replug and damaged-application/power-loss recovery remain separate.
+Evidence: [usb-gui-acceptance.json](evidence/2026-10-11/usb-gui-acceptance.json).

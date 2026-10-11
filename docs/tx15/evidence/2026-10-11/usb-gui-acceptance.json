@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "date": "2026-10-11",
+  "scope": "first dedicated Windows GUI USB application update accepted by user",
+  "resident_entry": {
+    "user_observed_usb_update": true,
+    "host_hello_status_verified": true,
+    "uid_matched": true,
+    "port": "COM36",
+    "source_session": "local/hardware-session/usb-resident-info-20261011-113309.json"
+  },
+  "package": {
+    "file": "tx15-installed-calibration.ndu",
+    "bytes": 693944,
+    "sha256": "45748971e7e8a3b24d2f54ab6180971654baa32ff302a2fab43f2c01a7fadcf9",
+    "image_bytes": 693816,
+    "image_crc32": "0x1763063a",
+    "application_unchanged": true
+  },
+  "gui": {
+    "executable_sha256": "e6cefeefd2e332d5ed92b2b562fbf9be546651ebcb263f91a1458728f3c7628f",
+    "user_reported_update_complete": true,
+    "client_requires_verified_done_and_matching_size_crc": true,
+    "independent_device_done_requery": false,
+    "independent_requery_note": "User had already powered off and restarted into Deviation; the application does not enumerate updater CDC"
+  },
+  "backup": {
+    "bytes": 65536,
+    "sha256": "64ac9c7013aec1ad3b4836b4500edfe7099ebab2fcde3cd520b1af322318d056",
+    "file_sha_verified": true,
+    "session_matched": true,
+    "equals_preinstall_settings": true
+  },
+  "user_acceptance": {
+    "normal_restart": true,
+    "models_and_calibration_retained": true,
+    "rotary_and_six_inputs_normal": true,
+    "internal_elrs_connection_and_rssi_lq_normal": true
+  },
+  "remaining": [
+    "Physical cancel/invalid-package and unplug/replug acceptance",
+    "Damaged-application boot recovery and power-loss physical acceptance",
+    "External ELRS module hardware acceptance"
+  ]
+}
