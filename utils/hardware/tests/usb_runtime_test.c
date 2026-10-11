@@ -23,6 +23,12 @@ static void service(void *ctx)
     f.kind=TX15_ABORT;f.bytes=0;tx15_update_runtime_request(&runtime,&f,&out);
     assert(tx15_update_word(out.payload+4));
     unsigned before=writes;tx15_update_runtime_request(&runtime,&commit,&out);assert(writes==before);
+    f.kind=TX15_STATUS;f.session=runtime.receiver.session;f.bytes=0;
+    tx15_update_runtime_request(&runtime,&f,&out);
+    if (!writes) {
+        assert(tx15_update_word(out.payload)==TX15_VALIDATING);
+        assert(!tx15_update_word(out.payload+4));
+    }
 }
 static const struct tx15_update_io io={NULL,observation,read_nor,erase,program,service};
 static void ready(const uint8_t *data,size_t n)

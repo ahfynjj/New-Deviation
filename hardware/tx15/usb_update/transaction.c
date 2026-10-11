@@ -27,8 +27,13 @@ int tx15_update_tx_prepare(struct tx15_update_tx *tx,const struct tx15_update_io
     tx->io=*io;tx->package=*p;tx->package.boot=boot;tx->shadow=shadow;
     tx->erase_bytes=(p->image_bytes+4095u)&~4095u;
     if (tx->erase_bytes>0xf0000u) return 0;
+    /* USB STATUS remains successful/VALIDATING while observation and shadow
+     * reads service the host. The transaction has not started writing yet. */
+    tx->status=(struct tx15_update_reply){TX15_VALIDATING,0,0,p->image_bytes,p->image_crc,0};
     struct tx15_update_flash_info info;
-    if (!io->observe(io->ctx,&info) || !tx15_update_flash_writable(&info)) return 0;
+    if (!io->observe(io->ctx,&info) || !tx15_update_flash_writable(&info)) {
+        tx->status.state=TX15_ERROR;tx->status.error=TX15_BAD_PACKAGE;return 0;
+    }
     /* Not active yet, but runtime must already freeze COMMIT/READY before this
      * service callback. Preparation is an immutable read phase. */
     for (uint32_t at=0;at<0x100000u;at+=1024) {
@@ -36,7 +41,9 @@ int tx15_update_tx_prepare(struct tx15_update_tx *tx,const struct tx15_update_io
         service(tx);
     }
     /* Re-observe just before first mutation; no protection changes are made. */
-    if (!io->observe(io->ctx,&info) || !tx15_update_flash_writable(&info)) return 0;
+    if (!io->observe(io->ctx,&info) || !tx15_update_flash_writable(&info)) {
+        tx->status.state=TX15_ERROR;tx->status.error=TX15_BAD_PACKAGE;return 0;
+    }
     tx->active=1;tx->status=(struct tx15_update_reply){TX15_ERASING,0,0,p->image_bytes,p->image_crc,0};
     return 1;
 }

@@ -7,7 +7,7 @@
 
 用户已批准设计和实施计划。`.ndu` 包校验、有界 USB 协议与 RAM 接收、TinyUSB CDC 只读诊断程序、受限外部 NOR 事务核心及 UID/会话提交检查已实现；当前完整 220 项软件检查通过。隔离构建未覆盖旧启动器或应用产物。
 
-2026-10-11 换好故障数据线后，CDC COM36 识别、UID/只读 HELLO 及 USB 时钟同步实测通过；首帧接收触发异常，定位为前置只读程序未初始化外部 RAM，USB 程序误用了该前提。修正版已补原生 SDRAM 初始化，真实 ARM 回归 RED→GREEN，等待完整 RAM 传输复测；本轮 Flash 擦写命令为 0。已补 C/Python 对照的 NOR SFDP 几何检查。NOR 硬件后端、常驻更新入口、Windows 小工具和完整更新验收仍未完成；尚未安装 USB 启动器。详见[实施证据](docs/tx15/usb-progress-2026-10-11.md)。
+2026-10-11 换好数据线并补齐外部 RAM 初始化后，CDC COM36、UID/只读 HELLO、USB 时钟同步、完整 694896 字节更新包接收/校验及 READ_ONLY 拒绝刷写全部实测通过；ND15 镜像 694768 字节，最终 READY，无异常，Flash 擦写命令为 0。用户断电后确认恢复 Deviation。另补 C/Python 对照的 NOR SFDP 几何检查，以及事务备份阶段正确返回 VALIDATING 的回归修复；最新完整 220 项检查通过。USB 拔插、NOR 硬件后端、常驻更新入口、Windows 小工具和完整更新验收仍未完成；尚未安装 USB 启动器。详见[实施证据](docs/tx15/usb-progress-2026-10-11.md)。
 
 ## 2026-10-10 用户优先 USB 自助更新（设计阶段记录）
 

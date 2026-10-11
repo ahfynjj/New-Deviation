@@ -69,7 +69,7 @@ still excludes NOR mutation code. The separate fixed candidate is in
 `local/tx15-hardware/usb-probe-sdram`, BIN SHA256
 `8fc57928db7d3230589c5102ca0eb3ccf0b90b8ffd2f27523d00a984227f6f2a`.
 The fixed build has 17152 text / 24 data / 11800 BSS bytes and has not yet
-passed physical full-package reception.
+passed physical full-package reception at the time of that build.
 
 The PC checker also has a bounded retry for the initial Windows COM-path
 creation delay, before any protocol traffic. Tests refuse writable/unknown
@@ -82,8 +82,29 @@ not bypassed. A rerun without an active hardware session passed: 220 tests / OK.
 
 ## Remaining acceptance
 
-Real RAM package transfer/READY/read-only COMMIT rejection,
-unplug/replug, integrated NOR backend/resident
+Unplug/replug, integrated NOR backend/resident
 boot, Windows GUI and packaged delivery, fresh device baseline and explicit
 approval for first resident installation, then complete physical update and
 preserved model/calibration checks are still required.
+
+## Fixed-probe physical acceptance
+
+The fixed candidate subsequently passed actual USB transfer of the complete
+694896-byte `.ndu` package (694768-byte ND15 image). Device validation reached
+READY, and the negative COMMIT test returned READ_ONLY without a Flash write.
+The final mailbox recorded state3/error0, 683 requests, received694768,
+mounted1/synchronized1 and SDRAM state2 at tick90123. The session number matched
+the host report. Candidate upload/readback and the final CPU halt were verified.
+The user then power-cycled and confirmed normal Deviation recovery.
+
+Curated evidence: [usb-readonly-ram.json](evidence/2026-10-11/usb-readonly-ram.json).
+This proves the USB identity, complete RAM reception/validation and the read-only
+guard. It does not prove resident boot selection, USB unplug/replug, NOR hardware
+writing, Windows GUI delivery or a full application Flash update.
+
+While advancing transaction integration, a regression test also exposed STATUS
+reporting ERROR during the pre-write shadow backup. Preparation now reports
+VALIDATING with no error while servicing the host, until an actual failure or
+the erase phase. This changed only the tested transaction core; the RAM probe
+does not link that core. The runtime regression failed first, then passed, and
+the transaction failure-injection test passed.

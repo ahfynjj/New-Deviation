@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "mode": "usb-readonly-ram-acceptance",
+  "board": "TX15 MAX",
+  "uid": "1c0039000e51333234363236",
+  "port": "COM36",
+  "session": 2518996522648306749,
+  "probe_bin_sha256": "8fc57928db7d3230589c5102ca0eb3ccf0b90b8ffd2f27523d00a984227f6f2a",
+  "package_sha256": "cc28b5684dd114ab84b489d4dffc748c2d108dd21c83bb1cfe3e56a0c9372cb7",
+  "package_bytes": 694896,
+  "image_bytes": 694768,
+  "usb_identity_verified": true,
+  "ram_candidate_readback_verified": true,
+  "sdram_initialized_state": 2,
+  "ready_verified": true,
+  "commit_rejected_read_only": true,
+  "mounted": true,
+  "clock_synchronized": true,
+  "requests_handled": 683,
+  "tick_ms": 90123,
+  "fault_state": false,
+  "error": 0,
+  "flash_mutation_commands": 0,
+  "halt_verified": true,
+  "cpu_resume_allowed": false,
+  "manual_recovery_confirmed": true,
+  "source_reports": [
+    "local/hardware-session/usb-probe-20261011-102758.json",
+    "local/hardware-session/usb-readonly-acceptance-20261011.json"
+  ],
+  "remaining": [
+    "unplug/replug acceptance",
+    "resident updater and NOR hardware backend",
+    "Windows GUI and complete physical Flash-update acceptance"
+  ]
+}
