@@ -22,22 +22,24 @@ class BootFirmwareTests(unittest.TestCase):
             with self.assertRaises(ValueError):parse(bad)
 
     def test_real_flash_build_and_stackless_supply_before_ram_initialization(self):
-        r=subprocess.run([sys.executable,str(ROOT/'utils/build-tx15-boot.py')],cwd=ROOT,
-                         capture_output=True,text=True,encoding='utf8',errors='replace')
-        self.assertEqual(r.returncode,0,r.stdout+r.stderr)
-        out=ROOT/'local/tx15-hardware/boot';layout=parse((out/'tx15-boot.elf').read_bytes())
-        binary=(out/'tx15-boot.bin').read_bytes()
-        self.assertEqual(struct.unpack_from('<2I',binary),(0x24010000,int(layout['entry'],16)))
-        self.assertLessEqual(len(binary),128*1024)
-        tool=ROOT.parent/'tools/arm8/bin/arm-none-eabi-objdump.exe'
-        text=subprocess.check_output([str(tool),'-d',str(out/'tx15-boot.elf')],text=True,encoding='utf8',errors='replace')
-        startup=text.split('<Boot_Reset>:',1)[1].split('\n\n',1)[0]
-        self.assertLess(startup.index('tx15_boot_supply_early'),startup.index('strd'))
-        jump=text.split('<tx15_boot_jump>:',1)[1].split('\n\n',1)[0]
-        self.assertNotRegex(jump,r'\b(push|pop|bl|blx|sp)\b')
-        self.assertIn('msr',jump);self.assertIn('bx',jump)
-        copy=text.split('<copy>:',1)[1].split('\n\n',1)[0]
-        self.assertRegex(copy,r'\bstrd\s+(?:r\d+|ip|lr),\s*(?:r\d+|ip|lr),\s*\[(?:r\d+|ip|lr)\]',
-                         'First AXI ECC initialization must use doubleword destination stores, not stack-only STRD')
+        with tempfile.TemporaryDirectory(prefix='TX15 isolated build ') as tmp:
+            out=Path(tmp)
+            r=subprocess.run([sys.executable,str(ROOT/'utils/build-tx15-boot.py'),'--out',str(out)],cwd=ROOT,
+                             capture_output=True,text=True,encoding='utf8',errors='replace')
+            self.assertEqual(r.returncode,0,r.stdout+r.stderr)
+            layout=parse((out/'tx15-boot.elf').read_bytes())
+            binary=(out/'tx15-boot.bin').read_bytes()
+            self.assertEqual(struct.unpack_from('<2I',binary),(0x24010000,int(layout['entry'],16)))
+            self.assertLessEqual(len(binary),128*1024)
+            tool=ROOT.parent/'tools/arm8/bin/arm-none-eabi-objdump.exe'
+            text=subprocess.check_output([str(tool),'-d',str(out/'tx15-boot.elf')],text=True,encoding='utf8',errors='replace')
+            startup=text.split('<Boot_Reset>:',1)[1].split('\n\n',1)[0]
+            self.assertLess(startup.index('tx15_boot_supply_early'),startup.index('strd'))
+            jump=text.split('<tx15_boot_jump>:',1)[1].split('\n\n',1)[0]
+            self.assertNotRegex(jump,r'\b(push|pop|bl|blx|sp)\b')
+            self.assertIn('msr',jump);self.assertIn('bx',jump)
+            copy=text.split('<copy>:',1)[1].split('\n\n',1)[0]
+            self.assertRegex(copy,r'\bstrd\s+(?:r\d+|ip|lr),\s*(?:r\d+|ip|lr),\s*\[(?:r\d+|ip|lr)\]',
+                             'First AXI ECC initialization must use doubleword destination stores, not stack-only STRD')
 
 if __name__=='__main__':unittest.main()

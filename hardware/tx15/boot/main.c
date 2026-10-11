@@ -6,16 +6,25 @@
 #include "../board/power.h"
 #include "../board/display.h"
 #include "handoff.h"
+#ifdef TX15_USB_UPDATE
+#include "update_mode.h"
+#endif
 #ifdef TX15_RAM_CHAIN
 #include "chain_source.h"
 volatile struct tx15_chain_control chain_control __attribute__((aligned(8)));
 #endif
-#define R(a) (*(volatile uint32_t *)(a))
+#ifndef TX15_BOOT_REGISTER
+#define TX15_BOOT_REGISTER(a) (*(volatile uint32_t *)(a))
+#endif
+#ifndef TX15_BOOT_ASM
+#define TX15_BOOT_ASM(...) __asm volatile(__VA_ARGS__)
+#endif
+#define R(a) TX15_BOOT_REGISTER(a)
 volatile struct probe_report probe_report __attribute__((section(".mailbox"),aligned(8)));
 static void stop(void) __attribute__((noreturn));
-static void stop(void) { __asm volatile("cpsid i");R(0xe000e010u)=0;for(;;)__asm volatile("nop"); }
+static void stop(void) { TX15_BOOT_ASM("cpsid i");R(0xe000e010u)=0;for(;;)TX15_BOOT_ASM("nop"); }
 void Boot_Fault(void) {
-    uint32_t exception;__asm volatile("mrs %0,ipsr":"=r"(exception));
+    uint32_t exception=0;TX15_BOOT_ASM("mrs %0,ipsr":"=r"(exception));
     probe_report.fault_exception=exception;probe_report.cfsr=R(0xe000ed28u);probe_report.hfsr=R(0xe000ed2cu);
     probe_report.mmfar=R(0xe000ed34u);probe_report.bfar=R(0xe000ed38u);probe_report.state=PROBE_FAULT;stop();
 }
@@ -38,10 +47,10 @@ static int copy(void *ctx,const struct tx15_boot_segment *s) {
     for (uint32_t at=0;at<s->length;at+=8) {
         uint32_t words[2]={0,0};
         for (unsigned i=0;i<8 && at+i<s->length;i++)words[i/4]|=(uint32_t)s->source[at+i]<<((i%4)*8);
-        __asm volatile("strd %1,%2,[%0]"::"r"(dst),"r"(words[0]),"r"(words[1]):"memory");
+        TX15_BOOT_ASM("strd %1,%2,[%0]"::"r"(dst),"r"(words[0]),"r"(words[1]):"memory");
         dst+=2;
     }
-    __asm volatile("dsb":::"memory");return 1;
+    TX15_BOOT_ASM("dsb":::"memory");return 1;
 }
 static int verify(void *ctx,const struct tx15_boot_segment *s) {
     (void)ctx;const volatile uint8_t *dst=(const volatile uint8_t *)s->destination;
@@ -67,7 +76,17 @@ void Boot_Main(void) {
     if(tx15_sdram_init(&probe_report.sdram))fail(BAD_SDRAM);
     probe_report.ram_words|=TX15_BOOT_SDRAM;
     uint32_t id=0;enum tx15_qspi_result qspi=tx15_boot_qspi_init(&id,1000000u);
-    if(qspi!=TX15_QSPI_OK || id!=0xc84018u) {tx15_boot_qspi_stop();fail(256u|((uint32_t)qspi<<16));}
+    if(qspi!=TX15_QSPI_OK || id!=0xc84018u) {
+        tx15_boot_qspi_stop();
+#ifdef TX15_USB_UPDATE
+        probe_report.error=256u|((uint32_t)qspi<<16);probe_report.state=PROBE_ERROR;
+        tx15_boot_update_run(0); /* No controller ownership: read-only diagnostics. */
+#endif
+        fail(256u|((uint32_t)qspi<<16));
+    }
+#ifdef TX15_USB_UPDATE
+    if(tx15_boot_update_mode(tx15_boot_exit_stable(),TX15_BOOT_LOAD_OK))tx15_boot_update_run(id);
+#endif
 #ifdef TX15_RAM_CHAIN
     // Exercise the actual read-only driver; original NOR remains untouched.
     uint8_t prefix[64];
@@ -76,15 +95,24 @@ void Boot_Main(void) {
     }
     for(unsigned i=0;i<64;i++)chain_control.original_prefix[i]=prefix[i];
     tx15_boot_qspi_stop();chain_control.jedec=id;
-    __asm volatile("dsb":::"memory");chain_control.ready=TX15_CHAIN_READY;
+    TX15_BOOT_ASM("dsb":::"memory");chain_control.ready=TX15_CHAIN_READY;
     // Host fills a separate source buffer after SDRAM initialization, then
     // opens the gate. Staging, validation, STRD copies and jump stay native.
-    while(chain_control.gate!=TX15_CHAIN_GO)__asm volatile("nop");
-    __asm volatile("dsb\nisb":::"memory");
+    while(chain_control.gate!=TX15_CHAIN_GO)TX15_BOOT_ASM("nop");
+    TX15_BOOT_ASM("dsb\nisb":::"memory");
 #endif
     struct tx15_boot_io io={0,read_image,copy,verify};uint32_t entry=0;
     enum tx15_boot_load_result load=tx15_boot_load(&io,TX15_BOOT_SLOT_OFFSET,TX15_BOOT_SLOT_BYTES,
         (uint8_t *)TX15_BOOT_STAGING,TX15_BOOT_MAX_BYTES,&entry);
+#ifdef TX15_USB_UPDATE
+    if(load!=TX15_BOOT_LOAD_OK && tx15_boot_update_mode(0,load)) {
+        tx15_boot_qspi_stop();id=0;
+        qspi=tx15_boot_qspi_init(&id,1000000u);
+        if(qspi==TX15_QSPI_OK && id==0xc84018u)tx15_boot_update_run(id);
+        tx15_boot_qspi_stop();probe_report.error=256u|((uint32_t)qspi<<16);
+        probe_report.state=PROBE_ERROR;tx15_boot_update_run(0);
+    }
+#endif
     tx15_boot_qspi_stop();
     if(load!=TX15_BOOT_LOAD_OK)fail(512u|((uint32_t)load<<16));
     probe_report.ram_words|=TX15_BOOT_IMAGE|TX15_BOOT_COPIED;
@@ -96,5 +124,5 @@ void Boot_Main(void) {
     if(!tx15_boot_handoff_valid(&probe_report))fail(1024u);
     R(0xe000e010u)=0;R(0xe000e014u)=0;R(0xe000e018u)=0;R(0xe000ed04u)=(1u<<25)|(1u<<27);
     for(unsigned i=0;i<8;i++) {R(0xe000e180u+i*4)=0xffffffffu;R(0xe000e280u+i*4)=0xffffffffu;}
-    __asm volatile("dsb\nisb":::"memory");tx15_boot_jump(entry);
+    TX15_BOOT_ASM("dsb\nisb":::"memory");tx15_boot_jump(entry);
 }

@@ -8,9 +8,23 @@
 boot_vectors:
  .word _stack_top
  .word Boot_Reset
+#ifdef TX15_USB_UPDATE
+ .rept 13
+ .word Boot_Fault
+ .endr
+ .word SysTick_Handler
+ .rept 101
+ .word Boot_Fault
+ .endr
+ .word OTG_FS_IRQHandler
+ .rept 58
+ .word Boot_Fault
+ .endr
+#else
  .rept 174
  .word Boot_Fault
  .endr
+#endif
 .section .text.Boot_Reset,"ax",%progbits
 .global Boot_Reset
 .type Boot_Reset,%function

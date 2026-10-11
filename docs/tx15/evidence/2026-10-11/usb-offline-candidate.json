@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "date": "2026-10-11",
+  "scope": "offline candidate; not installed",
+  "software_tests": {
+    "count": 244,
+    "result": "OK",
+    "seconds": 80.397
+  },
+  "resident_boot": {
+    "raw_bytes": 27240,
+    "bin_sha256": "ed12230e1db8acf6ccc46096106bc2da6cd81d58e4b3f17fb431b91a308a4465",
+    "elf_sha256": "68ce60ed302d930465334ecee80abbe76262162c8187de6944f272b6dfae2f10",
+    "installed": false
+  },
+  "windows_tool": {
+    "exe_sha256": "e6cefeefd2e332d5ed92b2b562fbf9be546651ebcb263f91a1458728f3c7628f",
+    "startup": {
+      "schema": 1,
+      "title": "New Deviation · TX15 USB 更新",
+      "visible": true,
+      "update_button_enabled": false,
+      "automatic_device_open": false,
+      "automatic_flash_write": false,
+      "packaged_runtime": true
+    },
+    "physical_update_verified": false
+  },
+  "installation": {
+    "existing_verified_snapshot_reused": true,
+    "fresh_backup_performed": false,
+    "recovery_archive_extraction_verified": true,
+    "live_snapshot_verified": false,
+    "flash_write_authorized": false
+  },
+  "proof": {
+    "read_only_ram_usb_transfer_verified": true,
+    "resident_exit_entry_verified": false,
+    "hardware_nor_write_verified": false,
+    "full_usb_flash_update_verified": false
+  }
+}

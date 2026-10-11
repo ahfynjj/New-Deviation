@@ -96,11 +96,11 @@ HELLO响应48B：UID12B；API、设置ABI、最大ND15长度、能力flags、JED
 
 **Interfaces:** 消费任务1/2/3。`struct tx15_update_io`包含ctx、`observe(ctx,struct tx15_update_flash_info*)`、`read(ctx,offset,dst,n)`、`erase4k(ctx,offset)`、`program(ctx,offset,src,n)`、`service(ctx)`；完整操作成功返回1，失败0。flash_info含JEDEC/容量/页/擦除/3个状态寄存器/SFDP已验证标志。`int tx15_update_tx_prepare(struct tx15_update_tx*,const struct tx15_update_io*,const struct tx15_update_package*,uint8_t *shadow,size_t capacity)`核对并备份首1MiB；`int tx15_update_tx_step(struct tx15_update_tx*)`每次推进一个受限动作，返回0进行中/1 DONE/-1 ERROR；`int tx15_boot_update_mode(unsigned exit_stable,enum tx15_boot_load_result result)`返回0 normal/1 updater。runtime对所有COMMIT字段核对后才调用prepare，进入事务后RAM镜像/版本/范围不可改。
 
-- [ ] 写失败注入测试：每个擦除/编程阶段取消供电模型、保护/几何错、读回任一字节错、设置或尾部变化均不能DONE；所有写地址 `<0xF0000`，所有页不跨256B；实际头写晚于正文；原设置/尾部逐字节不变。提交前USB中断写计数0，提交后USB丢失仍可完成同一冻结事务，重复COMMIT写计数不增加。USB服务回调期间恶意DATA/BEGIN/ABORT不能改变镜像。
-- [ ] 跑`python -m unittest discover -s utils/hardware/tests -p 'test_usb_*'`观察事务/模式RED。
-- [ ] 实现严格NOR观察、状态允许掩码沿用`flash_geometry.assess`，SFDP边界逻辑与已有Python参考进行同fixture对照；读/擦/编程地址只经受限函数，明确无全擦/内部/选项字节接口。busy等待有上限并调用USB service，只响应状态；防止嵌套step。从shadow中比较设置及未触及尾部，重新验证Flash完整ND15。
-- [ ] 实现BOOT模式选择和更新屏幕（等待/接收/校验/写入/完成/错误），EXIT上拉30ms稳定采样，不依赖应用或I2C；应用READ_ERROR/BAD_IMAGE进入更新器，其它初始化错误不授权写入。先释放电源键20ms，随后2秒长按在非写入阶段关机；写入阶段不软件关机。正常模式保持旧handoff/ECC初始化，USB IRQ仅更新模式启用。
-- [ ] 独立构建`python utils/build-tx15-boot.py --usb-update --out local/tx15-hardware/boot-usb`，不改默认boot/boot-chain产物；128KiB/56KiB布局、704B向量、stackless供电、正常copy STRD和IRQ归属通过。同一软件命令GREEN，追加正常/强制USB/损坏应用模式真实C检查，提交。
+- [x] 写失败注入测试：每个擦除/编程阶段取消供电模型、保护/几何错、读回任一字节错、设置或尾部变化均不能DONE；所有写地址 `<0xF0000`，所有页不跨256B；实际头写晚于正文；原设置/尾部逐字节不变。提交前USB中断写计数0，提交后USB丢失仍可完成同一冻结事务，重复COMMIT写计数不增加。USB服务回调期间恶意DATA/BEGIN/ABORT不能改变镜像。
+- [x] 跑`python -m unittest discover -s utils/hardware/tests -p 'test_usb_*'`观察事务/模式RED。
+- [x] 实现严格NOR观察、状态允许掩码沿用`flash_geometry.assess`，SFDP边界逻辑与已有Python参考进行同fixture对照；读/擦/编程地址只经受限函数，明确无全擦/内部/选项字节接口。busy等待有上限并调用USB service，只响应状态；防止嵌套step。从shadow中比较设置及未触及尾部，重新验证Flash完整ND15。
+- [x] 实现BOOT模式选择和更新屏幕（等待/接收/校验/写入/完成/错误），EXIT上拉30ms稳定采样，不依赖应用或I2C；应用READ_ERROR/BAD_IMAGE进入更新器，其它初始化错误不授权写入。先释放电源键20ms，随后2秒长按在非写入阶段关机；写入阶段不软件关机。正常模式保持旧handoff/ECC初始化，USB IRQ仅更新模式启用。
+- [x] 独立构建`python utils/build-tx15-boot.py --usb-update --out local/tx15-hardware/boot-usb`，不改默认boot/boot-chain产物；128KiB/56KiB布局、704B向量、stackless供电、正常copy STRD和IRQ归属通过。同一软件命令GREEN，追加正常/强制USB/损坏应用模式真实C检查，提交。
 
 ## Task 5: Windows备份/更新工具及可双击交付
 
@@ -108,11 +108,11 @@ HELLO响应48B：UID12B；API、设置ABI、最大ND15长度、能力flags、JED
 
 **Interfaces:** 消费Python包/FrameCodec及任务2的DeviceInfo/DeviceStatus。`UpdaterClient(transport,backup_dir:Path,progress:Callable)`，transport提供`read(n:int)->bytes`, `write(bytes)->int`, `close()`；`connect()->DeviceInfo`, `prepare(package:bytes)->PreparedUpdate`, `commit(prepared:PreparedUpdate)->UpdateResult`, `status()->DeviceStatus`。PreparedUpdate绑定UID/session/image_crc和已验证落盘备份路径；UpdateResult只有DONE且verification_flags bit0=1才success=true。`UpdaterModel`提供可测连接/文件/按钮使能和状态，不在Tk线程执行串口/备份/写入。
 
-- [ ] 写`test_backup_failure_and_cancel_never_commit`、`test_wrong_device_and_reconnect_invalidate_prepared`、`test_commit_timeout_queries_without_resend`：中文/空格路径备份64KiB+UID+SHA正确；磁盘满/fsync或读回失败COMMIT帧数0；PWLINK2/普通COM描述符不自动连接，UID变或session变需重新准备；断连返回未知状态，不返回成功、不重复COMMIT。GUI模型READY/数据传完不能显示成功，实际DONE可显示完成。
-- [ ] 跑`python -m unittest discover -s utils/hardware/tests -p 'test_usb_update_client.py'`及`-p 'test_usb_updater_gui_model.py'`观察RED。
-- [ ] 实现读取受限设置备份，使用原子保存/fsync并重新读取SHA核对；默认`%LOCALAPPDATA%/NewDeviation/backups/<UID>/`，用户可选择可写目录。支持串口partial write/read，COMMIT仅一次，超时只查询，不静默跨设备/会话继续；窗体只有设备、连接、文件、更新、进度及明确结果。
-- [ ] 隔离安装固定主机依赖，打包为onedir Windows程序`local/tx15-usb-release/NewDeviationUpdater/NewDeviationUpdater.exe`（用户双击）；新进程在未连接设备时启动可观察，记录窗口截图/启动证据，不自动点击更新。同一软件命令GREEN；在无开发venv的运行环境验证程序能打开，不能把打包成功当USB更新成功。
-- [ ] 提交源码/锁定依赖/使用说明；大体积依赖产物、固件、用户备份留local，不提交个人数据。
+- [x] 写`test_backup_failure_and_cancel_never_commit`、`test_wrong_device_and_reconnect_invalidate_prepared`、`test_commit_timeout_queries_without_resend`：中文/空格路径备份64KiB+UID+SHA正确；磁盘满/fsync或读回失败COMMIT帧数0；PWLINK2/普通COM描述符不自动连接，UID变或session变需重新准备；断连返回未知状态，不返回成功、不重复COMMIT。GUI模型READY/数据传完不能显示成功，实际DONE可显示完成。
+- [x] 跑`python -m unittest discover -s utils/hardware/tests -p 'test_usb_update_client.py'`及`-p 'test_usb_updater_gui_model.py'`观察RED。
+- [x] 实现读取受限设置备份，使用原子保存/fsync并重新读取SHA核对；默认`%LOCALAPPDATA%/NewDeviation/backups/<UID>/`，用户可选择可写目录。支持串口partial write/read，COMMIT仅一次，超时只查询，不静默跨设备/会话继续；窗体只有设备、连接、文件、更新、进度及明确结果。
+- [x] 隔离安装固定主机依赖，打包为onedir Windows程序`local/tx15-usb-release/NewDeviationUpdater/NewDeviationUpdater.exe`（用户双击）；新进程在未连接设备时启动可观察，记录窗口截图/启动证据，不自动点击更新。同一软件命令GREEN；在无开发venv的运行环境验证程序能打开，不能把打包成功当USB更新成功。
+- [x] 提交源码/锁定依赖/使用说明；大体积依赖产物、固件、用户备份留local，不提交个人数据。
 
 ## Task 6: 一次性USB启动器安装包、整体验收与交接
 
@@ -120,10 +120,10 @@ HELLO响应48B：UID12B；API、设置ABI、最大ND15长度、能力flags、JED
 
 **Interfaces:** `usb_boot_update.prepare(root,folder,baseline_folder,internal:bytes,external:bytes)->USBInstallKit`、`read(folder)->USBInstallKit`，严格当前已安装baseline及活跃installed记录；`USBInstallKit.approval(action:str)->str`域`tx15-usb-boot-update-v1`绑定实际UID/事务hash，新包不能借用旧许可。内部新boot ELF/BIN经`boot_elf.parse`及相互核对；应用使用已安装baseline的真实ELF/ND15，必须与现场应用一致，不顺带安装未批准ELRS命令版。
 
-- [ ] 写`test_usb_boot_kit_preserves_live_app_models_and_requires_new_approval`：新boot被正确布局验证，旧应用及最新模型/校准原样；任意文件/hash/baseline/UID或旧令牌错在开探针前拒绝；新boot不能被legacy kit默认为已批准。离线恢复ZIP解包后实际read/逐字节校验通过。
-- [ ] 跑新kit测试RED；实现独立kit读取/冻结。一次性SWD采用已有完整Transaction/Journal路径：它会先重写相同的已安装应用前缀，再安装新内部启动器；具体清单如实列外部擦除/编程及内部128KiB擦除，不假称只写boot。模型区和未触及尾部仍不变；恢复包绑定本次现场首1MiB/内部128KiB。默认CLI离线，不打开设备；capture只读，install/recover分别需明确具体包批准。
-- [ ] 同一新kit测试GREEN；运行完整`python -m unittest discover -s utils/hardware/tests`、隔离USB boot/probe构建和当前产品包装/hash核对。一轮最终独立审查，仅修Critical/Important并按RED→GREEN验证；Minor记入交接，不重复多轮审查。
-- [ ] 现场只读备份并正常恢复 → 展示真实冻结清单/回退包 → 得到具体刷入授权 → 用PWLINK2安装/读回/暂停退出 → 用户正常断电冷启动。设计/计划许可不等于这次写入许可。
+- [x] 写`test_usb_boot_kit_preserves_live_app_models_and_requires_new_approval`：新boot被正确布局验证，旧应用及最新模型/校准原样；任意文件/hash/baseline/UID或旧令牌错在开探针前拒绝；新boot不能被legacy kit默认为已批准。离线恢复ZIP解包后实际read/逐字节校验通过。
+- [x] 跑新kit测试RED；实现独立kit读取/冻结。一次性SWD采用已有完整Transaction/Journal路径：它会先重写相同的已安装应用前缀，再安装新内部启动器；具体清单如实列外部擦除/编程及内部128KiB擦除，不假称只写boot。模型区和未触及尾部仍不变；恢复包绑定本次现场首1MiB/内部128KiB。默认CLI离线，不打开设备；capture只读，install/recover分别需明确具体包批准。
+- [x] 同一新kit测试GREEN；运行完整`python -m unittest discover -s utils/hardware/tests`、隔离USB boot/probe构建和当前产品包装/hash核对。一轮最终独立审查，仅修Critical/Important并按RED→GREEN验证；Minor记入交接，不重复多轮审查。
+- [ ] 现场只读备份并正常恢复（2026-10-11 用户明确跳过，改为复用已验证快照；安装仍完整比较现场，差异在擦除前停止）→ 展示真实冻结清单/回退包 → 得到具体刷入授权 → 用PWLINK2安装/读回/暂停退出 → 用户正常断电冷启动。设计/计划许可不等于这次写入许可。
 - [ ] 合并USB实机验收：正常启动和原模型/校准、EXIT+开机、Windows连接/备份、一次实际USB应用更新及最终DONE、正常电源键关机开机、输入和ELRS基本保留。错误文件及提交前取消不得修改Flash；损坏镜像恢复入口先用只读RAM故障注入触发验证路径，真实应用损坏后的重启/恢复另列明确台架安排与授权，不提前声称通过。
 - [ ] 更新源码/测试/构建/枚举/擦写/读回/用户验收各层证据与TODO，提交推送；交付EXE、`.ndu`、现场恢复ZIP和两步日常操作说明。缺物理证据时保留pending，不因已构建宣称交付完成。
 

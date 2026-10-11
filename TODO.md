@@ -3,11 +3,13 @@
 更新：2026-10-11。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
-## 2026-10-11 USB 自助更新实施中
+## 2026-10-11 USB 自助更新待首次安装
 
-用户已批准设计和实施计划。`.ndu` 包校验、有界 USB 协议与 RAM 接收、TinyUSB CDC 只读诊断程序、受限外部 NOR 事务核心及 UID/会话提交检查已实现；当前完整 220 项软件检查通过。隔离构建未覆盖旧启动器或应用产物。
+用户已批准设计和实施计划。包/协议/RAM 接收、TinyUSB CDC、受限 NOR 事务和硬件后端、常驻启动入口及屏幕、Windows GUI 与 EXE 已完成软件实现。最终完整 **244 项检查通过（80.397 秒）**；ARM 启动器原始 BIN 27240 字节，内部 128 KiB 和 RAM 布局/向量检查通过。EXE 在 PATH 仅保留 Windows 的新进程启动，窗口可见、更新按钮禁用，无自动连接或刷写。独立审查提出的只读错误入口和文件选择残留两项问题已按 RED→GREEN 修复；旧启动测试改用临时目录，原冻结 ELF/BIN 哈希恢复且未放宽许可。
 
-2026-10-11 换好数据线并补齐外部 RAM 初始化后，CDC COM36、UID/只读 HELLO、USB 时钟同步、完整 694896 字节更新包接收/校验及 READ_ONLY 拒绝刷写全部实测通过；ND15 镜像 694768 字节，最终 READY，无异常，Flash 擦写命令为 0。用户断电后确认恢复 Deviation。另补 C/Python 对照的 NOR SFDP 几何检查，以及事务备份阶段正确返回 VALIDATING 的回归修复；最新完整 220 项检查通过。USB 拔插、NOR 硬件后端、常驻更新入口、Windows 小工具和完整更新验收仍未完成；尚未安装 USB 启动器。详见[实施证据](docs/tx15/usb-progress-2026-10-11.md)。
+此前只读实机已通过 COM36、UID/HELLO、完整更新包接收/READY 及 READ_ONLY 拒绝刷写，用户断电后恢复 Deviation。**本轮没有打开调试器或写 Flash；USB 常驻启动器尚未安装。** 用户要求跳过新增备份，已复用现有已验证快照生成 `usb-boot-kit` 和回退 ZIP，解包验证通过；实际安装仍先完整比较现场，任何模型/校准差异在擦除前停止。包重写相同已安装应用前缀，并替换内部 128 KiB 启动器，不安装待批准 ELRS 命令版。
+
+下一步：具体清单批准 → PWLINK2 一次性安装及读回 → 正常冷启动、EXIT 入口、一次真实 USB 更新和模型/校准/输入/ELRS 合并验收。USB 拔插、NOR 实际擦写、损坏应用恢复仍待实测。详见 [用户操作](docs/tx15/usb-update.md)、[首次安装清单](docs/tx15/usb-boot-install-2026-10-11.md) 和 [证据](docs/tx15/usb-progress-2026-10-11.md)。
 
 ## 2026-10-10 用户优先 USB 自助更新（设计阶段记录）
 

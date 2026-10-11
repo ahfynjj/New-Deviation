@@ -111,21 +111,22 @@ class BootChainTests(unittest.TestCase):
         with self.assertRaises(ValueError):boot_chain.decode(struct.pack('<32I',*v))
 
     def test_real_ram_build_uses_same_loader_copy_and_jump(self):
-        r=subprocess.run([sys.executable,str(ROOT/'utils/build-tx15-boot.py'),'--ram-chain'],cwd=ROOT,
-            capture_output=True,text=True,encoding='utf8',errors='replace')
-        self.assertEqual(r.returncode,0,r.stdout+r.stderr)
-        from check_ram_elf import check
-        out=ROOT/'local/tx15-hardware/boot-chain'
-        self.assertEqual(check((out/'boot-chain.elf').read_bytes())['mailbox'],'0x2400e000')
-        from json import loads
-        meta=loads((out/'build.json').read_text())
-        self.assertTrue(0x24000000 <= meta['control'] < 0x2400e000-80)
-        self.assertEqual(meta['bin_sha256'],hashlib.sha256((out/'boot-chain.bin').read_bytes()).hexdigest())
-        tool=ROOT.parent/'tools/arm8/bin/arm-none-eabi-objdump.exe'
-        dis=subprocess.check_output([str(tool),'-d',str(out/'boot-chain.elf')],text=True)
-        for name in ('tx15_boot_load','tx15_boot_jump','tx15_boot_handoff_valid','tx15_boot_image_validate'):
-            self.assertIn('<'+name+'>:',dis)
-        copy=dis.split('<copy>:',1)[1].split('\n\n',1)[0]
-        self.assertRegex(copy,r'\bstrd\s+(?:r\d+|ip|lr),\s*(?:r\d+|ip|lr),\s*\[(?:r\d+|ip|lr)\]')
+        with tempfile.TemporaryDirectory(prefix='TX15 isolated build ') as tmp:
+            out=Path(tmp)
+            r=subprocess.run([sys.executable,str(ROOT/'utils/build-tx15-boot.py'),'--ram-chain','--out',str(out)],cwd=ROOT,
+                capture_output=True,text=True,encoding='utf8',errors='replace')
+            self.assertEqual(r.returncode,0,r.stdout+r.stderr)
+            from check_ram_elf import check
+            self.assertEqual(check((out/'boot-chain.elf').read_bytes())['mailbox'],'0x2400e000')
+            from json import loads
+            meta=loads((out/'build.json').read_text())
+            self.assertTrue(0x24000000 <= meta['control'] < 0x2400e000-80)
+            self.assertEqual(meta['bin_sha256'],hashlib.sha256((out/'boot-chain.bin').read_bytes()).hexdigest())
+            tool=ROOT.parent/'tools/arm8/bin/arm-none-eabi-objdump.exe'
+            dis=subprocess.check_output([str(tool),'-d',str(out/'boot-chain.elf')],text=True)
+            for name in ('tx15_boot_load','tx15_boot_jump','tx15_boot_handoff_valid','tx15_boot_image_validate'):
+                self.assertIn('<'+name+'>:',dis)
+            copy=dis.split('<copy>:',1)[1].split('\n\n',1)[0]
+            self.assertRegex(copy,r'\bstrd\s+(?:r\d+|ip|lr),\s*(?:r\d+|ip|lr),\s*\[(?:r\d+|ip|lr)\]')
 
 if __name__=='__main__':unittest.main()

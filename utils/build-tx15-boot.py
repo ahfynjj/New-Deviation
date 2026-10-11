@@ -6,8 +6,22 @@ root=Path(__file__).resolve().parents[1]
 arm=Path(tempfile.gettempdir())/'new-deviation-arm8/bin'
 args=argparse.ArgumentParser(description=__doc__)
 args.add_argument('--ram-chain',action='store_true',help='RAM loader with host-fed SDRAM source; no Flash writes')
+args.add_argument('--usb-update',action='store_true',help='Isolated resident USB updater candidate; does not program hardware')
+args.add_argument('--out',type=Path,help='Isolated candidate output directory')
 options=args.parse_args()
-support=root.parent/'tools/arm8';out=root/'local/tx15-hardware'/('boot-chain' if options.ram_chain else 'boot');out.mkdir(parents=True,exist_ok=True)
+if options.usb_update:
+    if options.ram_chain: args.error('USB resident and RAM chain modes are mutually exclusive')
+    from usb_update.boot_build import build
+    build(options.out)
+    raise SystemExit(0)
+support=root.parent/'tools/arm8'
+out=options.out.resolve() if options.out else root/'local/tx15-hardware'/('boot-chain' if options.ram_chain else 'boot')
+if options.out:
+    for name in ('boot','boot-chain','app','app-standalone','usb-probe','usb-probe-sdram','boot-usb'):
+        frozen=root/'local/tx15-hardware'/name
+        if out==frozen or out in frozen.parents or frozen in out.parents:
+            args.error('Refusing a frozen output directory')
+out.mkdir(parents=True,exist_ok=True)
 flags=['-isystem',str(support/'lib/gcc/arm-none-eabi/8.2.1/include'),
     '-isystem',str(support/'lib/gcc/arm-none-eabi/8.2.1/include-fixed'),'-isystem',str(support/'arm-none-eabi/include'),
     '-mcpu=cortex-m7','-mthumb','-mfloat-abi=soft','-std=c11','-Os','-g3',

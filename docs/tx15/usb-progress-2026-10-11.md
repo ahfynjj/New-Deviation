@@ -4,16 +4,44 @@ The installed Deviation application is unchanged. No external/internal Flash
 erase or programming was issued during either RAM test below. This is partial
 bring-up evidence, not USB updater product acceptance.
 
-## Current software
+## Current software (final offline candidate)
 
-Committed package validation, bounded framing/RAM receiver, isolated TinyUSB
-CDC probe, transaction core and runtime gates: `6268408c`, `067d0370`,
-`527e9fde`, `9be8bdd9`. The current complete suite finished with 220 tests / OK
-(61.649 seconds); the USB-focused suite finished with 16 tests / OK before
-additional geometry mutation cases were included in the complete run.
-Native bounded NOR geometry assessment has now been added and compared with
-the existing Python SFDP/protection policy; hardware NOR commands and resident
-USB boot integration remain pending.
+The complete final suite passed **244 tests / OK in 80.397 seconds**, with no
+live hardware session. Integrated resident boot selection/error recovery,
+NOR controller backend and USB servicing, update screen, Python client and
+Windows GUI are implemented. Host failure injection covers wrong UID/session,
+backup save/readback failures, interrupted COMMIT and no resending of COMMIT.
+The normal boot path is exercised through actual Boot_Main with fake MMIO;
+QSPI failures enter a read-only diagnostic updater, never a writable fallback.
+Selecting an unreadable or oversized file clears any previously selected image.
+Both fixes followed failing regressions and passed after implementation.
+
+Legacy build tests now use temporary output directories. The original frozen
+boot-chain ELF/BIN were reproduced from their exact original sources at the
+original source paths and match unchanged production pins; their approvals
+were not relaxed. Shared source bytes were restored before verification.
+
+Resident boot raw BIN: 27240 bytes, SHA256
+`ed12230e1db8acf6ccc46096106bc2da6cd81d58e4b3f17fb431b91a308a4465`.
+ELF: `68ce60ed302d930465334ecee80abbe76262162c8187de6944f272b6dfae2f10`.
+Build size: 27208 text / 32 data / 13000 BSS. The isolated build verifies
+128KiB Flash, 56KiB RAM limits, vectors and matching ELF/BIN.
+
+Windows onedir executable: `local/tx15-usb-release/NewDeviationUpdater/`;
+EXE SHA256 `e6cefeefd2e332d5ed92b2b562fbf9be546651ebcb263f91a1458728f3c7628f`.
+A new packaged process started successfully with PATH restricted to Windows,
+without Python or a developer venv in PATH. Its smoke report records a visible
+window, disabled update button and no automatic device opening or Flash writes.
+This is GUI startup evidence, not physical USB update acceptance.
+
+At the user's request, the next separate fresh-backup session is skipped.
+The one-time kit reuses the validated pre-update snapshot in elrs-commands-kit
+and freezes the actually installed calibration app unchanged. Recovery ZIP
+extraction and the full kit reader passed. Installation must still compare all
+live internal128KiB/external1MiB bytes; any changed settings abort before erase.
+No hardware was opened or Flash written while preparing this kit. The resident
+boot installation and full USB Flash update still require concrete approval
+and physical acceptance; see [installation checklist](usb-boot-install-2026-10-11.md).
 
 ## Read-only physical sessions
 
@@ -82,10 +110,10 @@ not bypassed. A rerun without an active hardware session passed: 220 tests / OK.
 
 ## Remaining acceptance
 
-Unplug/replug, integrated NOR backend/resident
-boot, Windows GUI and packaged delivery, fresh device baseline and explicit
-approval for first resident installation, then complete physical update and
-preserved model/calibration checks are still required.
+Unplug/replug, resident normal boot/EXIT/error entry, actual NOR writing,
+concrete approval for the first resident installation, a complete physical USB
+Flash update, and preserved model/calibration checks remain pending. The GUI
+and resident/backend software builds are complete; hardware acceptance is separate.
 
 ## Fixed-probe physical acceptance
 
