@@ -1,9 +1,15 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-10-10。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-11。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
-## 2026-10-10 用户优先 USB 自助更新
+## 2026-10-11 USB 自助更新实施中
+
+用户已批准设计和实施计划。`.ndu` 包校验、有界 USB 协议与 RAM 接收、TinyUSB CDC 只读诊断程序、受限外部 NOR 事务核心及 UID/会话提交检查已实现；当前完整 218 项软件检查通过。隔离构建未覆盖旧启动器或应用产物。
+
+2026-10-11 两轮只读 RAM 程序各运行约 120 秒，Flash 擦写命令为 0；均没有 USB 请求、未识别目标 CDC。第一轮结束后用户澄清数据线尚未插入；第二轮明确插线后 PH5 插入检测仍为低，需核对实际接口/数据线，尚未判定驱动故障。已补 C/Python 对照的 NOR SFDP 几何检查。实机识别、NOR 硬件后端、常驻更新入口、Windows 小工具和完整更新验收仍未完成；尚未安装 USB 启动器。详见[实施证据](docs/tx15/usb-progress-2026-10-11.md)。
+
+## 2026-10-10 用户优先 USB 自助更新（设计阶段记录）
 
 用户改为优先USB更新入口，并选择“专用更新工具，优先操作简单”。已核对内部启动器128KiB容量/6880B现有BIN、ND15校验与暂存、模型区边界、板级USB和EXIT引脚依据，形成[USB更新设计](docs/superpowers/specs/2026-10-10-tx15-usb-update-design.md)，待用户审阅。拟采用常驻原生更新器、EXIT+开机入口、USB CDC和Windows小工具；完整接收/校验后才写外部应用，模型/校准与未触及尾部逐字节核对，应用损坏时自动进入恢复更新模式。首次安装仍需PWLINK2，之后日常应用更新走遥控器USB。
 

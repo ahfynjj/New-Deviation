@@ -56,11 +56,11 @@
 
 固定128B小端头：0..7=`ND15UPD1`；8版本1；12机型`0x54583135`；16 ND15字节数；20 ND15整体CRC32；24最低boot API；28设置ABI；32..123全0；124头前124B的CRC32；128起ND15。CRC为IEEE/zlib，不填充到Flash文件；4KiB擦除和256B页填充属于事务内部。设置ABI1绑定现有模型/校准存储布局，布局变化必须改版本，不能只凭相同ABI宣称兼容。
 
-- [ ] 写`test_roundtrip_real_nd15_and_c_python_agree`：真实已有fixture的ND15双方通过，截断/追加/机型错/ABI2/最低API2/保留字段非0/CRC修补后语义错均拒绝；`assert len(pack(image))==128+len(image)`，C失败out无部分计划。
-- [ ] 跑`python -m unittest discover -s utils/hardware/tests -p test_usb_update_package.py`，观察缺失API或接受错误包的RED。
-- [ ] 实现上述API，调用已有完整ND15解析器；包装CLI要求真实产品构建`rf_enabled=true,persistent_settings=true`及ELF/ND15哈希匹配，不能把测试RF关闭产物当产品发布。
-- [ ] 同一命令GREEN，另验证未改变默认app/boot冻结文件。
-- [ ] 提交本任务和测试；记录格式、实际输出hash及测试结果，不访问设备。
+- [x] 写`test_roundtrip_real_nd15_and_c_python_agree`：真实已有fixture的ND15双方通过，截断/追加/机型错/ABI2/最低API2/保留字段非0/CRC修补后语义错均拒绝；`assert len(pack(image))==128+len(image)`，C失败out无部分计划。
+- [x] 跑`python -m unittest discover -s utils/hardware/tests -p test_usb_update_package.py`，观察缺失API或接受错误包的RED。
+- [x] 实现上述API，调用已有完整ND15解析器；包装CLI要求真实产品构建`rf_enabled=true,persistent_settings=true`及ELF/ND15哈希匹配，不能把测试RF关闭产物当产品发布。
+- [x] 同一命令GREEN，另验证未改变默认app/boot冻结文件。
+- [x] 提交本任务和测试；记录格式、实际输出hash及测试结果，不访问设备。
 
 ## Task 2: 有界传输与纯RAM接收状态
 
@@ -72,11 +72,11 @@
 
 HELLO响应48B：UID12B；API、设置ABI、最大ND15长度、能力flags、JEDEC、容量、页字节数、擦除字节数各u32；最后SR1/SR2/SR3和SFDP已验证标志各u8。能力bit0=read_only、bit1=写入观察通过。session来自响应帧头，不信任USB字符串独立授权。状态/控制响应24B：state,error,received,total,image_crc,verification_flags各u32，末字段bit0仅完整读回DONE时设置。READ_SETTINGS请求payload为u32长度1..1024，帧offset为设置区内偏移，响应原始数据并回显偏移；提交期间拒绝此新读取。COMMIT payload=UID12B+image_bytes u32+image_crc u32；其frame session和READY冻结信息都须一致。Python同任务定义`DeviceInfo`（上述HELLO字段及session）、`DeviceStatus`（上述状态字段）供任务5使用。
 
-- [ ] 写`test_stream_split_merge_noise_and_length_overflow`和`test_receiver_replay_gap_timeout_and_ready_immutable`：所有拆分点和合并均解码一次；超长帧/旧session/错CRC拒绝；顺序数据完整才READY，重复同序号/偏移逐字节一致才ACK；数据空洞/重复内容不同/READY后改包均拒绝，硬件写调用计数始终0。
-- [ ] 跑`python -m unittest discover -s utils/hardware/tests -p test_usb_update_protocol.py`观察RED。
-- [ ] 实现解析和接收，固定缓冲/边界检查；COMMIT只交付已验证只读包描述，不在本任务实现写入。ABORT仅在提交前生效；重连清解析/会话，DATA等待超时后旧包不能提交。
-- [ ] 同一命令GREEN，并用Python帧驱动真实C接收器，覆盖32位offset回绕及最大镜像边界。
-- [ ] 提交并记录接口；不得连接探针或创建自动烧录动作。
+- [x] 写`test_stream_split_merge_noise_and_length_overflow`和`test_receiver_replay_gap_timeout_and_ready_immutable`：所有拆分点和合并均解码一次；超长帧/旧session/错CRC拒绝；顺序数据完整才READY，重复同序号/偏移逐字节一致才ACK；数据空洞/重复内容不同/READY后改包均拒绝，硬件写调用计数始终0。
+- [x] 跑`python -m unittest discover -s utils/hardware/tests -p test_usb_update_protocol.py`观察RED。
+- [x] 实现解析和接收，固定缓冲/边界检查；COMMIT只交付已验证只读包描述，不在本任务实现写入。ABORT仅在提交前生效；重连清解析/会话，DATA等待超时后旧包不能提交。
+- [x] 同一命令GREEN，并用Python帧驱动真实C接收器，覆盖32位offset回绕及最大镜像边界。
+- [x] 提交并记录接口；不得连接探针或创建自动烧录动作。
 
 ## Task 3: USB CDC与只读RAM实机入口
 
