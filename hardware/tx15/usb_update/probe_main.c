@@ -3,11 +3,13 @@
 #include "usb_hw.h"
 #include "receiver.h"
 #include "../board/power.h"
+#include "../board/sdram.h"
 #define REG(a) (*(volatile uint32_t *)(uintptr_t)(a))
 volatile uint32_t usb_probe_report[32] __attribute__((section(".mailbox"),aligned(8)));
 static struct tx15_frame_parser parser;
 static struct tx15_update_receiver receiver;
 static uint8_t tx[TX15_FRAME_BYTES_MAX];static size_t tx_bytes,tx_sent;
+static struct tx15_sdram_report sdram;
 void Boot_Fault(void)
 {
     usb_probe_report[2]=8;usb_probe_report[3]=REG(0xe000ed28u);
@@ -35,12 +37,14 @@ static void request(void *ctx,const struct tx15_frame *f)
 }
 void Boot_Main(void)
 {
-    /* Host launches only after the frozen RAM initializer proved PLL128,
-     * SDRAM, PH12 and thread-mode halt. Never inherit the application PC. */
+    /* Frozen initializer proves PLL128, PH12 and thread-mode halt only.
+     * This probe owns SDRAM initialization before any receiver staging writes. */
     usb_probe_report[0]=0x55534231u;usb_probe_report[1]=1;usb_probe_report[2]=1;
     if ((REG(0x58024410u)&0x3fu)!=0x1bu || (REG(0x58024418u)&0xf7fu)!=0x48u
         || (REG(0xe000ed14u)&0x30000u) || (REG(0xe000ed94u)&1u)) { usb_probe_report[3]=1;Boot_Fault(); }
     tx15_power_init();
+    if (tx15_sdram_init(&sdram)) { usb_probe_report[3]=3;Boot_Fault(); }
+    usb_probe_report[12]=sdram.state;
     if ((tx15_power_status()&15u)!=15u || tx15_usb_init()) { usb_probe_report[3]=2;Boot_Fault(); }
     tx15_update_frame_init(&parser);uint32_t epoch=UINT32_MAX;
     usb_probe_report[2]=3;__asm volatile("cpsie i");

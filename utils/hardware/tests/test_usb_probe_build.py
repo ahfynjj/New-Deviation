@@ -34,4 +34,10 @@ class USBProbeBuildTests(unittest.TestCase):
             for forbidden in ('tx15_update_tx_prepare','tx15_update_nor_erase','tx15_update_nor_program'):
                 self.assertNotIn(forbidden,symbols)
             self.assertIn('OTG_FS_IRQHandler',symbols)
+            self.assertIn('tx15_sdram_init',symbols,'USB BEGIN needs initialized external staging RAM')
+            objdump=ROOT.parent/'tools/arm8/bin/arm-none-eabi-objdump.exe'
+            assembly=subprocess.check_output([str(objdump),'-d',str(folder/'tx15-usb-probe.elf')],text=True)
+            import re
+            main=re.search(r'<Boot_Main>:\n(.*?)(?=\n[0-9a-f]+ <|\Z)',assembly,re.S).group(1)
+            self.assertLess(main.index('<tx15_sdram_init>'),main.index('<tx15_usb_init>'))
         for p,digest in old.items(): self.assertEqual(hashlib.sha256(p.read_bytes()).hexdigest(),digest)

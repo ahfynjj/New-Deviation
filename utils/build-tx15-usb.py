@@ -34,7 +34,7 @@ def main():
     sources=[usb/p for p in ('startup.S','usb_hw.c','usb_board.c','usb_descriptors.c','probe_main.c',
                             'package.c','protocol.c','receiver.c')]
     sources+=[ROOT/'hardware/tx15/boot'/p for p in ('early_supply.S','image.c')]
-    sources+=[ROOT/'hardware/tx15/board/power.c']
+    sources+=[ROOT/'hardware/tx15/board'/p for p in ('power.c','sdram.c')]
     sources+=[tiny/p for p in ('tusb.c','common/tusb_fifo.c','device/usbd.c','device/usbd_control.c',
               'class/cdc/cdc_device.c','portable/synopsys/dwc2/dcd_dwc2.c','portable/synopsys/dwc2/dwc2_common.c')]
     objects=[]
