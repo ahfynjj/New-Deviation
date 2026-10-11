@@ -4,6 +4,29 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 
 class SwitchUpgradeTests(unittest.TestCase):
+    def test_reported_live_contacts_do_not_contain_a_third_electrical_state(self):
+        # Captured on the installed 3P-r2 application. Catalog capacity and
+        # observed electrical positions are separate claims.
+        self.run_c(r'''
+#include <assert.h>
+#include "common.h"
+#include "config/tx.h"
+#include "hardware/tx15/board/controls.h"
+struct Transmitter Transmitter;struct tx15_controls tx15_controls;
+int main(void) {
+ const unsigned raw[]={0xfb7f,0xfb7f,0xbb7f,0xbb7f,0xbb7f,0xbb6f};
+ const unsigned group[]={4,4,4,5,5,5},position[]={1,1,0,1,1,2};
+ assert(INPUT_NumSwitchPos(INP_SWE0)==3 && INPUT_NumSwitchPos(INP_SWF0)==3);
+ for(unsigned i=0;i<6;i++) {
+  tx15_controls_reset(&tx15_controls);
+  tx15_controls_decode(&tx15_controls,0xffff,raw[i],0);
+  tx15_controls_decode(&tx15_controls,0xffff,raw[i],20);
+  assert(tx15_controls_switch(&tx15_controls,group[i],position[i])==1);
+ }
+ assert(raw[0]==raw[1] && raw[3]==raw[4]);
+ return 0;
+}''', ['src/inputs.c','hardware/tx15/board/control_decode.c'])
+
     def test_live_monitor_distinguishes_catalog_positions_contacts_and_invalid_inputs(self):
         diagnostic=ROOT/'src/target/tx/radiomaster/tx15/input_monitor.c'
         self.assertTrue(diagnostic.exists(), 'Runtime switch diagnostics are missing')

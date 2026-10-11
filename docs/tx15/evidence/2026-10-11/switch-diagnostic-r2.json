@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "diagnostic-built-hardware-pending",
+  "status": "diagnostic-installed-two-electrical-states-reported",
   "previous_user_report": {
     "usb_update_complete": true,
     "selected_file": "tx15-switches-3pos-20261011.ndu",
@@ -31,5 +31,55 @@
   },
   "boot_modified": false,
   "decoder_or_source_layout_changed": false,
-  "flash_written_by_this_run": false
+  "flash_written_by_this_run": false,
+  "live_user_report": {
+    "build_marker_seen": "3P-r2",
+    "se": {
+      "down": {
+        "position": 1,
+        "catalog_positions": 3,
+        "raw_75": "0xfb7f"
+      },
+      "middle": {
+        "position": 1,
+        "catalog_positions": 3,
+        "raw_75": "0xfb7f"
+      },
+      "up": {
+        "position": 0,
+        "catalog_positions": 3,
+        "raw_75": "0xbb7f"
+      }
+    },
+    "sf": {
+      "down": {
+        "position": 1,
+        "catalog_positions": 3,
+        "raw_75": "0xbb7f"
+      },
+      "middle": {
+        "position": 1,
+        "catalog_positions": 3,
+        "raw_75": "0xbb7f"
+      },
+      "up": {
+        "position": 2,
+        "catalog_positions": 3,
+        "raw_75": "0xbb6f"
+      }
+    },
+    "ignore_mask": null,
+    "raw_74": null,
+    "hardware_assembly_variant_confirmed": false
+  },
+  "captured_sample_replay": {
+    "switch_suite_tests": 5,
+    "result": "OK",
+    "decoder_matches_all_six_samples": true,
+    "does_not_prove_hardware_fault": true
+  },
+  "manufacturer_references": [
+    "https://radiomasterrc.com/products/tx15-max-radio-controller-elrs-m2",
+    "https://radiomasterrc.com/products/optional-se-sf-3-position-assembly-for-tx15-radio"
+  ]
 }
