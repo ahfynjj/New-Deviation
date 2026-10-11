@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "date": "2026-10-11",
-  "scope": "one-time SWD resident USB boot installation; cold boot and USB acceptance pending",
+  "scope": "one-time SWD resident USB boot installation and user normal cold boot; USB acceptance pending",
   "source_session": "local/hardware-session/flash-entry-20261011-112951.json",
   "source_journal": "transaction-14f8905fc9654a878e8a4b91ec9f61f1.json",
   "transaction": {
@@ -29,8 +29,13 @@
   "halt_verified": true,
   "proof": {
     "swd_internal_external_write_readback_verified": true,
-    "normal_cold_boot_verified": false,
+    "normal_cold_boot_verified": true,
     "resident_usb_entry_verified": false,
     "usb_flash_update_verified": false
+  },
+  "user_acceptance": {
+    "normal_deviation_boot": true,
+    "models_calibration_and_rotary_six_inputs_reported_normal": true,
+    "receiver_rf_tested": false
   }
 }

@@ -149,3 +149,8 @@ and the entire 128KiB bank verified. Journal state=installed, sequence3647,
 checkpoints external/internal; final halt verified. No new snapshot was saved.
 Curated evidence: [usb-installed-swd.json](evidence/2026-10-11/usb-installed-swd.json).
 Normal cold boot, EXIT USB entry and full USB Flash update remain pending.
+
+The user subsequently disconnected the debugger, battery-cycled and confirmed
+normal Deviation boot, retained models/calibration and working rotary/six
+inputs. The receiver stayed off, so this does not verify RF. EXIT USB entry
+and actual USB update acceptance remain pending.
