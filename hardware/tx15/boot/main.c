@@ -8,6 +8,8 @@
 #include "handoff.h"
 #ifdef TX15_USB_UPDATE
 #include "update_mode.h"
+#include "../usb_update/screen.h"
+static uint32_t loading_total,loading_drawn;
 #endif
 #ifdef TX15_RAM_CHAIN
 #include "chain_source.h"
@@ -38,7 +40,17 @@ static int read_image(void *ctx,uint32_t offset,uint8_t *dst,uint32_t bytes) {
     for(uint32_t i=0;i<bytes;i++)dst[i]=source[offset+i];
     return 1;
 #else
-    return tx15_boot_qspi_read(offset,dst,bytes,1000000u)==TX15_QSPI_OK;
+    int ok=tx15_boot_qspi_read(offset,dst,bytes,1000000u)==TX15_QSPI_OK;
+#ifdef TX15_USB_UPDATE
+    if(ok) {
+        if(offset==0 && bytes==64)loading_total=tx15_boot_image_size(dst);
+        uint32_t done=offset+bytes;
+        if(loading_total && (done-loading_drawn>=16384u || done==loading_total)) {
+            tx15_boot_screen(1,done,loading_total);loading_drawn=done;
+        }
+    }
+#endif
+    return ok;
 #endif
 }
 static int copy(void *ctx,const struct tx15_boot_segment *s) {
@@ -75,6 +87,14 @@ void Boot_Main(void) {
     probe_report.ram_words=TX15_BOOT_CLOCK;
     if(tx15_sdram_init(&probe_report.sdram))fail(BAD_SDRAM);
     probe_report.ram_words|=TX15_BOOT_SDRAM;
+#ifdef TX15_USB_UPDATE
+    /* Power has already been latched by the stackless entry. Show the safe
+     * release cue before the long external-NOR read, validation and copies. */
+    tx15_display_fill(0);unsigned display=tx15_display_init();
+    if(display)fail(128u|(display<<8));
+    probe_report.ram_words|=TX15_BOOT_DISPLAY;
+    tx15_boot_screen(0,0,0);
+#endif
     uint32_t id=0;enum tx15_qspi_result qspi=tx15_boot_qspi_init(&id,1000000u);
     if(qspi!=TX15_QSPI_OK || id!=0xc84018u) {
         tx15_boot_qspi_stop();
@@ -116,9 +136,13 @@ void Boot_Main(void) {
     tx15_boot_qspi_stop();
     if(load!=TX15_BOOT_LOAD_OK)fail(512u|((uint32_t)load<<16));
     probe_report.ram_words|=TX15_BOOT_IMAGE|TX15_BOOT_COPIED;
+#ifdef TX15_USB_UPDATE
+    tx15_boot_screen(2,1,1);
+#else
     tx15_display_fill(0);unsigned display=tx15_display_init();
     if(display)fail(128u|(display<<8));
     probe_report.ram_words|=TX15_BOOT_DISPLAY;
+#endif
     probe_report.rcc_cr=R(0x58024400u);probe_report.rcc_cfgr=R(0x58024410u);probe_report.rcc_d1cfgr=R(0x58024418u);
     probe_report.state=PROBE_RUNNING;
     if(!tx15_boot_handoff_valid(&probe_report))fail(1024u);

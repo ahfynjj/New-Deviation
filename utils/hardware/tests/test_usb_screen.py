@@ -21,7 +21,15 @@ int main(void){
         pixels=0;tx15_update_screen(&s,i%2,i%2);assert(pixels>5040);
     }
     s.total=0;s.received=0xffffffffu;tx15_update_screen(&s,0,0);
-    assert(fills==10);return 0;
+    assert(fills==10);
+    for(unsigned stage=0;stage<3;stage++) {
+        unsigned before=fills;pixels=0;tx15_boot_screen(stage,0,100);
+        assert(fills==before+1 && pixels>5040);
+        tx15_boot_screen(stage,50,100);assert(fills==before+1);
+        tx15_boot_screen(stage,100,100);assert(fills==before+1);
+        tx15_boot_screen(stage,0xffffffffu,0);
+    }
+    return 0;
 }
 '''
 class ScreenTests(unittest.TestCase):

@@ -36,3 +36,17 @@ void tx15_update_screen(const struct tx15_update_reply *s,unsigned connected,uns
     unsigned progress=s->total && s->received<=s->total?(unsigned)((uint64_t)s->received*420/s->total):0;
     rect(30,250,420,12,0x4208);rect(30,250,progress,12,0x07e0);
 }
+void tx15_boot_screen(unsigned stage,uint32_t completed,uint32_t total)
+{
+    static unsigned last_stage=~0u;
+    if(stage!=last_stage) {
+        tx15_display_fill(0x0841);
+        text(30,25,"NEW DEVIATION",4,0xffff);
+        text(30,100,stage==0?"POWER ON":stage==1?"LOADING":"STARTING",3,0x07ff);
+        text(30,165,"RELEASE POWER KEY",3,0x07e0);
+        text(30,285,"PLEASE WAIT",2,0xffff);
+        rect(30,230,420,14,0x4208);last_stage=stage;
+    }
+    unsigned progress=total && completed<=total?(unsigned)((uint64_t)completed*420/total):0;
+    rect(30,230,progress,14,0x07e0);
+}

@@ -19,7 +19,7 @@ void tx15_controls_decode(struct tx15_controls *c,uint16_t port74,uint16_t port7
     c->trims=trims; /* Publish once: SysTick must not observe a partial mask. */
     for(unsigned i=0;i<6;i++) {
         unsigned h=(port75>>hi[i])&1,l=(port75>>lo[i])&1;
-        unsigned p=(!h && !l)?255:(i<4?(h?(l?1:0):2):(!(h&&l)));
+        unsigned p=(!h && !l)?255:(h?(l?1:0):2);
         if(p==255) { c->candidate[i]=255; c->valid&=~(1u<<i); continue; }
         if(c->candidate[i]!=p) { c->candidate[i]=p;c->since[i]=now; }
         if((uint32_t)(now-c->since[i])>=20) {c->position[i]=p;c->valid|=1u<<i;}
@@ -34,6 +34,6 @@ void tx15_controls_decode(struct tx15_controls *c,uint16_t port74,uint16_t port7
     }
 }
 int tx15_controls_switch(const struct tx15_controls *c,unsigned group,unsigned position) {
-    if(group>=7 || position>=(group<4?3:group<6?2:6) || !(c->valid&(1u<<group))) return -1;
+    if(group>=7 || position>=(group<6?3:6) || !(c->valid&(1u<<group))) return -1;
     return c->position[group]==position;
 }

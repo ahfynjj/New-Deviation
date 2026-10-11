@@ -1,5 +1,6 @@
 /* Native resident USB update loop; GPL-3.0-or-later. */
 #include "update_mode.h"
+#include "handoff.h"
 #include "qspi.h"
 #include "../board/display.h"
 #include "../board/power.h"
@@ -76,7 +77,8 @@ void tx15_boot_update_run(uint32_t jedec)
     R(0x58020c04u)&=~(1u<<4);
     R(0x58020c00u)=(R(0x58020c00u)&~(3u<<8))|(1u<<8);
     tx15_display_fill(0);
-    unsigned display_ok=tx15_display_init()==0;
+    unsigned display_ok=(probe_report.ram_words&TX15_BOOT_DISPLAY)!=0;
+    if(!display_ok)display_ok=tx15_display_init()==0;
     uint8_t uid[12];tx15_usb_hw_uid(uid);
     unsigned nor_ok=jedec==0xc84018u && tx15_update_nor_init(&nor,pump,ticks,0,1000000u);
     struct tx15_update_flash_info observed;

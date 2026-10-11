@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "status": "offline-verified-not-installed",
+  "scope": "six-native-three-position-switches; startup-feedback-boot-build-only",
+  "tests": {
+    "count": 247,
+    "seconds": 85.622,
+    "result": "OK"
+  },
+  "application": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "60d54faa0a5e8e6308aba6edb87e989f5c05b6dc12b972b4692e97aa1f34862c",
+    "payload_sha256": "eeb558f280d82aeb7d7286b07b297efdb3d592528d508a408f960384fae47253",
+    "rf_enabled": true,
+    "persistent_settings": true
+  },
+  "boot_candidate": {
+    "schema": 1,
+    "mode": "resident-usb-update-candidate",
+    "boot_api": 1,
+    "settings_abi": 1,
+    "elf_sha256": "5a0a3ea84af5f27c7522634789dfd8ac5a6c7de736d077f5b0145c5dcf6a4106",
+    "bin_sha256": "bc4e7c93d36da80e5adcc06b27d0ba88cee523c88f6724d06bb51b76b08d9221",
+    "layout": {
+      "entry": "0x80002c1",
+      "flash_start": "0x8000000",
+      "flash_bytes": 27592,
+      "stack_top": "0x24010000",
+      "mailbox": "0x2400e000"
+    },
+    "sources": {
+      "tinyusb": {
+        "repo": "hathach/tinyusb",
+        "commit": "86ad6e56c1700e85f1c5678607a762cfe3aa2f47",
+        "version": "0.18.0"
+      },
+      "stm32h7": {
+        "repo": "STMicroelectronics/cmsis-device-h7",
+        "commit": "6dac8c24d7b38ab20806d27dd7d8285a6433b8f7",
+        "version": "1.10.3"
+      },
+      "cmsis": {
+        "repo": "ARM-software/CMSIS_5",
+        "commit": "2b7495b8535bdcb306dac29b9ded4cfb679d7e5c",
+        "version": "5.9.0"
+      }
+    },
+    "hardware_installation_verified": false
+  },
+  "package": {
+    "file": "tx15-switches-3pos-20261011.ndu",
+    "bytes": 695216,
+    "image_bytes": 695088,
+    "sha256": "e07233e96c09f5d869450bd610fa4deca16a83813802c066dd18bda13affa824",
+    "image_crc32": "0x7fdf2e4b",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "live_backup_offline_migration": {
+    "sha256": "64ac9c7013aec1ad3b4836b4500edfe7099ebab2fcde3cd520b1af322318d056",
+    "record_bytes": 3452,
+    "arm_model_v1_bytes": 3400,
+    "model_and_all_six_calibrations_verified": true,
+    "host_enum_abi": "-fshort-enums matching ARM layout"
+  },
+  "review": {
+    "independent_agent_completed": false,
+    "reason": "reviewer usage limit",
+    "focused_self_review_and_regressions_completed": true
+  },
+  "hardware_accessed": false,
+  "flash_written": false,
+  "boot_installation_deferred_by_user": true,
+  "hardware_switch_acceptance": false,
+  "power_on_failure_root_cause_confirmed": false
+}

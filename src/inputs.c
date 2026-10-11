@@ -91,6 +91,7 @@
 #define INPNAME_SWE2(x,y)      x = _tr_noop("SW E"); y = 2
 #define INPNAME_SWF0(x,y)      x = _tr_noop("SW F"); y = 0
 #define INPNAME_SWF1(x,y)      x = _tr_noop("SW F"); y = 1
+#define INPNAME_SWF2(x,y)      x = _tr_noop("SW F"); y = 2
 #define INPNAME_SWG0(x,y)      x = _tr_noop("SW G"); y = 0
 #define INPNAME_SWG1(x,y)      x = _tr_noop("SW G"); y = 1
 #define INPNAME_SWG2(x,y)      x = _tr_noop("SW G"); y = 2

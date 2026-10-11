@@ -1290,7 +1290,7 @@ static void write_proto_opts(FILE *fh, struct Model *m)
 #include "target/tx/radiomaster/tx15/rf_model.h"
 #endif
 #include "../../hardware/tx15/board/settings_snapshot.h"
-static struct Model stored_model;
+#include "target/tx/radiomaster/tx15/model_migrate.h"
 static struct {struct tx15_snapshot_header header;struct Model model;} stored_snapshot;
 static u32 saved_inputs_crc;
 static u32 input_settings_crc(void) {
@@ -1303,7 +1303,7 @@ u8 CONFIG_WriteModel(u8 model_num) {
     tx15_rf_model_reset();
 #endif
     memset(&stored_snapshot,0,sizeof(stored_snapshot));
-    stored_snapshot.header.magic=TX15_SNAPSHOT_MAGIC;stored_snapshot.header.version=1;
+    stored_snapshot.header.magic=TX15_SNAPSHOT_MAGIC;stored_snapshot.header.version=2;
     stored_snapshot.header.model_bytes=sizeof(Model);stored_snapshot.header.mode=Transmitter.mode;
     for(unsigned i=0;i<6;i++) {
         stored_snapshot.header.cal[i][0]=Transmitter.calibration[i].max;
@@ -1614,19 +1614,7 @@ u8 CONFIG_ReadModel(u8 model_num) {
     get_model_file(file, model_num);
     int parse_result = CONFIG_IniParse(file, ini_handler, &Model);
 #ifdef TX15_PERSISTENCE
-    if(model_num==1 && tx15_settings_load(model_num,&stored_snapshot,sizeof(stored_snapshot))
-       && tx15_snapshot_valid(&stored_snapshot.header,sizeof(Model))) {
-        Model=stored_snapshot.model;
-        Transmitter.mode=stored_snapshot.header.mode;
-        for(unsigned i=0;i<6;i++) {
-            Transmitter.calibration[i].max=stored_snapshot.header.cal[i][0];
-            Transmitter.calibration[i].min=stored_snapshot.header.cal[i][1];
-            Transmitter.calibration[i].zero=stored_snapshot.header.cal[i][2];
-        }
-        parse_result=0;
-    } else if(model_num==1 && tx15_settings_load(model_num,&stored_model,sizeof(stored_model))) {
-        Model=stored_model;parse_result=0; /* Migrate existing model on next save. */
-    }
+    if(model_num==1 && tx15_model_restore(&Model,&Transmitter,model_num,tx15_settings_load))parse_result=0;
     saved_inputs_crc=input_settings_crc();
 #endif
 

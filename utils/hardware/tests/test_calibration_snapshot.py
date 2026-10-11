@@ -18,7 +18,8 @@ int main(void) {
  assert(tx15_snapshot_valid(&h,100));
  h.cal[0][2]=4000;assert(!tx15_snapshot_valid(&h,100));
  h.cal[0][2]=2050;h.mode=0;assert(!tx15_snapshot_valid(&h,100));
- h.mode=4;assert(tx15_snapshot_valid(&h,100));h.version=2;assert(!tx15_snapshot_valid(&h,100));
+ h.mode=4;assert(tx15_snapshot_valid(&h,100));h.version=2;assert(tx15_snapshot_valid(&h,100));
+ h.version=3;assert(!tx15_snapshot_valid(&h,100));
 }
 """)
    r=subprocess.run([str(gcc),'-std=c99','-Wall','-Wextra','-Werror','-I',str(ROOT.parent/'tools/msys64/ucrt64/include'),'-I',str(ROOT/'hardware/tx15/board'),str(p/'test.c'),'-o',str(p/'test.exe')],env=env,capture_output=True,text=True,encoding="utf8",errors="replace")

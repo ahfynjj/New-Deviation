@@ -10,7 +10,7 @@ static void assembly(void);
 #define TX15_USB_UPDATE 1
 #include "../../../hardware/tx15/boot/main.c"
 static uint32_t addresses[64],values[64];static unsigned used,scenario,init_calls,updates,jumps,loads;
-static uint32_t update_id;
+static uint32_t update_id;static unsigned displays,screens;
 static jmp_buf exit_gate;
 static uint32_t *reg(uint32_t address) {
     for(unsigned i=0;i<used;i++)if(addresses[i]==address)return values+i;
@@ -26,11 +26,13 @@ enum tx15_qspi_result tx15_boot_qspi_init(uint32_t *id,uint32_t budget){
     return scenario==1 || (scenario==3 && init_calls==2)?TX15_QSPI_TIMEOUT:TX15_QSPI_OK;
 }
 void tx15_boot_qspi_stop(void){}
+uint32_t tx15_boot_image_size(const uint8_t p[64]){(void)p;return 64;}
 enum tx15_qspi_result tx15_boot_qspi_read(uint32_t o,uint8_t *d,uint32_t n,uint32_t b){
     (void)o;(void)d;(void)n;(void)b;return TX15_QSPI_OK;
 }
 enum tx15_boot_load_result tx15_boot_load(const struct tx15_boot_io *io,uint32_t o,uint32_t n,
     uint8_t *p,uint32_t cap,uint32_t *entry){
+    assert(displays==1 && screens); /* Visible feedback before any slow payload load. */
     (void)io;(void)o;(void)n;(void)p;(void)cap;loads++;*entry=0x24010001;
     return scenario==3?TX15_BOOT_LOAD_READ_ERROR:(scenario==5?TX15_BOOT_LOAD_BAD_IMAGE:TX15_BOOT_LOAD_OK);
 }
@@ -40,12 +42,15 @@ int tx15_boot_update_mode(unsigned pressed,enum tx15_boot_load_result r){
 }
 void tx15_boot_update_run(uint32_t id){updates++;update_id=id;longjmp(exit_gate,2);}
 void tx15_display_fill(uint16_t c){(void)c;}
-int tx15_display_init(void){return 0;}
+int tx15_display_init(void){displays++;return 0;}
+void tx15_boot_screen(unsigned stage,uint32_t completed,uint32_t total){
+    (void)stage;(void)completed;(void)total;assert(displays==1);screens++;
+}
 int tx15_boot_handoff_valid(const volatile struct probe_report *r){(void)r;return 1;}
 void tx15_boot_jump(uint32_t entry){assert(entry==0x24010001);jumps++;longjmp(exit_gate,3);}
 int main(void){
     for(scenario=1;scenario<=6;scenario++) {
-        used=init_calls=updates=jumps=loads=0;update_id=0xffffffff;
+        used=init_calls=updates=jumps=loads=displays=screens=0;update_id=0xffffffff;
         memset((void*)&probe_report,0,sizeof(probe_report));
         *reg(0xe000ed00)=0x411fc271;*reg(0x5c001000)=0x450;*reg(0x58024400)=5;
         if(!setjmp(exit_gate))Boot_Main();

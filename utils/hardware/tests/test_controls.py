@@ -21,14 +21,12 @@ int main(void) {
  assert(tx15_controls_switch(&c,0,0)==-1);
  tx15_controls_decode(&c,0xffff,0xffff,0);
  tx15_controls_decode(&c,0xffff,0xffff,20);
- for(unsigned i=0;i<4;i++) {
+ for(unsigned i=0;i<6;i++) {
   assert(tx15_controls_switch(&c,i,1)==1);
   assert(tx15_controls_switch(&c,i,0)==0);
  }
- assert(tx15_controls_switch(&c,4,0)==1);
- assert(tx15_controls_switch(&c,5,0)==1);
- const unsigned hi[]={13,11,9,7},lo[]={12,10,8,6};
- for(unsigned i=0;i<4;i++) {
+ const unsigned hi[]={13,11,9,7,15,4},lo[]={12,10,8,6,14,5};
+ for(unsigned i=0;i<6;i++) {
   tx15_controls_decode(&c,0xffff,0xffff^(1u<<lo[i]),30+i*100);
   assert(tx15_controls_switch(&c,i,1)==1); /* Debounce. */
   tx15_controls_decode(&c,0xffff,0xffff^(1u<<lo[i]),50+i*100);
@@ -48,10 +46,10 @@ int main(void) {
  }
  tx15_controls_decode(&c,0xffff,0xffff^(1u<<14),600);
  tx15_controls_decode(&c,0xffff,0xffff^(1u<<14),620);
- assert(tx15_controls_switch(&c,4,1)==1);
+ assert(tx15_controls_switch(&c,4,0)==1);
  tx15_controls_decode(&c,0xffff,0xffff^(1u<<5),630);
  tx15_controls_decode(&c,0xffff,0xffff^(1u<<5),650);
- assert(tx15_controls_switch(&c,5,1)==1);
+ assert(tx15_controls_switch(&c,5,0)==1);
  /* Six front buttons live on 0x74 and latch a selected position. */
  for(unsigned i=0;i<6;i++) {
   tx15_controls_decode(&c,0xffff^(1u<<i),0xffff,700+i*50);

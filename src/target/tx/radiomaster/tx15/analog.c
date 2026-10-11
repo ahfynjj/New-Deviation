@@ -15,7 +15,7 @@ s32 CHAN_ReadInput(int ch) {
     if(ch>6) {
         static const unsigned first[7]={INP_SWA0,INP_SWB0,INP_SWC0,INP_SWD0,INP_SWE0,INP_SWF0,INP_SW60};
         for(unsigned i=0;i<7;i++) {
-            unsigned count=i<4?3:i<6?2:6;
+            unsigned count=i<6?3:6;
             if(ch>=(int)first[i] && ch<(int)(first[i]+count)) {
                 int on=tx15_controls_switch(&tx15_controls,i,ch-first[i]);
                 return on<0?0:on?CHAN_MAX_VALUE:CHAN_MIN_VALUE;

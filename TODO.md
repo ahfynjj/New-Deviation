@@ -3,6 +3,12 @@
 更新：2026-10-11。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
+## 2026-10-11 六组三位开关更新候选
+
+用户确认 SA–SF 均为三位；修正 SE/SF 解码、原生源列表与混控读取，增加 v1 原始模型/校准快照到 v2 的 RAM 迁移。ARM 模型布局3400→3404字节，十字盘比例不作输入编号处理；真实 USB 备份的模型与六路校准离线转换通过。新应用通过专用 USB 工具交付，实机验收待进行。旧 SE/SF 合并端点无法还原具体档位，更新后需核对使用它们的混控。
+
+开机反馈启动器代码已构建：提前显示 RELEASE POWER KEY 与加载进度，复用更新模式显示。用户已拆 PWLINK2，明确本轮先 USB 更新开关，故不安装内部启动器，开机失败尚未定位。详见 [本轮说明](docs/tx15/switches-startup-2026-10-11.md)。
+
 ## 2026-10-11 USB 自助更新首次验收通过
 
 用户已批准设计和实施计划。包/协议/RAM 接收、TinyUSB CDC、受限 NOR 事务和硬件后端、常驻启动入口及屏幕、Windows GUI 与 EXE 已完成软件实现。最终完整 **244 项检查通过（80.397 秒）**；ARM 启动器原始 BIN 27240 字节，内部 128 KiB 和 RAM 布局/向量检查通过。EXE 在 PATH 仅保留 Windows 的新进程启动，窗口可见、更新按钮禁用，无自动连接或刷写。独立审查提出的只读错误入口和文件选择残留两项问题已按 RED→GREEN 修复；旧启动测试改用临时目录，原冻结 ELF/BIN 哈希恢复且未放宽许可。
