@@ -41,10 +41,14 @@ volatile uint16_t tx15_controls_raw[2];
 const char *tx15_input_monitor_text(void);
 int tx15_input_monitor_changed(void);
 int main(void) {
- tx15_controls_reset(&tx15_controls);tx15_controls_raw[1]=0xffff;
- assert(strstr(tx15_input_monitor_text(),"3P-r2"));
+ tx15_controls_reset(&tx15_controls);tx15_controls_raw[0]=0xff3f;tx15_controls_raw[1]=0xffff;
  assert(strstr(tx15_input_monitor_text(),"SE:-/3 SF:-/3"));
  assert(tx15_input_monitor_changed());assert(!tx15_input_monitor_changed());
+ /* Observe a spare contact even if switch decoding is unchanged. */
+ tx15_controls_raw[0]^=1u<<6;
+ assert(tx15_input_monitor_changed());assert(!tx15_input_monitor_changed());
+ assert(strstr(tx15_input_monitor_text(),"3P-r3"));
+ assert(strstr(tx15_input_monitor_text(),"\n74:FF7F 75:FFFF"));
  tx15_controls_decode(&tx15_controls,0xffff,0xffff,0);
  tx15_controls_decode(&tx15_controls,0xffff,0xffff,20);
  assert(strstr(tx15_input_monitor_text(),"SE:1/3 SF:1/3"));
@@ -54,7 +58,7 @@ int main(void) {
  assert(tx15_input_monitor_changed());assert(!tx15_input_monitor_changed());
  tx15_controls_decode(&tx15_controls,0xffff,raw,50);
  assert(strstr(tx15_input_monitor_text(),"SE:0/3 SF:2/3"));
- assert(strstr(tx15_input_monitor_text(),"RAW:BFEF"));
+ assert(strstr(tx15_input_monitor_text(),"74:FF7F 75:BFEF"));
  assert(tx15_input_monitor_changed());assert(!tx15_input_monitor_changed());
  tx15_controls_invalidate(&tx15_controls);
  assert(strstr(tx15_input_monitor_text(),"SE:-/3 SF:-/3"));

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "status": "offline-verified-awaiting-usb-install-and-contact-observation",
+  "scope": "both-expander-inputs-read-only-diagnostic",
+  "test_count": 14,
+  "test_result": "OK",
+  "arm_objects": 132,
+  "red_test_failure": "raw 0x74 changed without monitor refresh in r2",
+  "root_cause_confirmed": false,
+  "hardware_user_report": {
+    "shoulder_switches": true,
+    "only_switch_replaced_on_original_small_board": true,
+    "complete_three_position_assembly_installed": false,
+    "previous_edgetx_three_position_behavior": "user uncertain",
+    "three_stable_positions_confirmed": false
+  },
+  "package": {
+    "file": "tx15-switches-3pos-diag-r3-20261011.ndu",
+    "bytes": 695544,
+    "image_bytes": 695416,
+    "image_crc32": "0xf61acace",
+    "sha256": "348e846fd8c97d81a3c78e848a1ea8334bf2209f5775764ed16f6faef441c4cf",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "4589f724654ad6af9fd941ae5b17bbe3378882605cdb3460caddba9013c4f9a3",
+    "payload_sha256": "37076cc7928444bf2485a6d6e1a1738d24c3c6c9859f7b484947f33121d7ac46",
+    "rf_enabled": true,
+    "persistent_settings": true
+  },
+  "boot_modified": false,
+  "decoder_or_source_layout_changed": false,
+  "flash_written_by_this_run": false,
+  "hardware_acceptance": null
+}

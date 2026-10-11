@@ -22,4 +22,19 @@ USB 文件：`local/tx15-usb-release/tx15-switches-3pos-20261011.ndu`。通过�
 
 用户随后确认标题 `3P-r2`。SE 下/中均为 `1/3, FB7F`，上为 `0/3, BB7F`；SF 下/中均为 `1/3, BB7F`，上为 `2/3, BB6F`。原生解码器重放六个实测值均与报告一致，5 项开关回归检查通过。软件有三档定义，但已采集的每个开关仅有两个不同电气状态；不能由相同输入推导第三档，也不能据此直接判定开关损坏或接错。
 
-[厂家 TX15 MAX 说明](https://radiomasterrc.com/products/tx15-max-radio-controller-elrs-m2)列出随附两位自锁、两位瞬时肩部组件，另有[SE/SF 三位组件](https://radiomasterrc.com/products/optional-se-sf-3-position-assembly-for-tx15-radio)。当前等待确认实机肩部组件是否已换成三位版本；若已换，需要核对第二触点及另一颗扩展器原始输入，不能用默认配件规格否定用户的实机配置。本阶段未再次刷写或变更引脚。
+[厂家 TX15 MAX 说明](https://radiomasterrc.com/products/tx15-max-radio-controller-elrs-m2)列出随附两位自锁、两位瞬时肩部组件，另有[SE/SF 三位组件](https://radiomasterrc.com/products/optional-se-sf-3-position-assembly-for-tx15-radio)。用户随后确认实机是将新开关焊到原肩部小板上，未更换整套组件；不确定原系统是否曾正确识别三档。这些信息不能直接证明小板缺少接线或开关型号不符，需要继续观察第二触点。
+
+## 同时观察两颗扩展器，诊断版 r3
+
+`local/tx15-usb-release/tx15-switches-3pos-diag-r3-20261011.ndu` 的 Input monitor 标题为 `3P-r3`。中间两行显示：
+
+```text
+3P-r3 SE:1/3 SF:1/3 MASK:00000000
+74:FFFF 75:FFFF
+```
+
+示例值不代表实机结果。74、75 分别是两颗扩展器已经采样的 16 位输入值，显示未屏蔽的原始位；任一变化都会刷新。仍使用原去抖与引脚定义，不写外设方向/输出寄存器，不改模型布局、射频逻辑或内部启动器。
+
+先通过失败的回归检查证明 r2 不会在仅 0x74 原始位变化时刷新，再补齐观测。14 项相关检查、132 个 ARM 对象构建、包/构建镜像一致性及可见版本标记核对通过。字体 5x7 与现有换行绘制可在 32 像素中间区域放下两行；实机安装及诊断值仍待用户验证。
+
+安装后保持其他开关、按键和微调不动，记录 SE 上/中/下及 SF 上/中/下各自的 74/75 值。若任一扩展器出现第三状态，再据读数核对引脚；若两颗均只有两个状态，则需断电检查新开关的触点类型以及原小板到主板的两路触点连接。不得用相同输入强行生成第三档。构建与包身份见 `evidence/2026-10-11/switch-diagnostic-r3.json`。
