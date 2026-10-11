@@ -19,8 +19,9 @@ void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #include "../../../../../hardware/tx15/board/analog.h"
 #include "../../../../../hardware/tx15/board/battery.h"
 #include "../../../../../hardware/tx15/board/controls.h"
+#include "input_monitor.h"
 #ifdef TX15_STANDALONE
-const char DeviationVersion[33]="New Deviation TX15";
+const char DeviationVersion[33]="New Deviation TX15 " TX15_SWITCH_BUILD;
 #else
 const char DeviationVersion[33]="New Deviation TX15 RAM";
 #endif

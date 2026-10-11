@@ -55,6 +55,9 @@ unsigned button_capture_cb(u32 button, unsigned flags, void *data)
 
 void PAGE_ChantestEvent()
 {
+#ifdef TX15_RAM_APPLICATION
+    refresh_switch_diagnostic();
+#endif
     if(cp->type == MONITOR_BUTTONTEST) {
         _handle_button_test();
         return;

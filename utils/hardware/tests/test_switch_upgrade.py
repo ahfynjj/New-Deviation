@@ -4,6 +4,46 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 
 class SwitchUpgradeTests(unittest.TestCase):
+    def test_live_monitor_distinguishes_catalog_positions_contacts_and_invalid_inputs(self):
+        diagnostic=ROOT/'src/target/tx/radiomaster/tx15/input_monitor.c'
+        self.assertTrue(diagnostic.exists(), 'Runtime switch diagnostics are missing')
+        self.run_c(r'''
+#include <assert.h>
+#include <string.h>
+#include "common.h"
+#include "config/tx.h"
+#include "hardware/tx15/board/controls.h"
+struct Transmitter Transmitter;struct tx15_controls tx15_controls;
+volatile uint16_t tx15_controls_raw[2];
+const char *tx15_input_monitor_text(void);
+int tx15_input_monitor_changed(void);
+int main(void) {
+ tx15_controls_reset(&tx15_controls);tx15_controls_raw[1]=0xffff;
+ assert(strstr(tx15_input_monitor_text(),"3P-r2"));
+ assert(strstr(tx15_input_monitor_text(),"SE:-/3 SF:-/3"));
+ assert(tx15_input_monitor_changed());assert(!tx15_input_monitor_changed());
+ tx15_controls_decode(&tx15_controls,0xffff,0xffff,0);
+ tx15_controls_decode(&tx15_controls,0xffff,0xffff,20);
+ assert(strstr(tx15_input_monitor_text(),"SE:1/3 SF:1/3"));
+ assert(tx15_input_monitor_changed());assert(!tx15_input_monitor_changed());
+ unsigned raw=0xffff^(1u<<14)^(1u<<4);tx15_controls_raw[1]=raw;
+ tx15_controls_decode(&tx15_controls,0xffff,raw,30);
+ assert(tx15_input_monitor_changed());assert(!tx15_input_monitor_changed());
+ tx15_controls_decode(&tx15_controls,0xffff,raw,50);
+ assert(strstr(tx15_input_monitor_text(),"SE:0/3 SF:2/3"));
+ assert(strstr(tx15_input_monitor_text(),"RAW:BFEF"));
+ assert(tx15_input_monitor_changed());assert(!tx15_input_monitor_changed());
+ tx15_controls_invalidate(&tx15_controls);
+ assert(strstr(tx15_input_monitor_text(),"SE:-/3 SF:-/3"));
+ assert(tx15_input_monitor_changed());
+ Transmitter.ignore_src=1u<<INP_SWE2;
+ assert(strstr(tx15_input_monitor_text(),"SE:-/2 SF:-/3"));
+ assert(strstr(tx15_input_monitor_text(),"MASK:00200000"));
+ assert(tx15_input_monitor_changed());
+ return 0;
+}''', ['src/inputs.c','hardware/tx15/board/control_decode.c',
+       'src/target/tx/radiomaster/tx15/input_monitor.c'])
+
     def run_c(self, code, sources):
         gcc = Path(tempfile.gettempdir())/'new-deviation-ucrt64/bin/gcc.exe'
         env = dict(os.environ, PATH=str(gcc.parent)+os.pathsep+os.environ.get('PATH',''))

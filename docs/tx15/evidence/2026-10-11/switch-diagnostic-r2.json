@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "status": "diagnostic-built-hardware-pending",
+  "previous_user_report": {
+    "usb_update_complete": true,
+    "selected_file": "tx15-switches-3pos-20261011.ndu",
+    "battery_and_usb_power_cycle": true,
+    "se_sf_three_positions": false
+  },
+  "root_cause_confirmed": false,
+  "scope": "visible-build-marker-and-live-read-only-switch-diagnostics",
+  "test_count": 13,
+  "test_result": "OK",
+  "arm_objects": 132,
+  "package": {
+    "file": "tx15-switches-3pos-diag-r2-20261011.ndu",
+    "bytes": 695536,
+    "image_bytes": 695408,
+    "image_crc32": "0x2a672cb2",
+    "sha256": "975bd085ba25b7ee3999e3f96b2b255b24a3fe2945c0d9e53111084e9a6d06f7",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "7240b04512a933eb690a9fc3b77e7ca5b8ffaa523069b44b9aba698f397e2aef",
+    "payload_sha256": "e4f723f8485bec2bfe329056c20c0737b7464e27a9eaa37f96799253d60903b5",
+    "rf_enabled": true,
+    "persistent_settings": true
+  },
+  "boot_modified": false,
+  "decoder_or_source_layout_changed": false,
+  "flash_written_by_this_run": false
+}
