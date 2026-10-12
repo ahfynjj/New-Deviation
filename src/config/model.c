@@ -1291,6 +1291,7 @@ static void write_proto_opts(FILE *fh, struct Model *m)
 #endif
 #include "../../hardware/tx15/board/settings_snapshot.h"
 #include "target/tx/radiomaster/tx15/model_migrate.h"
+#include "target/tx/radiomaster/tx15/trim_defaults.h"
 static struct {struct tx15_snapshot_header header;struct Model model;} stored_snapshot;
 static u32 saved_inputs_crc;
 static u32 input_settings_crc(void) {
@@ -1615,6 +1616,7 @@ u8 CONFIG_ReadModel(u8 model_num) {
     int parse_result = CONFIG_IniParse(file, ini_handler, &Model);
 #ifdef TX15_PERSISTENCE
     if(model_num==1 && tx15_model_restore(&Model,&Transmitter,model_num,tx15_settings_load))parse_result=0;
+    if(!parse_result)tx15_trim_defaults(&Model);
     saved_inputs_crc=input_settings_crc();
 #endif
 

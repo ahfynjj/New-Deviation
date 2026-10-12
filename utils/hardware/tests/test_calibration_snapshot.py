@@ -43,6 +43,8 @@ int tx15_settings_save(unsigned model,const void *data,unsigned bytes) {
  assert(model==1);assert(bytes>=sizeof(Model)+sizeof(struct tx15_snapshot_header));
  const struct tx15_snapshot_header *h=data;assert(tx15_snapshot_valid(h,sizeof(Model)));
  assert(h->mode==(unsigned)Transmitter.mode);assert(h->cal[1][1]==Transmitter.calibration[1].min);
+ const struct Model *saved=(const void *)(h+1);
+ assert(saved->trims[0].value[0]==Model.trims[0].value[0]);
  calls++;return success;
 }
 void tx15_rf_model_reset(void) {}
@@ -53,6 +55,9 @@ int main(void) {
  assert(CONFIG_IsModelChanged());success=0;assert(!CONFIG_SaveModelIfNeeded());assert(CONFIG_IsModelChanged());
  success=1;assert(CONFIG_SaveModelIfNeeded());assert(!CONFIG_IsModelChanged());
  Transmitter.mode=1;assert(CONFIG_IsModelChanged());assert(CONFIG_SaveModelIfNeeded());assert(!CONFIG_IsModelChanged());
+ Model.trims[0].value[0]=17;assert(CONFIG_IsModelChanged());
+ success=0;assert(!CONFIG_SaveModelIfNeeded() && CONFIG_IsModelChanged());
+ success=1;assert(CONFIG_SaveModelIfNeeded() && !CONFIG_IsModelChanged());
 }
 """)
    inc=[]

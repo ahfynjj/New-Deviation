@@ -3,6 +3,14 @@
 更新：2026-10-12。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
+## 2026-10-12 Input monitor 与微调 MON1
+
+用户批准一屏现代布局，已完成原生卡片页面：两根物理摇杆二维图、S1/S2、SA–SF 每组一个三档指示、四组微调值/按键高亮、六键当前按下与锁存选择；ENTER 切换原始诊断，EXIT 返回。每卡片变化时刷新，20Hz 上限。SE/SF 第二触点问题按用户要求暂停，不继续刷诊断包或改引脚。
+
+最新 USB 自动备份确认当前模型十个微调项均无绑定；产品默认 CRSF 模型遗漏四组绑定。新模板及完全空白微调模型的 RAM 兼容修复已完成，任何已有自定义微调保持不变；真实已保存模型离线验证仅改微调绑定。后续按键/编辑后正常关机保存，启动时不自动写 Flash，模型 3404 字节及设置 ABI 保持不变。
+
+22 项相关检查、133 个 ARM 对象构建、实机绘图/字体静态边界预览与 USB 包核对通过。审查提出的 ENTER 自定义微调冲突已修正并回归验证。文件 `local/tx15-usb-release/tx15-input-monitor-trims-20261012.ndu` 已就绪；下一步用户通过专用工具 USB 更新，验证 MON1 页面、微调影响真实通道及正常关机后数值保存，实机验收仍待进行。[说明](docs/tx15/input-monitor-trims-2026-10-12.md)，[证据](docs/tx15/evidence/2026-10-12/input-monitor-trims.json)。
+
 ## 2026-10-11 六组三位开关更新候选
 
 实机三档验收未通过，原因未确认。`3P-r2` 诊断版已由用户通过 USB 安装并确认标题；[记录](docs/tx15/evidence/2026-10-11/switch-diagnostic-r2.json)。

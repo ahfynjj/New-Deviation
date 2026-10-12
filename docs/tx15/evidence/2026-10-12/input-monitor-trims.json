@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "status": "offline-verified-usb-candidate-hardware-acceptance-pending",
+  "build_marker": "MON1",
+  "approved_layout": true,
+  "scope": "native-input-dashboard-and-empty-trim-bindings",
+  "test_count": 22,
+  "test_result": "OK",
+  "test_seconds": 11.031,
+  "arm_objects": 133,
+  "review": {
+    "important_issues": 1,
+    "resolved": "Scoped priority ENTER handler, including longpress and release; real callback-order regression passed"
+  },
+  "package": {
+    "file": "tx15-input-monitor-trims-20261012.ndu",
+    "bytes": 698424,
+    "image_bytes": 698296,
+    "image_crc32": "0x0e7cda29",
+    "sha256": "a5566f587ba918d77ee64a763e741d632bf0a9696ed88435162d51632b63026c",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "9e1b851cdada62556c2b8f112436be343b39fc025250c1c2417df8396e86b7f1",
+    "payload_sha256": "b9afc3955b6a6df5923f7b04f981da105fe500002b51f48d5e5ed2a353bed9e8",
+    "rf_enabled": true,
+    "persistent_settings": true
+  },
+  "read_only_settings_verification": {
+    "file": "20261012-193543-cc85e97dc6ed.bin",
+    "sha256": "aa180f43a4f0f7ab1208ea0c5ec895ede1f8a834a6eb23f69ad4fabbbcd3e376",
+    "record_sequence": 7,
+    "snapshot_version": 2,
+    "model_bytes": 3404,
+    "mode": 2,
+    "all_ten_trim_bindings_missing": true,
+    "repair_applies_to_real_saved_model": true,
+    "only_trim_bindings_changed": true
+  },
+  "trim_compatibility": "Repair in RAM only when every trim lacks bindings, custom steps, switches and values; normal model edits/trim presses become dirty and save through existing workflow.",
+  "static_preview": {
+    "render": "Actual native dashboard draw calls and bundled font bitmaps, not a simulator",
+    "valid": "local/tx15-hardware/input-dashboard-20261012/app/preview-valid.png",
+    "invalid": "local/tx15-hardware/input-dashboard-20261012/app/preview-invalid.png"
+  },
+  "boot_modified": false,
+  "settings_abi_changed": false,
+  "rf_code_modified": false,
+  "flash_written_by_agent": false,
+  "se_sf_second_contact_issue": "deferred at user request; no pin remapping",
+  "hardware_acceptance": null
+}

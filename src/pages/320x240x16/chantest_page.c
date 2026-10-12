@@ -18,19 +18,10 @@
 #include "gui/gui.h"
 #include "config/model.h"
 #ifdef TX15_RAM_APPLICATION
-#include "input_monitor.h"
-static const char *switch_diagnostic_cb(guiObject_t *obj,const void *data) {
-    (void)obj;(void)data;return tx15_input_monitor_text();
-}
-static void refresh_switch_diagnostic(void);
+#include "input_dashboard.h"
 #endif
 
 #include "../common/_chantest_page.c"
-#ifdef TX15_RAM_APPLICATION
-static void refresh_switch_diagnostic(void) {
-    if(cp->type==MONITOR_RAWINPUT && tx15_input_monitor_changed())GUI_Redraw(&gui->lock);
-}
-#endif
 
 static void show_button_page();
 static const char *channum_cb(guiObject_t *obj, const void *data);
@@ -66,10 +57,6 @@ static int row_cb(int absrow, int relrow, int y, void *data)
         height = 155 + (LCD_HEIGHT - 240);
         count = num_bars;
     }
-#ifdef TX15_RAM_APPLICATION
-    /* Leave the middle band clear even when input filtering removes bars. */
-    if(cp->type==MONITOR_RAWINPUT)height=90;
-#endif
     u16 offset = (LCD_WIDTH + (SEPARATION - 10) - SEPARATION * ((num_rows > 2 ? 1 : 0) + count)) / 2;
     memset(cp->pctvalue, 0, sizeof(cp->pctvalue));
     for(i = 0; i < count; i++) {
@@ -126,14 +113,15 @@ void PAGE_InputtestInit(int page)
 {
     (void)page;
 #ifdef TX15_RAM_APPLICATION
-    PAGE_ShowHeader("Input monitor " TX15_SWITCH_BUILD);
+    PAGE_ShowHeader("Input monitor " TX15_DASHBOARD_BUILD);
 #else
     PAGE_ShowHeader(PAGE_GetName(PAGEID_INPUTMON));
 #endif
     cp->type = MONITOR_RAWINPUT;
-    _show_bar_page();
 #ifdef TX15_RAM_APPLICATION
-    GUI_CreateLabelBox(&gui->lock,0,160,LCD_WIDTH,32,&TINY_FONT,switch_diagnostic_cb,NULL,NULL);
+    tx15_input_dashboard_init(&cp->action);
+#else
+    _show_bar_page();
 #endif
 }
 
