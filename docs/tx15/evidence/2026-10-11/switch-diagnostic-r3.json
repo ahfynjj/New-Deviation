@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "offline-verified-awaiting-usb-install-and-contact-observation",
+  "status": "live-se-two-electrical-states-reported-contact-path-unresolved",
   "scope": "both-expander-inputs-read-only-diagnostic",
   "test_count": 14,
   "test_result": "OK",
@@ -34,5 +34,36 @@
   "boot_modified": false,
   "decoder_or_source_layout_changed": false,
   "flash_written_by_this_run": false,
-  "hardware_acceptance": null
+  "hardware_acceptance": "SE three-position acceptance failed; USB diagnostic samples reported by user",
+  "live_user_report": {
+    "date": "2026-10-12",
+    "verbatim": "SE下：74:FFFF 75:F57F SE中：74:FFFF 75:_F57F SE上：74:FFFF 75:B57F",
+    "se": {
+      "down": {
+        "raw_74": "0xffff",
+        "raw_75": "0xf57f"
+      },
+      "middle": {
+        "raw_74": "0xffff",
+        "raw_75": "0xf57f"
+      },
+      "up": {
+        "raw_74": "0xffff",
+        "raw_75": "0xb57f"
+      }
+    },
+    "normalization": "leading underscore before middle F57F treated as formatting; four hex digits retained",
+    "sf_complete_samples": null
+  },
+  "analysis": {
+    "distinct_se_input_pairs": 2,
+    "changing_port_75_bits": [
+      14
+    ],
+    "expected_second_se_contact_bit": 15,
+    "second_contact_bit_high_in_all_samples": true,
+    "raw_74_unchanged": true,
+    "hardware_fault_or_wiring_error_confirmed": false,
+    "next_step": "Inspect replacement switch contact type and the two contact paths through the original shoulder board; no further firmware update for these identical samples."
+  }
 }

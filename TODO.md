@@ -1,6 +1,6 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-10-11。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-12。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
 ## 2026-10-11 六组三位开关更新候选
@@ -9,7 +9,7 @@
 
 实测 SE 下/中 `FB7F`，上 `BB7F`；SF 下/中 `BB7F`，上 `BB6F`，各仅两个不同电气状态。六个实测值重放通过，软件三档定义已可见。用户确认仅将新拨杆开关焊在原肩部小板上，未更换完整组件；原系统能否识别三档，用户记不清。尚不能断言硬件故障或引脚错误。
 
-诊断版 r3 已构建：`local/tx15-usb-release/tx15-switches-3pos-diag-r3-20261011.ndu` 同时显示 0x74/0x75 原始输入，任一变化都会刷新，标题 `3P-r3`。14 项相关检查、132 个 ARM 对象构建及包内容/CRC 核对通过。只补充观测，不改解码或模型布局，不更新内部启动器。下一步由用户 USB 安装、保持其他控件不动，各记录 SE/SF 上中下的 74/75 值；若两颗扩展器均无第三状态，再核对小板与开关两路触点接线。[记录](docs/tx15/evidence/2026-10-11/switch-diagnostic-r3.json)。
+诊断版 r3：`local/tx15-usb-release/tx15-switches-3pos-diag-r3-20261011.ndu` 同时显示 0x74/0x75 原始输入，任一变化都会刷新，标题 `3P-r3`。14 项相关检查、132 个 ARM 对象构建及包内容/CRC 核对通过。只补充观测，不改解码或模型布局，不更新内部启动器。2026-10-12 用户报告 SE 下/中均为 `74:FFFF 75:F57F`，上为 `74:FFFF 75:B57F`：仅 0x75 bit14 变化，预期第二触点 bit15 始终高；0x74 无变化。停止无依据的解码修改及重复刷写，下一步断电核对新开关触点类型和原小板两路触点连接；尚不能确认具体硬件故障，SF 完整双扩展器数据未采集。[记录](docs/tx15/evidence/2026-10-11/switch-diagnostic-r3.json)。
 
 用户确认 SA–SF 均为三位；修正 SE/SF 解码、原生源列表与混控读取，增加 v1 原始模型/校准快照到 v2 的 RAM 迁移。ARM 模型布局3400→3404字节，十字盘比例不作输入编号处理；真实 USB 备份的模型与六路校准离线转换通过。新应用通过专用 USB 工具交付，实机验收待进行。旧 SE/SF 合并端点无法还原具体档位，更新后需核对使用它们的混控。
 
