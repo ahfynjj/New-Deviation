@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "date": "2026-10-15",
+  "status": "software-verified-hardware-pending",
+  "build_marker": "SRC1",
+  "scope": [
+    "Simple Src",
+    "Expo DR Src",
+    "Complex Src"
+  ],
+  "threshold_units": 1000,
+  "threshold_full_travel_percent": 5,
+  "tests": {
+    "count": 27,
+    "result": "OK",
+    "seconds": 14.468,
+    "red_before_implementation": true
+  },
+  "arm_objects": 136,
+  "review": {"mode": "focused-read-only", "important_issues": 0},
+  "code_bss_margin_bytes": 2872,
+  "package": {
+    "file": "tx15-s1-s2-source-capture-20261015.ndu",
+    "bytes": 699600,
+    "image_bytes": 699472,
+    "image_crc32": "0xbc70b033",
+    "sha256": "07e10f97ac84b2fe77733db28070db5e2ce6bb12c38cdeff34a767340d522b0e",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "480fafe38e686323be557697a4908eb213adc3cf17c074256a72c4aa89fc6bbf",
+    "payload_sha256": "6a4beac91b7a3a9acad5eea4ae4e941872afb139a95302da762d86ebd84195a1",
+    "rf_enabled": true,
+    "persistent_settings": true
+  },
+  "boot_modified": false,
+  "model_layout_changed": false,
+  "rf_code_modified": false,
+  "flash_written_by_agent": false,
+  "hardware_acceptance": null,
+  "voice_implementation_started": false
+}

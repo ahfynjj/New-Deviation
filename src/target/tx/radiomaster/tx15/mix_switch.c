@@ -1,27 +1,36 @@
-/* Edit only Mix switch fields; do not enable global source auto-selection.
- * Reads existing debounced controls; GPL-3.0-or-later. */
+/* Explicit Mix field editing, using existing controls/analog samples.
+ * GPL-3.0-or-later. */
 #include "common.h"
 #define ENABLE_GUIOBJECT
 #include "gui/gui.h"
 #include "pages.h"
 #include "config/tx.h"
 #include "mix_switch.h"
+#include "knob_capture.h"
+extern volatile u32 tx15_analog_status;
 static guiTextSelect_t *editing;
 static struct tx15_switch_capture capture;
+static struct tx15_knob_capture knobs;
 static buttonAction_t action;
 static unsigned long_handled,exit_consumed;
 
 void tx15_mix_switch_register(guiTextSelect_t *field) {field->enable|=TX15_SWITCH_FIELD;}
+void tx15_mix_source_register(guiTextSelect_t *field) {field->enable|=TX15_SOURCE_FIELD;}
+static int read_knobs(int armed,int values[2]) {
+    values[0]=CHAN_ReadInput(INP_S1);values[1]=CHAN_ReadInput(INP_S2);
+    return tx15_knob_capture_step(&knobs,values,tx15_analog_status==4,armed);
+}
 static guiTextSelect_t *selected_field(void) {
     if(PAGE_GetID()!=PAGEID_MIXTEMPL || GUI_IsModal())return NULL;
     guiObject_t *obj=GUI_GetSelected();
     if(!obj || obj->Type!=TextSelect || !OBJ_IS_USED(obj) || OBJ_IS_HIDDEN(obj))return NULL;
     guiTextSelect_t *field=(guiTextSelect_t *)obj;
-    return (field->enable&TX15_SWITCH_FIELD) && (field->enable&1) && field->InputValueCB?field:NULL;
+    return (field->enable&(TX15_SWITCH_FIELD|TX15_SOURCE_FIELD)) && (field->enable&1) && field->InputValueCB?field:NULL;
 }
 static void end_edit(void) {
     if(editing) {editing->enable&=~TX15_SWITCH_EDITING;GUI_Redraw((guiObject_t *)editing);}
     editing=NULL;tx15_switch_capture_step(&capture,&tx15_controls,0);
+    knobs.seeded=0;
 }
 void tx15_mix_switch_forget(guiObject_t *object) {
     /* Called before an object is unlinked or its page storage is reused. */
@@ -48,6 +57,7 @@ static unsigned buttons(u32 keys,unsigned flags,void *data) {
                     editing=field;editing->enable|=TX15_SWITCH_EDITING;
                     tx15_switch_capture_step(&capture,&tx15_controls,0);
                     tx15_switch_capture_step(&capture,&tx15_controls,1);
+                    int values[2];knobs.seeded=0;read_knobs(1,values);
                     GUI_Redraw((guiObject_t *)field);
                 }
             }
@@ -77,11 +87,18 @@ void tx15_mix_switch_init(void) {
 void tx15_mix_switch_poll(void) {
     if(!editing)return;
     if(editing!=selected_field()) {end_edit();return;}
-    int event=tx15_switch_capture_step(&capture,&tx15_controls,1);
-    if(!event)return;
-    static const unsigned first[]={INP_SWA0,INP_SWB0,INP_SWC0,INP_SWD0,INP_SWE0,INP_SWF0};
-    unsigned source=first[(event-1)/3]+(event-1)%3;
+    unsigned source;int value=CHAN_MAX_VALUE;
+    if(editing->enable&TX15_SOURCE_FIELD) {
+        int values[2];int event=read_knobs(1,values);
+        if(!event)return;
+        source=event==1?INP_S1:INP_S2;value=values[event-1];
+    } else {
+        int event=tx15_switch_capture_step(&capture,&tx15_controls,1);
+        if(!event)return;
+        static const unsigned first[]={INP_SWA0,INP_SWB0,INP_SWC0,INP_SWD0,INP_SWE0,INP_SWF0};
+        source=first[(event-1)/3]+(event-1)%3;
+    }
     if(Transmitter.ignore_src&(1u<<source))return;
-    editing->InputValueCB((guiObject_t *)editing,source,CHAN_MAX_VALUE,editing->cb_data);
+    editing->InputValueCB((guiObject_t *)editing,source,value,editing->cb_data);
     GUI_Redraw((guiObject_t *)editing);
 }

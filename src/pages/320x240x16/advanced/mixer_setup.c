@@ -80,6 +80,9 @@ static void _show_simple()
     //Row 1
     mp->firstObj = GUI_CreateLabelBox(&gui1->srclbl, COL1_TEXT, y, COL1_VALUE - COL1_TEXT, 0, &LABEL_FONT, GUI_Localize, NULL, _tr_noop("Src"));
     GUI_CreateTextSource(&gui1->src, COL1_VALUE, y, TEXTSELECT_96, sourceselect_cb, set_source_cb, set_input_source_cb, &mp->mixer[0].src);
+#ifdef TX15_RAM_APPLICATION
+    tx15_mix_source_register(&gui1->src);
+#endif
     y += space;
     //Row 2
     GUI_CreateLabelBox(&gui1->curvelbl, COL1_TEXT, y, COL1_VALUE - COL1_TEXT, 0, &LABEL_FONT, GUI_Localize, NULL, _tr_noop("Curve"));
@@ -114,6 +117,7 @@ static void _show_expo_dr()
     GUI_CreateTextSource(&gui2->sw2, COL_EXP3, 48, TEXTSELECT_96, sourceselect_cb, set_drsource_cb,
                          set_input_switch_cb, &mp->mixer[2].sw);
 #ifdef TX15_RAM_APPLICATION
+    tx15_mix_source_register(&gui2->src);
     tx15_mix_switch_register(&gui2->sw1);tx15_mix_switch_register(&gui2->sw2);
 #endif
     //Row 3
@@ -179,6 +183,9 @@ static void _show_complex(int page_change)
     GUI_CreateLabelBox(&gui3->srclbl, COL1_TEXT, 98, COL1_VALUE - COL1_TEXT, 0, &LABEL_FONT, GUI_Localize, NULL, _tr_noop("Src"));
     GUI_CreateTextSource(&gui3->src, COL1_VALUE, 98, TEXTSELECT_96, sourceselect_cb, set_source_cb,
                          set_input_source_cb, &mp->cur_mixer->src);
+#ifdef TX15_RAM_APPLICATION
+    tx15_mix_source_register(&gui3->src);
+#endif
     //Row 4
     GUI_CreateLabelBox(&gui3->curvelbl, COL1_TEXT, 122, COL1_VALUE - COL1_TEXT, 0, &LABEL_FONT, GUI_Localize, NULL, _tr_noop("Curve"));
     GUI_CreateTextSelect(&gui3->curve, COL1_VALUE, 122, TEXTSELECT_96, curveselect_cb, set_curvename_cb, mp->cur_mixer);

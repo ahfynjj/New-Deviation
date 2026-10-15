@@ -49,6 +49,8 @@ int main(void){
 #include "config/tx.h"
 #include "mix_switch.h"
 struct Transmitter Transmitter;struct tx15_controls tx15_controls;
+volatile u32 tx15_analog_status=4;
+s32 CHAN_ReadInput(int ch){(void)ch;return 0;}
 static guiObject_t *selected;static int page=PAGEID_MIXTEMPL;static unsigned updates,redraws;
 static u32 now,keys;static u8 field_value=INP_NONE;static unsigned page_exits,page_saves;
 guiObject_t *GUI_GetSelected(void){return selected;}
@@ -110,6 +112,7 @@ int main(void){
  tap(CHAN_ButtonMask(BUT_EXIT));assert(page_exits==1);
  assert(redraws>0);return 0;
 }''',['src/target/tx/radiomaster/tx15/mix_switch.c','src/target/tx/radiomaster/tx15/switch_capture.c',
+       'src/target/tx/radiomaster/tx15/knob_capture.c',
        'src/buttons.c','src/inputs.c','src/gui/textsel.c'])
 
     def test_only_new_unambiguous_valid_switch_transitions_are_captured(self):
