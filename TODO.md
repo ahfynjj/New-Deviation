@@ -1,7 +1,13 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-10-12。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-15。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
+
+## 2026-10-15 混控开关拨动选择 SWC1
+
+用户已批准编辑后捕获交互。Complex Switch、Expo&DR Switch1/2 支持短按滚轮开始/结束编辑，橙色框表示捕获中；拨 SA–SF 选择具体档位，摇杆/旋钮不参与。保留滚轮手选、None 与长按滚轮反向，EXIT 结束字段编辑时吞掉完整按键过程，仍需原 Mix 页面 OK 保存整条混控。进入编辑只建基线；失效恢复、同时变化、焦点/页面/对象移除均有边界处理。只读现有去抖输入，无引脚重映射。
+
+25 项相关检查、135 个 ARM 对象构建、包/镜像一致性、CRC 与 SWC1 版本标记核对通过。审查发现的编辑边框覆盖问题已修正并回归检查。USB 文件 `local/tx15-usb-release/tx15-mix-switch-capture-20261015.ndu` 已就绪；下一步用户更新并以 SA–SD 验证捕获、停止捕获、反向、Expo&DR 及保存重启。保留 MON1、模型和校准，实机验收待进行。[说明](docs/tx15/mix-switch-capture-2026-10-15.md)，[证据](docs/tx15/evidence/2026-10-15/mix-switch-capture.json)。
 
 ## 2026-10-12 Input monitor 与微调 MON1
 

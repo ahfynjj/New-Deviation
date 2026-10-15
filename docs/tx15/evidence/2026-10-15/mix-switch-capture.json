@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "status": "offline-verified-usb-candidate-hardware-acceptance-pending",
+  "date": "2026-10-15",
+  "build_marker": "SWC1",
+  "approved_interaction": "Short ENTER begins/ends Mix switch editing; new SA-SF movement selects exact position; EXIT ends editing; retain manual wheel, None and inversion.",
+  "scope": [
+    "Complex Switch",
+    "Expo DR Switch1",
+    "Expo DR Switch2"
+  ],
+  "not_enabled_for": "Other source fields, menus, analog controls or front-panel six-position keys",
+  "test_count": 25,
+  "test_result": "OK",
+  "test_seconds": 12.6,
+  "arm_objects": 135,
+  "regressions": [
+    "Baseline only on arming; all six groups and three positions",
+    "Ignore invalid/recovery and ambiguous simultaneous changes",
+    "Real buttons.c chain: short ENTER, held ENTER reverses once, held EXIT swallowed, field removal and page/focus exit",
+    "Manual selection, ignored-source mask and inverse flag",
+    "Real GUI_DrawObject selection order preserves orange editing indicator",
+    "Existing monitor, trim, snapshot, RF-model and update package checks"
+  ],
+  "review": {
+    "important_issues": 1,
+    "resolved": "Editing outline moved after normal selection highlight; regression failed before fix and passed afterward"
+  },
+  "package": {
+    "file": "tx15-mix-switch-capture-20261015.ndu",
+    "bytes": 699344,
+    "image_bytes": 699216,
+    "image_crc32": "0x722ac4b0",
+    "sha256": "f2f04e3eccb093326acff77f3626f1497138b812252c37ed5264a5c40b1f28c7",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "950cad5be9804ef773bdb61480f85c10357021a9d2127f9cd0209f2eda8096de",
+    "payload_sha256": "7586f0dc6c021f92030d1c8efa6e1211dc48f479643cca02b4683c4f1efb9498",
+    "rf_enabled": true,
+    "persistent_settings": true
+  },
+  "boot_modified": false,
+  "rf_code_modified": false,
+  "model_layout_changed": false,
+  "settings_abi_changed": false,
+  "flash_written_by_agent": false,
+  "se_sf_contact_issue": "Deferred; capture reflects existing valid hardware states without remapping",
+  "hardware_acceptance": null
+}

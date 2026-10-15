@@ -18,6 +18,9 @@
 #include "target.h"
 #include "config/display.h"
 #include "_mapped_gfx.h"
+#ifdef TX15_RAM_APPLICATION
+#include "mix_switch.h"
+#endif
 
 struct guiObject *objHEAD     = NULL;
 struct guiObject *objTOUCHED  = NULL;
@@ -102,6 +105,14 @@ void GUI_DrawObject(struct guiObject *obj)
     }
     if (obj == objSELECTED && obj->Type != Scrollable)
         _gui_hilite_selected(obj);
+#ifdef TX15_RAM_APPLICATION
+    /* Draw after the normal focus outline, otherwise its width=2 border
+     * erases the edit indicator. Orange distinguishes editing from focus. */
+    if(obj==objSELECTED && obj->Type==TextSelect
+        && (((guiTextSelect_t *)obj)->enable&TX15_SWITCH_EDITING)
+        && obj->box.width>2 && obj->box.height>2)
+        LCD_DrawRect(obj->box.x+1,obj->box.y+1,obj->box.width-2,obj->box.height-2,0xfdc0);
+#endif
     OBJ_SET_DIRTY(obj, 0);
 }
 
@@ -137,6 +148,9 @@ void GUI_RemoveAllObjects()
 
 void GUI_RemoveObj(struct guiObject *obj)
 {
+#ifdef TX15_RAM_APPLICATION
+    tx15_mix_switch_forget(obj);
+#endif
     switch(obj->Type) {
     case Dialog: {
         GUI_HandleModalButtons(0);

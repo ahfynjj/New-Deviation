@@ -431,13 +431,9 @@ const char *set_input_source_cb(guiObject_t *obj, int src, int value, void *data
     return set_source_helper(obj, data, changed);
 }
 
-const char *set_drsource_cb(guiObject_t *obj, int dir, void *data)
+static const char *set_drsource_helper(guiObject_t *obj,void *data,u8 oldsrc,u8 changed)
 {
-    (void) obj;
     u8 *source = (u8 *)data;
-    u8 changed;
-    u8 oldsrc = *source;
-    *source = INPUT_SelectSource(*source, dir, &changed);
     if (changed) {
         sync_mixers();
         if ((!! MIXER_SRC(oldsrc)) ^ (!! MIXER_SRC(*source))) {
@@ -455,6 +451,21 @@ const char *set_drsource_cb(guiObject_t *obj, int dir, void *data)
     GUI_TextSelectEnablePress((guiTextSelect_t *)obj, MIXER_SRC(*source));
     return INPUT_SourceName(tempstring, *source);
 }
+
+const char *set_drsource_cb(guiObject_t *obj,int dir,void *data)
+{
+    u8 *source=data,oldsrc=*source,changed;
+    *source=INPUT_SelectSource(*source,dir,&changed);
+    return set_drsource_helper(obj,data,oldsrc,changed);
+}
+#ifdef TX15_RAM_APPLICATION
+static const char *set_input_switch_cb(guiObject_t *obj,int source,int value,void *data)
+{
+    (void)value;u8 *target=data,oldsrc=*target,changed;
+    *target=INPUT_SelectInput(*target,source,&changed);
+    return set_drsource_helper(obj,data,oldsrc,changed);
+}
+#endif
 
 static void set_src_enable(int curve_type)
 {

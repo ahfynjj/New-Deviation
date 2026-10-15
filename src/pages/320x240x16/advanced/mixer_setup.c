@@ -15,6 +15,11 @@
 #include "common.h"
 #include "../pages.h"
 #include "config/model.h"
+#ifdef TX15_RAM_APPLICATION
+#include "mix_switch.h"
+#else
+#define set_input_switch_cb set_input_source_cb
+#endif
 
 #include "../../common/advanced/_mixer_setup.c"
 
@@ -105,9 +110,12 @@ static void _show_expo_dr()
     GUI_CreateTextSource(&gui2->src, COL1_TEXT, 48, TEXTSELECT_96, sourceselect_cb, set_source_cb,
                          set_input_source_cb, &mp->mixer[0].src);
     GUI_CreateTextSource(&gui2->sw1, COL_EXP2, 48, TEXTSELECT_96, sourceselect_cb, set_drsource_cb,
-                         set_input_source_cb, &mp->mixer[1].sw);
+                         set_input_switch_cb, &mp->mixer[1].sw);
     GUI_CreateTextSource(&gui2->sw2, COL_EXP3, 48, TEXTSELECT_96, sourceselect_cb, set_drsource_cb,
-                         set_input_source_cb, &mp->mixer[2].sw);
+                         set_input_switch_cb, &mp->mixer[2].sw);
+#ifdef TX15_RAM_APPLICATION
+    tx15_mix_switch_register(&gui2->sw1);tx15_mix_switch_register(&gui2->sw2);
+#endif
     //Row 3
     GUI_CreateLabelBox(&gui2->high, COL1_TEXT, 72, 96, 16, &NARROW_FONT, GUI_Localize, NULL, _tr_noop("High-Rate"));
     GUI_CreateButton(&gui2->rate[0], COL_EXP2, 72, BUTTON_96x16, show_rate_cb, toggle_link_cb, (void *)0);
@@ -161,7 +169,10 @@ static void _show_complex(int page_change)
     //Row 2
     GUI_CreateLabelBox(&gui3->swlbl, COL1_TEXT, 64, COL1_VALUE - COL1_TEXT, 0, &LABEL_FONT, GUI_Localize, NULL, _tr_noop("Switch"));
     GUI_CreateTextSource(&gui3->sw, COL1_VALUE, 64, TEXTSELECT_96, sourceselect_cb, set_drsource_cb,
-                         set_input_source_cb, &mp->cur_mixer->sw);
+                         set_input_switch_cb, &mp->cur_mixer->sw);
+#ifdef TX15_RAM_APPLICATION
+    tx15_mix_switch_register(&gui3->sw);
+#endif
     GUI_CreateLabelBox(&gui3->muxlbl, COL2_TEXT, 64, COL2_VALUE - COL2_TEXT, 0, &LABEL_FONT, GUI_Localize, NULL, _tr_noop("Mux"));
     GUI_CreateTextSelect(&gui3->mux, COL2_VALUE, 64, TEXTSELECT_96, NULL, set_mux_cb, NULL);
     //Row 3

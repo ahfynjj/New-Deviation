@@ -20,8 +20,9 @@ void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #include "../../../../../hardware/tx15/board/battery.h"
 #include "../../../../../hardware/tx15/board/controls.h"
 #include "input_dashboard.h"
+#include "mix_switch.h"
 #ifdef TX15_STANDALONE
-const char DeviationVersion[33]="New Deviation TX15 " TX15_DASHBOARD_BUILD;
+const char DeviationVersion[33]="New Deviation TX15 " TX15_MIX_SWITCH_BUILD;
 #else
 const char DeviationVersion[33]="New Deviation TX15 RAM";
 #endif
@@ -40,6 +41,7 @@ void tx15_app_main(void) {
     tx15_controls_init();
     LCD_SetFont(DEFAULT_FONT.font); LCD_SetFontColor(DEFAULT_FONT.font_color);
     GUI_HandleButtons(1); MIXER_Init(); PAGE_Init(); PAGE_ChangeByID(PAGEID_MAIN,0);
+    tx15_mix_switch_init();
     GUI_DrawScreen();
 #ifdef TX15_ELRS_RC
     tx15_rf_model_start(CLOCK_getms());
@@ -57,6 +59,7 @@ void tx15_app_main(void) {
         u32 now=CLOCK_getms();
         if(now-previous>=5) {
             previous=now; BUTTON_Handler();
+            tx15_mix_switch_poll();
 #ifndef TX15_ELRS_RC
             MIXER_CalcChannels();
 #else
