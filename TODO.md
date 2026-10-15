@@ -3,11 +3,17 @@
 更新：2026-10-15。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
+## 2026-10-15 语音开发计划与 S1/S2 需求
+
+用户反馈 SWC1“开关都可以正常识别”，仅按该反馈记录自动识别通过，不扩大为反向/保存或 SE/SF 接线已修复的证据。新增需求为 S1/S2 自动识别；已询问是 Src 连续输入自动选源，还是 Switch 阈值触发，待回复后实施，未改固件。
+
+已完成[原生语音开发计划书](docs/superpowers/plans/2026-10-15-tx15-native-voice.md)，供评审。核对到 TAS2505 + I²S2/DMA1 Stream4、与开关共用 I²C4、当前 CODE/BSS 仅余3136字节、现有文件层不支持 SD 文件读取。计划先解决工作区/总线并发与首次发声，再做流式 WAV、实际介质读取、事件/配置、数值语言及 Lua 音频；预计20–33人日，首次发声2–4人日，均为工程估算。官方普通话目录已核对为 SOUNDS/cn，不是 zh。本轮只写计划与现场反馈，不启用语音或擦写实机。
+
 ## 2026-10-15 混控开关拨动选择 SWC1
 
 用户已批准编辑后捕获交互。Complex Switch、Expo&DR Switch1/2 支持短按滚轮开始/结束编辑，橙色框表示捕获中；拨 SA–SF 选择具体档位，摇杆/旋钮不参与。保留滚轮手选、None 与长按滚轮反向，EXIT 结束字段编辑时吞掉完整按键过程，仍需原 Mix 页面 OK 保存整条混控。进入编辑只建基线；失效恢复、同时变化、焦点/页面/对象移除均有边界处理。只读现有去抖输入，无引脚重映射。
 
-25 项相关检查、135 个 ARM 对象构建、包/镜像一致性、CRC 与 SWC1 版本标记核对通过。审查发现的编辑边框覆盖问题已修正并回归检查。USB 文件 `local/tx15-usb-release/tx15-mix-switch-capture-20261015.ndu` 已就绪；下一步用户更新并以 SA–SD 验证捕获、停止捕获、反向、Expo&DR 及保存重启。保留 MON1、模型和校准，实机验收待进行。[说明](docs/tx15/mix-switch-capture-2026-10-15.md)，[证据](docs/tx15/evidence/2026-10-15/mix-switch-capture.json)。
+25 项相关检查、135 个 ARM 对象构建、包/镜像一致性、CRC 与 SWC1 版本标记核对通过。审查发现的编辑边框覆盖问题已修正并回归检查。USB 文件 `local/tx15-usb-release/tx15-mix-switch-capture-20261015.ndu` 已就绪，用户已反馈开关自动识别正常。停止捕获、反向、Expo&DR 与保存重启未逐项反馈；保留 MON1、模型和校准。[说明](docs/tx15/mix-switch-capture-2026-10-15.md)，[证据](docs/tx15/evidence/2026-10-15/mix-switch-capture.json)。
 
 ## 2026-10-12 Input monitor 与微调 MON1
 

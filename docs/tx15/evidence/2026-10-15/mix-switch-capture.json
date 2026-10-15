@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "status": "offline-verified-usb-candidate-hardware-acceptance-pending",
+  "status": "user-confirms-switch-auto-recognition-other-detailed-checks-not-separately-reported",
   "date": "2026-10-15",
   "build_marker": "SWC1",
   "approved_interaction": "Short ENTER begins/ends Mix switch editing; new SA-SF movement selects exact position; EXIT ends editing; retain manual wheel, None and inversion.",
@@ -49,5 +49,10 @@
   "settings_abi_changed": false,
   "flash_written_by_agent": false,
   "se_sf_contact_issue": "Deferred; capture reflects existing valid hardware states without remapping",
-  "hardware_acceptance": null
+  "hardware_acceptance": {
+    "user_report": "开关都可以正常识别",
+    "switch_auto_recognition": true,
+    "edit_stop_inversion_and_persistence_separately_reported": null,
+    "does_not_confirm_se_sf_wiring_change": true
+  }
 }
