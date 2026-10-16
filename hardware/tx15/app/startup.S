@@ -12,7 +12,15 @@ app_vectors:
  .word App_Fault
  .endr
  .word SysTick_Handler
- .rept 37
+ .rept 15
+ .word App_Fault
+ .endr
+#ifdef TX15_AUDIO
+ .word DMA1_Stream4_IRQHandler
+#else
+ .word App_Fault
+#endif
+ .rept 21
  .word App_Fault
  .endr
  .word USART1_IRQHandler

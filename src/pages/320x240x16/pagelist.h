@@ -38,6 +38,9 @@ PAGEDEF(PAGEID_DEBUGLOG, PAGE_DebuglogInit,    PAGE_DebuglogEvent,    NULL,     
 #ifdef TX15_ELRS_RC
 PAGEDEF(PAGEID_ELRSLUA, PAGE_ElrsLuaInit, NULL, NULL, MAIN_MENU, _tr_noop("ELRS Lua"))
 #endif
+#ifdef TX15_AUDIO
+PAGEDEF(PAGEID_AUDIOTEST, PAGE_AudioTestInit, PAGE_AudioTestEvent, PAGE_AudioTestExit, MAIN_MENU, "Audio test")
+#endif
 
 //Model menu
 //----------

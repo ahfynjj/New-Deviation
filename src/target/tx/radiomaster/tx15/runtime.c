@@ -11,6 +11,9 @@
 #endif
 #include "../../../../../hardware/tx15/board/analog.h"
 #include "../../../../../hardware/tx15/board/controls.h"
+#ifdef TX15_AUDIO
+#include "../../../../../hardware/tx15/board/audio.h"
+#endif
 int tx15_runtime_poll(unsigned now) {
 #ifdef TX15_STANDALONE
     tx15_battery_poll(now);
@@ -22,6 +25,9 @@ int tx15_runtime_poll(unsigned now) {
     tx15_rf_discovery_poll(now);
 #endif
     static unsigned sampled, refreshed;
+#ifdef TX15_AUDIO
+    tx15_audio_hw_poll(now);
+#endif
     if((u32)(now-sampled)<MEDIUM_PRIORITY_MSEC) return 0;
     sampled=now;
     tx15_controls_poll(now);

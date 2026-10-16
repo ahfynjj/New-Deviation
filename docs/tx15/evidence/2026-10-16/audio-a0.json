@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "date": "2026-10-16",
+  "status": "software-candidate-hardware-pending",
+  "build_marker": "AUD0",
+  "stage": "A0",
+  "stage_exit_met": false,
+  "tests": {
+    "count": 34,
+    "result": "OK",
+    "seconds": 22.526,
+    "red_green_verified": [
+      "D2 clock/init/cache guard",
+      "codec bus NACK recovery",
+      "DMA clock/transfer/underrun",
+      "DMA error visibility",
+      "first PCM after selected mute",
+      "page actions",
+      "settings clock with stable PLL2"
+    ]
+  },
+  "arm_objects": 140,
+  "audio_off_arm_objects": 137,
+  "code_bss_end": "0x24054390",
+  "code_bss_margin_bytes": 162928,
+  "stack_bytes": 16384,
+  "d2_workspace": {
+    "lua": [
+      "0x30000000",
+      "0x30028000"
+    ],
+    "pcm": [
+      "0x30028000",
+      "0x3002c000"
+    ],
+    "dma": [
+      "0x3002c000",
+      "0x3002d000"
+    ],
+    "reserved": [
+      "0x3002d000",
+      "0x30030000"
+    ],
+    "lua_bytes": 163840,
+    "audio_bytes": 32768,
+    "initialization": "application explicitly enables SRAM clocks then clears owned words; no added ELF load segment"
+  },
+  "package": {
+    "file": "tx15-audio-a0-20261016.ndu",
+    "bytes": 702936,
+    "image_bytes": 702808,
+    "image_crc32": "0x2b66eacd",
+    "sha256": "14cda0927eb8912cff206e06a0c0b4611ca97fb0f85afe1cc2a3a1fd015c0874",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "62a3271e8eceb9eaff9d63ab63c7966f7e66bf62adc1a4b25c00a6daba2e806c",
+    "payload_sha256": "d2e92976ac23ddcbd665a8af1132739cfbf5c5875ad388391335c1c56dd2c146",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true
+  },
+  "review": {
+    "mode": "focused-read-only",
+    "blockers_for_default_volume_manual_test": 0,
+    "mute_edge": "regression failed before PCM-ordering fix and passes after"
+  },
+  "rollback_package": {
+    "file": "tx15-s1-s2-source-capture-20261015.ndu",
+    "sha256": "07e10f97ac84b2fe77733db28070db5e2ce6bb12c38cdeff34a767340d522b0e"
+  },
+  "boot_modified": false,
+  "model_calibration_layout_changed": false,
+  "rf_code_modified": false,
+  "device_accessed": false,
+  "flash_written_by_agent": false,
+  "hardware_acceptance": null,
+  "not_implemented": [
+    "WAV streaming",
+    "SD filesystem",
+    "speech events",
+    "persistent audio configuration",
+    "numeric speech",
+    "Lua audio APIs"
+  ],
+  "next": "One USB test: audible tone/volume, native inputs and D2 ELRS Lua, reboot retention; then A1"
+}

@@ -61,6 +61,11 @@ void PAGE_SplashExit();
 void PAGE_MenuInit(int page);
 #ifdef TX15_ELRS_RC
 void PAGE_ElrsLuaInit(int page);
+#ifdef TX15_AUDIO
+void PAGE_AudioTestInit(int page);
+void PAGE_AudioTestEvent(void);
+void PAGE_AudioTestExit(void);
+#endif
 #endif
 void PAGE_MenuExit();
 void PAGE_TxMenuInit(int page);

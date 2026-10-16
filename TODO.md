@@ -1,7 +1,13 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-10-15。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-16。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
+
+## 2026-10-16 语音 A0 软件候选，待一次 USB 实机验收
+
+用户要求按语音计划推进。已实现原生 TAS2505/I²S2/DMA 低音量300ms合成提示音、MAIN MENU → Audio test、音量0–5/停止/错误状态；默认不自动发声，退出测试页停止。Lua保持160KiB容量迁入D2，音频预留32KiB，现有16KiB栈、加载器地址契约和NOR模型/校准格式不变。音频I²C4与开关串行访问、单次截止1ms，NACK不重置输入扩展器；使用独立PLL2，不改LCD PLL3和CPU时钟。
+
+34项相关检查、140对象音频 ARM 和137对象默认关闭音频对照构建通过；审查提出的首段PCM静音时序已用失败回归修复。候选包 `local/tx15-usb-release/tx15-audio-a0-20261016.ndu`，About AUD0，保留SRC1/MON1。待用户USB更新，合并确认提示音/音量/输入/ELRS Lua和重启保存。未访问或刷写实机，A0未记为完成；WAV/文件读取/事件/数字/Lua音频仍按A1–A6后续实施，无需重焊PWLINK2。[记录](docs/tx15/audio-a0-2026-10-16.md)，[硬件所有权](hardware/tx15/board/audio-notes.md)，[证据](docs/tx15/evidence/2026-10-16/audio-a0.json)。
 
 ## 2026-10-15 语音开发计划与 S1/S2 需求
 

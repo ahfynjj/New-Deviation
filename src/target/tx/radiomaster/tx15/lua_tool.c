@@ -10,7 +10,15 @@
 #include "runtime.h"
 #include "lua/runner.h"
 #include "../../../../../hardware/tx15/board/display.h"
+#ifdef TX15_AUDIO
+#include "../../../../../hardware/tx15/board/audio_memory.h"
+#define LUA_HEAP ((unsigned char *)TX15_AUDIO_D2_BASE)
+#define LUA_HEAP_SIZE TX15_AUDIO_LUA_BYTES
+#else
 static union { double align; unsigned char bytes[160*1024]; } heap;
+#define LUA_HEAP heap.bytes
+#define LUA_HEAP_SIZE sizeof(heap.bytes)
+#endif
 static struct nd_lua tool;
 /* Address obtained from ELF symbols for host diagnostics, never hard-coded. */
 volatile struct {u32 state,runs,used,peak,max_ms,blocked_writes;char error[160];u32 init_ms;
@@ -91,6 +99,12 @@ static unsigned button(u32 buttons,unsigned flags,void *ctx)
 }
 void tx15_lua_tool(void)
 {
+#ifdef TX15_AUDIO
+    if(tx15_audio_memory_init()) {
+        tx15_lua_report.state=ND_LUA_ERROR;
+        strcpy((char *)tx15_lua_report.error,"Lua D2 memory unavailable");return;
+    }
+#endif
     const struct tx15_resource *script=NULL;
     for(size_t i=0;i<tx15_resource_count;i++) if(!strcmp(tx15_resources[i].path,"scripts/elrs.lua")) script=&tx15_resources[i];
     if(!script) return;
@@ -101,7 +115,7 @@ void tx15_lua_tool(void)
         CHAN_ButtonMask(BUT_UP)|CHAN_ButtonMask(BUT_DOWN)|CHAN_ButtonMask(BUT_LEFT)|CHAN_ButtonMask(BUT_RIGHT),
         BUTTON_PRESS|BUTTON_RELEASE|BUTTON_LONGPRESS|BUTTON_PRIORITY,button,NULL);
     u32 started=CLOCK_getms(),previous=started;unsigned error_drawn=0;
-    nd_lua_start(&tool,heap.bytes,sizeof(heap.bytes),&host,tx15_rf_lua_init(),(const char *)script->data,script->size);
+    nd_lua_start(&tool,LUA_HEAP,LUA_HEAP_SIZE,&host,tx15_rf_lua_init(),(const char *)script->data,script->size);
     tool.allow_writes=tx15_rf_lua_writes_enabled();
     for(;;) {
         CLOCK_ResetWatchdog();BUTTON_Handler();u32 ms=CLOCK_getms();

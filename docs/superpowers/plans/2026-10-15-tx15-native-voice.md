@@ -10,7 +10,7 @@
 
 **Spec:** 本文“目标与交付边界”“已核对的现状与约束”“选定架构”“兼容规则与默认行为”共同构成待评审需求基线。
 
-日期：2026-10-15。状态：供用户评审，尚未实施音频驱动或修改实机。范围：原生 Deviation，兼容 EdgeTX 的语音资源与常用播报方式，沿用当前专用 USB 更新流程。
+编制日期：2026-10-15；实施更新：2026-10-16。用户已要求按计划推进，A0软件候选已实现并完成检查，尚待USB更新后的实际发声、D2 Lua及输入/RF验收；A1–A6未实施。[A0记录](../../tx15/audio-a0-2026-10-16.md)。范围：原生 Deviation，兼容 EdgeTX 的语音资源与常用播报方式，沿用当前专用 USB 更新流程。
 
 ## 目标与交付边界
 
@@ -115,8 +115,8 @@ flowchart LR
 拟修改 `hardware/tx15/app/app.ld`、`src/target/tx/radiomaster/tx15/lua_tool.c` 的工作区配置；拟新增 `hardware/tx15/board/audio.{h,c}`、`audio_memory.h`。已定位 Lua heap 在 lua_tool.c；不扩大加载器接受地址范围。
 
 - [ ] 列出 `.bss.heap`、RF 参数缓存、USB/显示/SDRAM 区域所有者，给出经验证的 D2 SRAM 预留图、时钟和 32-byte DMA 对齐；保留当前 16 KiB 栈。迁移大块工作区后原 ELRS Lua 页面必须通过实机回归。
-- [ ] 提供 `int tx15_audio_hw_init(void)`、`void tx15_audio_hw_volume(unsigned level)`、`void tx15_audio_hw_stop(void)`；初始化失败不阻止整机启动。低层 PCM 传输为预分配双缓冲，IRQ 只记空闲半块/填静音，不在 IRQ 访问文件或 I²C。
-- [ ] 明确 I²C4 交易锁与超时、PLL/内核时钟所有者、复位仅作用于音频器件；验证交易失败后开关采样仍恢复。
+- [x] 提供 `int tx15_audio_hw_init(void)`、`void tx15_audio_hw_volume(unsigned level)`、`void tx15_audio_hw_stop(void)`；初始化失败不阻止整机启动。低层 PCM 传输为预分配双缓冲，IRQ 只复制已准备块或填静音，不在 IRQ 访问文件或 I²C。2026-10-16软件检查通过，实机待验收。
+- [x] 明确 I²C4 交易锁与超时、PLL/内核时钟所有者、复位仅作用于音频器件；主机故障注入验证交易失败后开关采样仍恢复，实机共用总线效果待测。
 - [ ] 测试：寄存器访问顺序/预算、工作区不重叠、对齐、DMA 欠载静音；实机合成提示音、音量、复位重启及原功能回归。通过后提交此阶段。
 
 ### A1：解码与队列
@@ -193,4 +193,4 @@ flowchart LR
 5. [固定 rm-h750 音频硬件参考](https://github.com/EdgeTX/edgetx/blob/f5c13ab13ecadf3689c5854cfba51c43646fceec/radio/src/boards/rm-h750/audio_driver.cpp)、[TX15 HAL](https://github.com/EdgeTX/edgetx/blob/f5c13ab13ecadf3689c5854cfba51c43646fceec/radio/src/targets/tx15/hal.h)。仅作为硬件事实参考，沿用项目源码来源/许可核对流程，不把 EdgeTX 框架混入本项目。
 6. [TI TAS2505 数据手册](https://www.ti.com/lit/ds/symlink/tas2505.pdf)：器件时钟、I²S、复位和控制接口的依据。
 
-以上兼容与性能数值中，目录/格式/命名来自列明的官方资料；缓冲预算、队列容量、任务分期和性能验收值是本计划提出的工程目标，并非 EdgeTX 的承诺指标。本轮只交付计划，不宣称扬声器、语音包、文件读取或 Lua 音频已经可用。
+以上兼容与性能数值中，目录/格式/命名来自列明的官方资料；缓冲预算、队列容量、任务分期和性能验收值是本计划提出的工程目标，并非 EdgeTX 的承诺指标。2026-10-15编制时仅交付计划；后续实施以各阶段记录为准，不将软件构建当作扬声器、语音包、文件读取或 Lua 音频实机可用的证明。

@@ -7,6 +7,9 @@
 #include "config/model.h"
 #include "config/tx.h"
 #include "music.h"
+#ifdef TX15_AUDIO
+#include "../../../../../hardware/tx15/board/audio.h"
+#endif
 #ifdef TX15_ELRS_RC
 #include "rf_model.h"
 #endif
@@ -22,6 +25,9 @@ unsigned PWR_ReadVoltage(void) { return tx15_battery_mv; }
 int PWR_CheckPowerSwitch(void) { return 0; }
 void PWR_Shutdown(void) {
 #ifdef TX15_STANDALONE
+#ifdef TX15_AUDIO
+    tx15_audio_hw_stop();
+#endif
 #ifdef TX15_PERSISTENCE
 #ifdef TX15_ELRS_RC
     tx15_rf_model_reset();

@@ -23,6 +23,8 @@ static int program(void *c,unsigned a,const void *p,unsigned n) {
 int main(void) {
  assert(tx15_settings_core_clock(0x03030005));
  assert(tx15_settings_core_clock(0x33030005));
+ assert(tx15_settings_core_clock(0x3f030005)); /* Audio PLL2 + LCD PLL3 ready. */
+ assert(!tx15_settings_core_clock(0x37030005)); /* Audio PLL2 starting. */
  assert(!tx15_settings_core_clock(0x13030005));
  assert(!tx15_settings_core_clock(0x33030001));
  struct tx15_store_io io={0,read_flash,erase,program};unsigned char out[64],old[64],next[64];

@@ -21,7 +21,10 @@ void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #include "../../../../../hardware/tx15/board/controls.h"
 #include "input_dashboard.h"
 #include "mix_switch.h"
-#ifdef TX15_STANDALONE
+#ifdef TX15_AUDIO
+#include "../../../../../hardware/tx15/board/audio.h"
+const char DeviationVersion[33]="New Deviation TX15 AUD0";
+#elif defined(TX15_STANDALONE)
 const char DeviationVersion[33]="New Deviation TX15 " TX15_MIX_SWITCH_BUILD;
 #else
 const char DeviationVersion[33]="New Deviation TX15 RAM";
@@ -30,6 +33,9 @@ const char DeviationVersion[33]="New Deviation TX15 RAM";
 void tx15_lua_tool(void);
 #endif
 void tx15_app_main(void) {
+#ifdef TX15_AUDIO
+    (void)tx15_audio_hw_init();
+#endif
     CONFIG_LoadTx(); CONFIG_ReadDisplay(); CONFIG_ReadModel(1);
 #ifndef TX15_ELRS_RC
     Model.protocol=PROTOCOL_NONE;

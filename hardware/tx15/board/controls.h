@@ -17,4 +17,8 @@ extern volatile uint32_t tx15_controls_status, tx15_controls_frames, tx15_contro
 extern volatile uint16_t tx15_controls_raw[2];
 int tx15_controls_init(void);
 void tx15_controls_poll(unsigned now);
+/* Main-thread-only access to the shared TAS2505 (7-bit 0x18).
+ * One transaction, <=1ms deadline; never resets the input expanders/bus. */
+int tx15_controls_audio_write(unsigned reg,unsigned value);
+int tx15_controls_audio_read(unsigned reg,uint8_t *value);
 #endif

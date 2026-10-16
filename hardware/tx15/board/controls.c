@@ -14,21 +14,26 @@
 struct tx15_controls tx15_controls;
 volatile uint32_t tx15_controls_status,tx15_controls_frames,tx15_controls_errors;
 volatile uint16_t tx15_controls_raw[2];
-static unsigned sampled;
+static unsigned sampled,locked;
 static unsigned msec(void) {return TX15_READ32(0x2400e02cu);}
 static void modify(uint32_t a,uint32_t mask,uint32_t value) {
     TX15_WRITE32(a,(TX15_READ32(a)&~mask)|value);
 }
-static int wait_status(uint32_t mask,uint32_t expected,unsigned start) {
+static int wait_bounded(uint32_t mask,uint32_t expected,unsigned start,unsigned timeout) {
     for(unsigned n=0;n<20000;n++) {
         uint32_t status=TX15_READ32(I2C+0x18);
         if(status&0x3710u) return -1; /* NACK/BERR/ARLO/OVR/timeout/alert. */
         if((status&mask)==expected) return 0;
-        if((unsigned)(msec()-start)>=3) break;
+        if((unsigned)(msec()-start)>=timeout) break;
     }
     return -1;
 }
+static int wait_status(uint32_t mask,uint32_t expected,unsigned start) {
+    return wait_bounded(mask,expected,start,3);
+}
 static int read_port(unsigned address,uint16_t *value) {
+    if(locked)return -1;
+    locked=1;
     unsigned start=msec();
     uint32_t base=address<<1;
     if(wait_status(1u<<15,0,start)) goto failed;
@@ -44,11 +49,43 @@ static int read_port(unsigned address,uint16_t *value) {
     unsigned hi=TX15_READ32(I2C+0x24)&255;
     if(wait_status(32,32,start)) goto failed;
     TX15_WRITE32(I2C+0x1c,32);
-    *value=(uint16_t)(lo|(hi<<8)); return 0;
+    *value=(uint16_t)(lo|(hi<<8));locked=0; return 0;
 failed:
     modify(I2C+4,0,1u<<14); /* Request STOP, do not wait without a deadline. */
     TX15_WRITE32(I2C,0); TX15_WRITE32(I2C+0x1c,0x3f38);
+    locked=0;
     return -1;
+}
+static int audio_transfer(unsigned reg,unsigned *value,int read) {
+    if(locked || tx15_controls_status!=1 || reg>127 || !(TX15_READ32(I2C)&1))return -1;
+    locked=1;unsigned start=msec();uint32_t base=0x18u<<1;
+    if(wait_bounded(1u<<15,0,start,1))goto failed_audio;
+    TX15_WRITE32(I2C+0x1c,0x3f38);
+    TX15_WRITE32(I2C+4,base|((read?1u:2u)<<16)|(read?0:1u<<25)|(1u<<13));
+    if(wait_bounded(2,2,start,1))goto failed_audio;
+    TX15_WRITE32(I2C+0x28,reg);
+    if(read) {
+        if(wait_bounded(64,64,start,1))goto failed_audio;
+        TX15_WRITE32(I2C+4,base|(1u<<10)|(1u<<16)|(1u<<25)|(1u<<13));
+        if(wait_bounded(4,4,start,1))goto failed_audio;
+        *value=TX15_READ32(I2C+0x24)&255;
+    } else {
+        if(wait_bounded(2,2,start,1))goto failed_audio;
+        TX15_WRITE32(I2C+0x28,*value);
+    }
+    if(wait_bounded(32,32,start,1))goto failed_audio;
+    TX15_WRITE32(I2C+0x1c,32);locked=0;return 0;
+failed_audio:
+    modify(I2C+4,0,1u<<14);
+    TX15_WRITE32(I2C+0x1c,0x3f38);locked=0;return -1;
+}
+int tx15_controls_audio_write(unsigned reg,unsigned value) {
+    if(value>255)return -1;
+    return audio_transfer(reg,&value,0);
+}
+int tx15_controls_audio_read(unsigned reg,uint8_t *value) {
+    unsigned result;if(!value || audio_transfer(reg,&result,1))return -1;
+    *value=(uint8_t)result;return 0;
 }
 static int bus_init(void) {
     /* Select undivided HSI64 as I2C4 kernel clock independently of APB4. */
