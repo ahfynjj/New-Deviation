@@ -11,6 +11,9 @@
 #endif
 #include "../../../../../hardware/tx15/board/analog.h"
 #include "../../../../../hardware/tx15/board/controls.h"
+#ifdef TX15_STORAGE
+#include "storage_tool.h"
+#endif
 #ifdef TX15_AUDIO
 #include "../../../../../hardware/tx15/board/audio.h"
 #endif
@@ -25,6 +28,9 @@ int tx15_runtime_poll(unsigned now) {
     tx15_rf_discovery_poll(now);
 #endif
     static unsigned sampled, refreshed;
+#ifdef TX15_STORAGE
+    tx15_storage_poll(now);
+#endif
 #ifdef TX15_AUDIO
     tx15_audio_hw_poll(now);
 #endif

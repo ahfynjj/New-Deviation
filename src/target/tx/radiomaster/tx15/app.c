@@ -23,6 +23,10 @@ void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #include "mix_switch.h"
 #ifdef TX15_AUDIO
 #include "../../../../../hardware/tx15/board/audio.h"
+#endif
+#ifdef TX15_STORAGE
+const char DeviationVersion[33]="New Deviation TX15 STO0";
+#elif defined(TX15_AUDIO)
 const char DeviationVersion[33]="New Deviation TX15 AUD0";
 #elif defined(TX15_STANDALONE)
 const char DeviationVersion[33]="New Deviation TX15 " TX15_MIX_SWITCH_BUILD;

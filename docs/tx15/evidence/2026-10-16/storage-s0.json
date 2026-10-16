@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "date": "2026-10-16",
+  "stage": "S0 internal SDMMC1 read-only metadata",
+  "status": "software-candidate-hardware-pending",
+  "stage_exit_met": false,
+  "tests": {
+    "new_count": 6,
+    "total": 46,
+    "result": "OK",
+    "seconds": 27.028,
+    "command": "python -m unittest test_storage_page test_storage_hw test_storage_card test_storage_volume test_audio_wav test_audio_pcm test_audio_queue test_audio_page test_audio_memory test_audio_hw test_settings_store test_lua_runtime test_source_capture test_switch_capture test_input_dashboard test_controls test_switch_upgrade test_calibration_snapshot test_rf_model test_usb_update_package",
+    "red_green_observed": true
+  },
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "93c2087a100797a36b9761a8ad9b04ecc235df397f61ccfdc675fbfb5d9ad300",
+    "payload_sha256": "27bc6fb1ffeaed0d01880fe3dcd4417d8e962451aba45498a95e306fc6dff2c0",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true
+  },
+  "arm_objects": 148,
+  "storage_off_arm_objects": 145,
+  "storage_off_image_identical_to_aud0": true,
+  "package": {
+    "file": "local/tx15-usb-release/tx15-internal-storage-readonly-20261016.ndu",
+    "bytes": 707800,
+    "image_bytes": 707672,
+    "image_crc": "0x911d7898",
+    "sha256": "521abf81961d113bd5226123e00fa44efa25ff8c2549a93ffdd8a9ce741e097b",
+    "minimum_boot_api": 1,
+    "settings_abi": 1
+  },
+  "memory": {
+    "bss_end": "0x24055d08",
+    "stack_bottom": "0x2407c000",
+    "code_bss_margin_bytes": 156408,
+    "stack_bytes": 16384,
+    "idma_buffer": "0x24055a80",
+    "idma_bytes": 512
+  },
+  "rollback": {
+    "file": "local/tx15-usb-release/tx15-audio-a0-20261016.ndu",
+    "sha256": "14cda0927eb8912cff206e06a0c0b4611ca97fb0f85afe1cc2a3a1fd015c0874",
+    "unchanged": true
+  },
+  "review": {
+    "mode": "focused-read-only",
+    "finding": "CMD response flag may precede CPSMACT clear",
+    "resolution": "keep request pending until CPSMACT clears; regression observed failing then passing",
+    "unresolved_critical_or_important": 0
+  },
+  "limits": {
+    "overall_ms": 2000,
+    "command_ms": 100,
+    "read_ms": 250,
+    "sectors_read_max": 2,
+    "sector_bytes": 512,
+    "clock_hz": 400000,
+    "bus_bits": 1
+  },
+  "readonly_commands": [
+    0,
+    2,
+    3,
+    7,
+    8,
+    9,
+    13,
+    16,
+    17,
+    41,
+    55
+  ],
+  "not_implemented": [
+    "filesystem mount",
+    "directory listing",
+    "file reads/writes",
+    "model migration",
+    "USB file transfer",
+    "real WAV playback"
+  ],
+  "device_accessed": false,
+  "flash_written": false,
+  "medium_written": false,
+  "hardware_acceptance": null
+}

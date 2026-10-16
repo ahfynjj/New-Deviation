@@ -8,6 +8,9 @@ root=Path(__file__).resolve().parents[1]
 standalone=os.environ.get('TX15_STANDALONE')=='1'
 product=os.environ.get('TX15_ELRS_PRODUCT')=='1'
 audio=os.environ.get('TX15_AUDIO')=='1'
+storage=os.environ.get('TX15_STORAGE')=='1'
+if storage and not (audio and standalone and product):
+ raise ValueError('Storage S0 requires standalone ELRS product with the audio D2-memory contract')
 if audio and not (standalone and product):
  raise ValueError('Audio A0 requires the native standalone ELRS product clock/loader contract')
 if product and any(os.environ.get(n)!='1' for n in ('TX15_ELRS_RC','TX15_ELRS_LUA','TX15_ELRS_WRITE')):
@@ -33,6 +36,7 @@ flags=['-isystem',str(root.parent/'tools/arm8/lib/gcc/arm-none-eabi/8.2.1/includ
  '-DHGVERSION="New Deviation TX15"' if standalone else '-DHGVERSION="New Deviation TX15 RAM"']
 if product:flags.append('-DTX15_ELRS_PRODUCT=1')
 if audio:flags.append('-DTX15_AUDIO=1')
+if storage:flags.append('-DTX15_STORAGE=1')
 if os.environ.get('TX15_PERSISTENCE')=='1':flags.append('-DTX15_PERSISTENCE=1')
 if standalone:flags.append('-DTX15_STANDALONE=1')
 if os.environ.get('TX15_ELRS_DISCOVERY') == '1':
@@ -73,6 +77,9 @@ if audio:
  # Portable A1 core is cross-compiled but not activated in the AUD0 product.
  # Unreferenced sections are removed by the existing linker GC.
  sources += sorted((root/'src/audio').glob('*.c'))
+if storage:
+ sources.append(root/'hardware/tx15/board/storage.c')
+ sources += sorted((root/'src/storage').glob('*.c'))
 if standalone:
  sources += [root/'hardware/tx15/boot'/n for n in ('handoff.c','power_button.c')]
  sources.append(root/'hardware/tx15/board/power.c')
@@ -125,6 +132,6 @@ if len(payload.read_bytes())>0xf0000:raise ValueError('Application overlaps nati
  'payload_sha256':hashlib.sha256(payload.read_bytes()).hexdigest(),
  'rf_enabled':any(os.environ.get(n)=='1' for n in ('TX15_ELRS_LUA','TX15_ELRS_DISCOVERY','TX15_ELRS_RC')),
  'persistent_settings':os.environ.get('TX15_PERSISTENCE')=='1',
- 'audio_diagnostic':audio},indent=2),encoding='utf8')
+ 'audio_diagnostic':audio,'storage_read_only':storage},indent=2),encoding='utf8')
 print('Checked native boot payload:',payload,'(requires cold-start loader; not directly flashable)')
 print('No device accessed; hardware acceptance remains pending.')

@@ -58,6 +58,11 @@ void PAGE_SplashEvent();
 void PAGE_SplashExit();
 
 // Menu
+#ifdef TX15_STORAGE
+void PAGE_StorageTestInit(int page);
+void PAGE_StorageTestEvent(void);
+void PAGE_StorageTestExit(void);
+#endif
 void PAGE_MenuInit(int page);
 #ifdef TX15_ELRS_RC
 void PAGE_ElrsLuaInit(int page);

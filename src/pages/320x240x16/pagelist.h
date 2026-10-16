@@ -43,6 +43,10 @@ PAGEDEF(PAGEID_AUDIOTEST, PAGE_AudioTestInit, PAGE_AudioTestEvent, PAGE_AudioTes
 #endif
 
 //Model menu
+#ifdef TX15_STORAGE
+PAGEDEF(PAGEID_STORAGETEST, PAGE_StorageTestInit, PAGE_StorageTestEvent, PAGE_StorageTestExit, MAIN_MENU, "Storage test")
+#endif
+
 //----------
 PAGEDEF(PAGEID_MODEL,    PAGE_ModelInit,       PAGE_ModelEvent,       NULL,               MODEL_MENU,  _tr_noop("Model setup"))
 PAGEDEF(PAGEID_MIXER,    PAGE_MixerInit,       NULL,                  NULL,               ADVGUI_MENU, _tr_noop("Mixer"))

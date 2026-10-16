@@ -3,9 +3,13 @@
 更新：2026-10-16。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
+## 2026-10-16 内置存储 S0 只读软件候选，待一次 USB 扫描
+
+已完成STO0手动诊断：MAIN MENU → Storage test → Scan，只读SDMMC1身份/CSD容量、扇区0/分区引导扇区及FAT参数；不自动探测、不格式化、不迁移模型。临时门控既有PLL1Q，保留CPU/LCD/音频时钟因子，独占512B控制器IDMA；结束/退出/关机保存前释放。46项检查、148对象ARM/加载范围及USB包验证通过，审查发现的CPSMACT收尾时序已回归修复；存储关闭的145对象镜像与AUD0一致。新包 `local/tx15-usb-release/tx15-internal-storage-readonly-20261016.ndu`，保留AUD0音频测试页。尚未访问实机，真实身份/容量/文件系统及RF并行未验收。模型/校准仍在NOR，目录/文件层和USB文件导入尚未实现。下一步一次USB更新后手动扫描，再进入有界目录读取及SOUNDS访问。[说明](docs/tx15/storage-s0-2026-10-16.md)，[证据](docs/tx15/evidence/2026-10-16/storage-s0.json)。
+
 ## 2026-10-16 语音 A0 软件候选，待一次 USB 实机验收
 
-用户新增要求：语音包和模型文件以内置存储为主要位置，已明确选择“遥控器内置存储”；设备校准留机内。固定目标HAL/共享驱动指向SDMMC1，另一读卡接口SDMMC2/PH8；真实芯片类型、容量、分区和文件系统尚未只读验收，不直接认定eMMC。当前模型1/校准仍在NOR快照，尚无存储文件后端。后续优先共用介质/文件访问基础，再接SOUNDS读取、独立项目目录的INI多模型及现有模型迁移；需拆分当前读取INI后被NOR模型覆盖的流程，并安排USB资源/模型导入导出，现有更新器仅更新固件。记录于[SD存储增补计划](docs/superpowers/plans/2026-10-16-tx15-sd-model-storage.md)。无卡/坏模型不静默换模型启用RF，本轮未改固件或介质。
+用户新增要求：语音包和模型文件以内置存储为主要位置，已明确选择“遥控器内置存储”；设备校准留机内。固定目标HAL/共享驱动指向SDMMC1，另一读卡接口SDMMC2/PH8；真实芯片类型、容量、分区和文件系统尚未只读验收，不直接认定eMMC。当前模型1/校准仍在NOR快照，尚无存储文件后端。后续优先共用介质/文件访问基础，再接SOUNDS读取、独立项目目录的INI多模型及现有模型迁移；需拆分当前读取INI后被NOR模型覆盖的流程，并安排USB资源/模型导入导出，现有更新器仅更新固件。记录于[SD存储增补计划](docs/superpowers/plans/2026-10-16-tx15-sd-model-storage.md)。无卡/坏模型不静默换模型启用RF；S0最新软件状态见上。
 
 用户后续确认“尚未更新或试听”。继续完成A1离线WAV/PCM/请求队列：增量RIFF头、未知chunk/奇数补齐/损坏拒绝、mono8/16bit及8/16/32kHz、跨块采样和线性插值、固定16项优先级/FIFO/事件合并/告警保留容量。6项新增检查、共40项回归及143对象ARM构建通过；核心未接入产品，最终ND15与原AUD0逐字节相同，本轮未产生新刷机包。player/停止抢占/运行耗时及实际存储仍待做，A0/A1阶段均未宣称完成。[A1记录](docs/tx15/audio-core-a1-2026-10-16.md)，[证据](docs/tx15/evidence/2026-10-16/audio-core-a1.json)。
 
