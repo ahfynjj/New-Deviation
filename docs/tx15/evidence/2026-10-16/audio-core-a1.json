@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "date": "2026-10-16",
+  "stage": "A1 portable core only",
+  "stage_exit_met": false,
+  "status": "offline-verified-not-activated",
+  "a0_user_report": "尚未更新或试听",
+  "new_modules": [
+    "wav",
+    "pcm",
+    "queue"
+  ],
+  "tests": {
+    "new_count": 6,
+    "total": 40,
+    "result": "OK",
+    "seconds": 27.122,
+    "command": "python -m unittest test_audio_wav test_audio_pcm test_audio_queue test_audio_page test_audio_memory test_audio_hw test_settings_store test_lua_runtime test_source_capture test_switch_capture test_input_dashboard test_controls test_switch_upgrade test_calibration_snapshot test_rf_model test_usb_update_package",
+    "red_green_observed": true
+  },
+  "arm_objects": 143,
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "7feabf254213c87352d463f5934f02c2d7c10aed9ca977ee6e681532713cf9e2",
+    "payload_sha256": "d2e92976ac23ddcbd665a8af1132739cfbf5c5875ad388391335c1c56dd2c146",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true
+  },
+  "new_core_called_by_product": false,
+  "active_nd15_identical_to_aud0": true,
+  "existing_package": {
+    "file": "tx15-audio-a0-20261016.ndu",
+    "sha256": "14cda0927eb8912cff206e06a0c0b4611ca97fb0f85afe1cc2a3a1fd015c0874",
+    "unchanged": true
+  },
+  "new_package_generated": false,
+  "review": {
+    "mode": "focused-read-only",
+    "blockers": 0
+  },
+  "limits": {
+    "wav_input_bytes_per_call": 512,
+    "pcm_input_bytes_per_call": 512,
+    "pcm_output_samples_per_call": 256,
+    "queue_requests": 16,
+    "alarm_reserved_slots": 2,
+    "max_path_bytes_excluding_nul": 127
+  },
+  "not_implemented": [
+    "player",
+    "active playback preemption/stop/timeout",
+    "real filesystem",
+    "measured 1ms audio CPU budget",
+    "real speech playback",
+    "Lua audio API"
+  ],
+  "device_accessed": false,
+  "flash_written": false,
+  "hardware_acceptance": null
+}

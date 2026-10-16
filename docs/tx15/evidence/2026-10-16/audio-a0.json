@@ -86,5 +86,11 @@
     "numeric speech",
     "Lua audio APIs"
   ],
-  "next": "One USB test: audible tone/volume, native inputs and D2 ELRS Lua, reboot retention; then A1"
+  "next": "One USB test: audible tone/volume, native inputs and D2 ELRS Lua, reboot retention; then A1",
+  "user_report": {
+    "date": "2026-10-16",
+    "message": "尚未更新或试听",
+    "installed": false,
+    "listened": false
+  }
 }

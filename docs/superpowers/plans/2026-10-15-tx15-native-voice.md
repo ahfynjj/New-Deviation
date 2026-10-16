@@ -10,7 +10,7 @@
 
 **Spec:** 本文“目标与交付边界”“已核对的现状与约束”“选定架构”“兼容规则与默认行为”共同构成待评审需求基线。
 
-编制日期：2026-10-15；实施更新：2026-10-16。用户已要求按计划推进，A0软件候选已实现并完成检查，尚待USB更新后的实际发声、D2 Lua及输入/RF验收；A1–A6未实施。[A0记录](../../tx15/audio-a0-2026-10-16.md)。范围：原生 Deviation，兼容 EdgeTX 的语音资源与常用播报方式，沿用当前专用 USB 更新流程。
+编制日期：2026-10-15；实施更新：2026-10-16。用户已要求按计划推进，A0软件候选已实现并完成检查，用户尚未更新/试听，实际发声、D2 Lua及输入/RF验收仍待完成；A1的WAV/PCM/请求队列离线核心已实现但未启用产品调用，player及A2–A6待实施。[A0记录](../../tx15/audio-a0-2026-10-16.md)，[A1离线记录](../../tx15/audio-core-a1-2026-10-16.md)。范围：原生 Deviation，兼容 EdgeTX 的语音资源与常用播报方式，沿用当前专用 USB 更新流程。
 
 ## 目标与交付边界
 
@@ -123,7 +123,7 @@ flowchart LR
 
 拟新增 `src/audio/wav.{h,c}`、`queue.{h,c}`、`player.{h,c}`，测试 `utils/hardware/tests/test_audio_wav.py`、`test_audio_queue.py`。后端契约：`int nd_audio_play(const char *path,unsigned priority,unsigned event_id)`、`void nd_audio_poll(uint32_t now)`、`void nd_audio_stop(void)`；排队调用不做文件读取，只返回是否接受。
 
-- [ ] 测试再实现 chunk 边界、奇数长度 padding、额外 LIST/JUNK、截断/溢出、PCM 格式拒绝、8-bit 转换与 8/16 kHz 插值；所有长度用实际读入量约束。
+- [x] 测试再实现 chunk 边界、奇数长度 padding、额外 LIST/JUNK、截断/溢出、PCM 格式拒绝、8-bit 转换与 8/16 kHz 插值；所有长度用实际读入量约束。2026-10-16离线WAV/PCM检查通过，实际文件服务和播放尚未接入。
 - [ ] 固定 16 请求上限、优先级、抢占、同事件合并、停止、采样率转换、超时与静音行为；禁止动态无界分配。
 - [ ] 主循环每次处理以 1 ms CPU 时间为初始上限，文件 I/O 不在该函数内同步等待；统计队列峰值、欠载和最坏耗时。目标不达标则先减载，再谈更多功能。
 

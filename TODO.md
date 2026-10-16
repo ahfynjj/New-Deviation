@@ -5,6 +5,8 @@
 
 ## 2026-10-16 语音 A0 软件候选，待一次 USB 实机验收
 
+用户后续确认“尚未更新或试听”。继续完成A1离线WAV/PCM/请求队列：增量RIFF头、未知chunk/奇数补齐/损坏拒绝、mono8/16bit及8/16/32kHz、跨块采样和线性插值、固定16项优先级/FIFO/事件合并/告警保留容量。6项新增检查、共40项回归及143对象ARM构建通过；核心未接入产品，最终ND15与原AUD0逐字节相同，本轮未产生新刷机包。player/停止抢占/运行耗时及实际存储仍待做，A0/A1阶段均未宣称完成。[A1记录](docs/tx15/audio-core-a1-2026-10-16.md)，[证据](docs/tx15/evidence/2026-10-16/audio-core-a1.json)。
+
 用户要求按语音计划推进。已实现原生 TAS2505/I²S2/DMA 低音量300ms合成提示音、MAIN MENU → Audio test、音量0–5/停止/错误状态；默认不自动发声，退出测试页停止。Lua保持160KiB容量迁入D2，音频预留32KiB，现有16KiB栈、加载器地址契约和NOR模型/校准格式不变。音频I²C4与开关串行访问、单次截止1ms，NACK不重置输入扩展器；使用独立PLL2，不改LCD PLL3和CPU时钟。
 
 34项相关检查、140对象音频 ARM 和137对象默认关闭音频对照构建通过；审查提出的首段PCM静音时序已用失败回归修复。候选包 `local/tx15-usb-release/tx15-audio-a0-20261016.ndu`，About AUD0，保留SRC1/MON1。待用户USB更新，合并确认提示音/音量/输入/ELRS Lua和重启保存。未访问或刷写实机，A0未记为完成；WAV/文件读取/事件/数字/Lua音频仍按A1–A6后续实施，无需重焊PWLINK2。[记录](docs/tx15/audio-a0-2026-10-16.md)，[硬件所有权](hardware/tx15/board/audio-notes.md)，[证据](docs/tx15/evidence/2026-10-16/audio-a0.json)。
