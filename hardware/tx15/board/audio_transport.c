@@ -103,6 +103,8 @@ void DMA1_Stream4_IRQHandler(void) {
     W(0x4002000cu,flags);
     if(!running)return;
     if(flags&0x0du) { /* FIFO/direct-mode/transfer error: mute, defer cleanup. */
+        tx15_audio_report.reason=TX15_AUDIO_DMA;tx15_audio_report.dma_flags=flags;
+        tx15_audio_report.spi_status=R(SPI+0x14);
         tx15_audio_report.errors++;fault=1;running=0;W(SPI,0);modify(DMA,1,0);
         W(0x58021c18u,1u<<26);return;
     }

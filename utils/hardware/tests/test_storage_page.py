@@ -22,7 +22,7 @@ static void (*press_[2])(guiObject_t *,s8,const void *);
 static const void *data_[2];
 u32 CLOCK_getms(void){return now;}
 u8 PAGE_SetModal(u8 m){return m;}
-void PAGE_ShowHeader(const char *s){assert(strstr(s,"STO0"));}
+void PAGE_ShowHeader(const char *s){assert(strstr(s,"STO1"));}
 void _GUI_Redraw(guiObject_t *o){(void)o;redraws++;}
 void tx15_storage_scan(unsigned n){assert(n==now);scanned++;}
 void tx15_storage_stop(void){stopped++;}
@@ -44,5 +44,9 @@ int main(void){
  card_report.state=ND_CARD_READY;card_report.blocks=33554432;card_report.high_capacity=1;
  card_report.volume.fs=ND_FS_FAT32;
  assert(strstr(report(NULL,NULL),"16384 MiB") && strstr(report(NULL,NULL),"FAT32"));
+ card_report.state=ND_CARD_ERROR;card_report.error=ND_CARD_TIMEOUT;card_report.elapsed=110;
+ tx15_storage_hw_report.clkcr=160;tx15_storage_hw_report.power=3;
+ assert(strstr(report(NULL,NULL),"Error:2") && strstr(report(NULL,NULL),"110ms"));
+ assert(strstr(report(NULL,NULL),"CLK:000000A0 PWR:3"));
  PAGE_StorageTestExit();assert(stopped==2);return 0;
 }''',[])

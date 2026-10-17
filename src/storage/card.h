@@ -17,12 +17,14 @@ struct nd_card_report {
     unsigned state,error,last_command,steps,high_capacity,partition_kind;
     uint32_t last_response,rca,ocr,cid[4],csd[4];uint64_t blocks;
     struct nd_volume volume;
+    uint32_t elapsed,max_gap;
 };
 struct nd_card {
     struct nd_card_report report;
     const struct nd_sd_ops *ops;void *ctx;
     unsigned active,phase,pending,v2;
     uint32_t next,deadline,total_deadline,lba;uint64_t span;
+    uint32_t started,last_poll;
     uint8_t sector[512];
 };
 /* Zero-initialize object before first use. Only init/read commands are issued.

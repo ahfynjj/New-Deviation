@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "date": "2026-10-17",
+  "base": "5537c785",
+  "purpose": "failure instrumentation only; no hardware root cause fix claimed",
+  "user_reports": {
+    "earlier": "Audio Error; Storage Error2",
+    "audio": {
+      "tests": 0,
+      "dma": 25,
+      "errors": 9,
+      "underruns": 0
+    },
+    "storage": {
+      "error": 0,
+      "hw": 0,
+      "mib": 0,
+      "cmd": 0,
+      "sta": "00002000",
+      "resp": "00000000",
+      "reads": 0,
+      "state_label": null,
+      "sample_time": null
+    }
+  },
+  "hardware_acceptance": "failed; root cause unknown",
+  "tests": {
+    "total": 46,
+    "seconds": 29.992,
+    "result": "OK",
+    "red_green_observed": true,
+    "new_assertions": [
+      "audio reason/probe register/I2C NACK persistence",
+      "DMA error flags",
+      "deadline elapsed",
+      "snapshot before SD reset",
+      "CMD17 timeout/CRC survives W1C cleanup",
+      "page fields"
+    ]
+  },
+  "arm_objects": 148,
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "bab78ef22af8b5104f78be04a5b47e95d822915fb0fe1d9381b8795dab2cbc66",
+    "payload_sha256": "ed48cad424a802b8d45b5f9d4ede6819133e138f35ebd5bc4372479f138a5b44",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true
+  },
+  "package": {
+    "file": "local/tx15-usb-release/tx15-audio-storage-diag-20261017.ndu",
+    "bytes": 708368,
+    "image_bytes": 708240,
+    "crc32": "0x68e3ecee",
+    "sha256": "14144a74d33e30146467dc0ce8f72b0f034c4c76d1fe243a41619a1f3bbedc11",
+    "minimum_boot_api": 1,
+    "settings_abi": 1
+  },
+  "memory": {
+    "bss_end": "0x240560e0",
+    "stack_bottom": "0x2407c000",
+    "margin_bytes": 155424,
+    "stack_bytes": 16384
+  },
+  "unchanged": [
+    "audio codec setup",
+    "PLL/pin/clock values",
+    "500ms audio startup deadline",
+    "2s storage deadline",
+    "SD read-only whitelist",
+    "bootloader",
+    "NOR model/calibration record format"
+  ],
+  "review": {
+    "finding": "CMD17 terminal response snapshot overwritten during stop",
+    "fixed_with_failing_regression": true,
+    "unresolved_important": 0
+  },
+  "rollback": {
+    "file": "local/tx15-usb-release/tx15-internal-storage-readonly-20261016.ndu",
+    "unchanged": true
+  },
+  "device_accessed": false,
+  "flash_written": false,
+  "medium_written": false,
+  "new_package_hardware_test": null
+}

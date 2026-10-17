@@ -22,6 +22,12 @@ static uint32_t dma_buffer[128] __attribute__((aligned(32)));
 static unsigned owned,command_pending,read_pending,last_command,response_kind;
 static uint32_t saved_q,saved_selector,c_gpio[5],d_gpio[5];
 volatile struct tx15_storage_hw_report tx15_storage_hw_report;
+static void snapshot(void) {
+    tx15_storage_hw_report.status=R(SD+0x34);
+    tx15_storage_hw_report.clkcr=R(SD+4);tx15_storage_hw_report.power=R(SD);
+    tx15_storage_hw_report.cmd=R(SD+0xc);
+    tx15_storage_hw_report.pllcfgr=R(RCC+0x2c);tx15_storage_hw_report.selector=R(RCC+0x4c);
+}
 static void modify(uint32_t a,uint32_t mask,uint32_t value) {W(a,(R(a)&~mask)|value);}
 static void pins(uint32_t port,unsigned first,unsigned last,uint32_t *saved,int restore) {
     const unsigned offsets[]={0,4,8,12,first>=8?0x24:0x20};
@@ -41,6 +47,9 @@ static void pins(uint32_t port,unsigned first,unsigned last,uint32_t *saved,int 
 }
 static void stop(void *ctx) {
     (void)ctx;if(!owned)return;
+    /* Preserve active timeout state; completed responses were already captured
+     * before their W1C flags were cleared by response()/read_poll(). */
+    if(command_pending || read_pending)snapshot();
     W(SD+0x3c,0);W(SD+0x50,0);W(SD+0x2c,0);W(SD+0xc,0);W(SD,0);
     modify(RCC+0x7c,0,1u<<16);modify(RCC+0x7c,1u<<16,0);
     modify(RCC+0xd4,1u<<16,0);(void)R(RCC+0xd4);
@@ -92,7 +101,7 @@ static int command(void *ctx,unsigned cmd,uint32_t argument,unsigned kind) {
 }
 static int response(void *ctx,uint32_t out[4]) {
     (void)ctx;if(!owned || !command_pending)return ND_SD_CRC;
-    uint32_t status=R(SD+0x34);tx15_storage_hw_report.status=status;
+    snapshot();uint32_t status=tx15_storage_hw_report.status;
     if(status&4) {W(SD+0x38,CMD_FLAGS);command_pending=0;return ND_SD_TIMEOUT;}
     if((status&1) && response_kind!=ND_SD_OCR) {W(SD+0x38,CMD_FLAGS);command_pending=0;return ND_SD_CRC;}
     /* Response flags may precede the tail of CPSM activity. Keep the same
@@ -118,10 +127,11 @@ static int read_poll(void *ctx,uint8_t sector[512]) {
     if(!owned || !read_pending)return ND_SD_CRC;
     if(command_pending) {
         uint32_t r[4];int result=response(ctx,r);
-        if(result<=0)return result;
+        if(result<0) {read_pending=0;return result;} /* Keep terminal response snapshot. */
+        if(!result)return 0;
         if(r[0]&0xfdffe008u)return ND_SD_CRC;
     }
-    uint32_t status=R(SD+0x34);tx15_storage_hw_report.status=status;
+    snapshot();uint32_t status=tx15_storage_hw_report.status;
     if(status&0x0800003au) {W(SD+0x50,0);W(SD+0x2c,0);read_pending=0;return ND_SD_CRC;}
     if(!(status&256) || R(SD+0x30) || (status&0x3000))return 0;
     W(SD+0x50,0);W(SD+0x2c,0);TX15_STORAGE_BARRIER();

@@ -56,12 +56,23 @@ int main(void){
  *reg(0x52007034)=0x500;*reg(0x52007030)=0;
  assert(o->read_poll(NULL,out)==1 && out[0]==0x78 && out[511]==0x12);
  assert(!o->read_start(NULL,2,0) && rd(0x52007008)==1024);
+ *reg(0x52007034)=0x2000;
  o->stop(NULL);
+ assert(tx15_storage_hw_report.status==0x2000);
+ assert(tx15_storage_hw_report.clkcr==160 && tx15_storage_hw_report.power==3);
+ assert(tx15_storage_hw_report.pllcfgr & (1u<<17));
+ assert(!tx15_storage_hw_report.selector && tx15_storage_hw_report.cmd==0x1151);
  assert(rd(0x5802442c)==cfg && rd(0x5802444c)==(1u<<16));
  assert(rd(0x58020800)==c_mode && rd(0x58020824)==c_af && rd(0x58020c00)==d_mode && rd(0x58020c20)==d_af);
  assert(!(rd(0x580244d4)&(1u<<16)) && !rd(0x52007050));
  /* A live second SDMMC consumer prevents taking the shared kernel selector. */
  *reg(0x580244dc)=1u<<9;assert(o->init(NULL)<0);*reg(0x580244dc)=0;
  assert(!o->init(NULL));assert(o->read_start(NULL,0x800000,0)<0);o->stop(NULL);
+ /* Terminal CMD17 errors must survive W1C and release, even in read phase. */
+ for(unsigned flag=1;flag<=4;flag*=4){
+  *reg(0x52007034)=0;assert(!o->init(NULL));assert(!o->read_start(NULL,0,1));
+  *reg(0x52007034)=flag;assert(o->read_poll(NULL,out)<0);o->stop(NULL);
+  assert(tx15_storage_hw_report.status==flag && !rd(0x52007050));
+ }
  return 0;
 }''',[])

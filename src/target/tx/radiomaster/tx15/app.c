@@ -25,7 +25,7 @@ void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #include "../../../../../hardware/tx15/board/audio.h"
 #endif
 #ifdef TX15_STORAGE
-const char DeviationVersion[33]="New Deviation TX15 STO0";
+const char DeviationVersion[33]="New Deviation TX15 STO1";
 #elif defined(TX15_AUDIO)
 const char DeviationVersion[33]="New Deviation TX15 AUD0";
 #elif defined(TX15_STANDALONE)

@@ -53,6 +53,7 @@ int main(void){
  assert(tx15_audio_report.underruns==1);
  *reg(0x40020004)=8;DMA1_Stream4_IRQHandler();
  assert(tx15_audio_report.errors && tx15_audio_transport_ready()<0);
+ assert(tx15_audio_report.reason==TX15_AUDIO_DMA && tx15_audio_report.dma_flags==8);
  tx15_audio_transport_stop();assert(!(rd(0x40020070)&1));
  assert((rd(0x58024400)&0x3f000000)==0x33000000);
  return 0;
@@ -96,6 +97,7 @@ int main(void){
  tick=0;assert(!bus_init());tx15_controls_status=1;
  unsigned resets=bus_resets;audio_mode=1;nack=1;
  unsigned before=tick;assert(tx15_controls_audio_write(0,1)<0);assert(tick-before<10);
+ assert(tx15_controls_audio_status()==16); /* NACK retained after STOP/flag clear. */
  assert(tx15_controls_status==1 && bus_resets==resets);
  audio_mode=0;nack=0;tick=100;
  assert(!locked);
@@ -105,6 +107,7 @@ int main(void){
  assert(bus_resets==resets);
  locked=1;unsigned before_writes=writes;
  assert(tx15_controls_audio_write(0,1)<0 && writes==before_writes);locked=0;
+ assert(tx15_controls_audio_status()==0xffffffffu);
  return 0;
 }''',['hardware/tx15/board/control_decode.c'])
     def test_codec_steps_are_cooperative_muted_until_ready_and_abort_on_nack(self):
@@ -129,6 +132,7 @@ int tx15_controls_audio_write(unsigned reg,unsigned value){
  return 0;
 }
 int tx15_controls_audio_read(unsigned reg,uint8_t *value){(void)reg;if(failed)return -1;*value=0;return 0;}
+uint32_t tx15_controls_audio_status(void){return 0x10;}
 #include "hardware/tx15/board/audio.c"
 int main(void){
  assert(!tx15_audio_hw_init());assert(!writes && !started); /* Default off. */
@@ -154,9 +158,12 @@ int main(void){
  failed=1;assert(tx15_audio_hw_test(now));
  for(unsigned i=0;i<20;i++)tx15_audio_hw_poll(now++);
  assert(tx15_audio_report.state==TX15_AUDIO_ERROR && !current_reset);
+ assert(tx15_audio_report.reason==TX15_AUDIO_PROBE && tx15_audio_report.i2c_status==0x10);
+ assert(tx15_audio_report.last_reg==0);
  assert(tx15_audio_report.errors && resets);
  failed=0;clock_ready=0;assert(tx15_audio_hw_test(now));
  tx15_audio_hw_poll(now+501);
  assert(tx15_audio_report.state==TX15_AUDIO_ERROR && !current_reset);
+ assert(tx15_audio_report.reason==TX15_AUDIO_DEADLINE && tx15_audio_report.elapsed==501);
  return 0;
 }''',[])

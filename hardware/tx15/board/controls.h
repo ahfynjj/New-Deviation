@@ -21,4 +21,6 @@ void tx15_controls_poll(unsigned now);
  * One transaction, <=1ms deadline; never resets the input expanders/bus. */
 int tx15_controls_audio_write(unsigned reg,unsigned value);
 int tx15_controls_audio_read(unsigned reg,uint8_t *value);
+/* Last audio transaction status before flag clear; FFFFFFFF = not admitted. */
+uint32_t tx15_controls_audio_status(void);
 #endif

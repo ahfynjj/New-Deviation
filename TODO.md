@@ -1,7 +1,11 @@
 # New Deviation — TX15 原生移植工作状态
 
-更新：2026-10-16。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
+更新：2026-10-17。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
+
+## 2026-10-17 音频/内置存储实机失败，待 AUD1/STO1 快照
+
+用户报告音频Error、存储Error2，随后读数音频Tests0/DMA25/Errors9/Underruns0；存储Error0/HW0、CMD0、STA2000、RESP0、0MiB/Reads0，采集时机及状态名称未知。两项实机验收均未通过，根因未确认。已补故障原因/寄存器/清理前快照、耗时/轮询间隔，未改硬件参数/超时/协议，无存储写入；46项检查、148对象ARM及USB包验证通过。新候选 `local/tx15-usb-release/tx15-audio-storage-diag-20261017.ndu`，标记AUD1/STO1，待一次更新后各运行一次并拍完整页面；模型/校准仍在NOR。[诊断说明](docs/tx15/audio-storage-fault-capture-2026-10-17.md)。
 
 ## 2026-10-16 内置存储 S0 只读软件候选，待一次 USB 扫描
 

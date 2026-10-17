@@ -7,7 +7,7 @@
 #include "../../../hardware/tx15/board/audio.h"
 static guiLabel_t status,play,stop,quieter,louder;
 static unsigned refreshed;
-static char text[144];
+static char text[320];
 static const char *action_name(guiObject_t *obj,const void *data) {
     (void)obj;
     static const char *const names[]={"Play 300 ms","Stop","Volume -","Volume +"};
@@ -17,9 +17,13 @@ static const char *report(guiObject_t *obj,const void *data) {
     (void)obj;(void)data;
     static const char *const names[]={"Off","Starting","Configuring","Ready","Error"};
     unsigned s=tx15_audio_report.state;
-    snprintf(text,sizeof(text),"%s   Volume: %u/5\nTests: %u   DMA: %u\nErrors: %u   Underruns: %u",
-        s<5?names[s]:"Error",(unsigned)tx15_audio_report.volume,(unsigned)tx15_audio_report.tests,
-        (unsigned)tx15_audio_report.dma_irqs,(unsigned)tx15_audio_report.errors,(unsigned)tx15_audio_report.underruns);
+    snprintf(text,sizeof(text),"%s Reason:%u   Volume:%u/5\nTests:%u DMA:%u Errors:%u U:%u\nStep:%u Reg:%u Value:%02X\nI2C:%08X\nDmaFlags:%08X SPI:%08X\nInit:%ums Gap:%ums",
+        s<5?names[s]:"Error",(unsigned)tx15_audio_report.reason,(unsigned)tx15_audio_report.volume,
+        (unsigned)tx15_audio_report.tests,(unsigned)tx15_audio_report.dma_irqs,
+        (unsigned)tx15_audio_report.errors,(unsigned)tx15_audio_report.underruns,
+        (unsigned)tx15_audio_report.steps,(unsigned)tx15_audio_report.last_reg,(unsigned)tx15_audio_report.last_value,
+        (unsigned)tx15_audio_report.i2c_status,(unsigned)tx15_audio_report.dma_flags,(unsigned)tx15_audio_report.spi_status,
+        (unsigned)tx15_audio_report.elapsed,(unsigned)tx15_audio_report.max_gap);
     return text;
 }
 static void action(guiObject_t *obj,s8 press,const void *data) {
@@ -32,12 +36,12 @@ static void action(guiObject_t *obj,s8 press,const void *data) {
     GUI_Redraw((guiObject_t *)&status);
 }
 void PAGE_AudioTestInit(int page) {
-    (void)page;PAGE_SetModal(0);PAGE_ShowHeader("Audio test AUD0");
-    GUI_CreateLabelBox(&status,20,48,440,90,&LABEL_FONT,report,NULL,NULL);
-    GUI_CreateLabelBox(&play,20,150,210,36,&MENU_FONT,action_name,action,NULL);
-    GUI_CreateLabelBox(&stop,250,150,210,36,&MENU_FONT,action_name,action,(const void *)1);
-    GUI_CreateLabelBox(&quieter,20,210,210,36,&MENU_FONT,action_name,action,(const void *)2);
-    GUI_CreateLabelBox(&louder,250,210,210,36,&MENU_FONT,action_name,action,(const void *)3);
+    (void)page;PAGE_SetModal(0);PAGE_ShowHeader("Audio test AUD1");
+    GUI_CreateLabelBox(&status,20,44,440,145,&LABEL_FONT,report,NULL,NULL);
+    GUI_CreateLabelBox(&play,20,210,210,36,&MENU_FONT,action_name,action,NULL);
+    GUI_CreateLabelBox(&stop,250,210,210,36,&MENU_FONT,action_name,action,(const void *)1);
+    GUI_CreateLabelBox(&quieter,20,266,210,36,&MENU_FONT,action_name,action,(const void *)2);
+    GUI_CreateLabelBox(&louder,250,266,210,36,&MENU_FONT,action_name,action,(const void *)3);
     refreshed=CLOCK_getms();
 }
 void PAGE_AudioTestEvent(void) {

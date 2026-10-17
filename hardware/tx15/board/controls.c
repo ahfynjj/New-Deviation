@@ -15,6 +15,8 @@ struct tx15_controls tx15_controls;
 volatile uint32_t tx15_controls_status,tx15_controls_frames,tx15_controls_errors;
 volatile uint16_t tx15_controls_raw[2];
 static unsigned sampled,locked;
+static uint32_t audio_status;
+uint32_t tx15_controls_audio_status(void) {return audio_status;}
 static unsigned msec(void) {return TX15_READ32(0x2400e02cu);}
 static void modify(uint32_t a,uint32_t mask,uint32_t value) {
     TX15_WRITE32(a,(TX15_READ32(a)&~mask)|value);
@@ -57,7 +59,9 @@ failed:
     return -1;
 }
 static int audio_transfer(unsigned reg,unsigned *value,int read) {
+    audio_status=0xffffffffu; /* Not admitted: no audio transaction snapshot. */
     if(locked || tx15_controls_status!=1 || reg>127 || !(TX15_READ32(I2C)&1))return -1;
+    audio_status=TX15_READ32(I2C+0x18);
     locked=1;unsigned start=msec();uint32_t base=0x18u<<1;
     if(wait_bounded(1u<<15,0,start,1))goto failed_audio;
     TX15_WRITE32(I2C+0x1c,0x3f38);
@@ -74,8 +78,10 @@ static int audio_transfer(unsigned reg,unsigned *value,int read) {
         TX15_WRITE32(I2C+0x28,*value);
     }
     if(wait_bounded(32,32,start,1))goto failed_audio;
+    audio_status=TX15_READ32(I2C+0x18);
     TX15_WRITE32(I2C+0x1c,32);locked=0;return 0;
 failed_audio:
+    audio_status=TX15_READ32(I2C+0x18);
     modify(I2C+4,0,1u<<14);
     TX15_WRITE32(I2C+0x1c,0x3f38);locked=0;return -1;
 }

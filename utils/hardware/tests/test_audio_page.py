@@ -19,7 +19,7 @@ static void (*press_[4])(guiObject_t *,s8,const void *);
 static const void *data_[4];
 u32 CLOCK_getms(void){return 10;}
 u8 PAGE_SetModal(u8 m){return m;}
-void PAGE_ShowHeader(const char *s){assert(strstr(s,"AUD0"));}
+void PAGE_ShowHeader(const char *s){assert(strstr(s,"AUD1"));}
 void _GUI_Redraw(guiObject_t *o){(void)o;}
 int tx15_audio_hw_test(unsigned now){assert(now==10);played++;return 1;}
 void tx15_audio_hw_stop(void){stopped++;}
@@ -34,6 +34,8 @@ guiObject_t *GUI_CreateLabelBox(guiLabel_t *o,u16 x,u16 y,u16 w,u16 h,const stru
 #include "src/pages/320x240x16/audio_test_page.c"
 int main(void){
  tx15_audio_report.volume=3;PAGE_AudioTestInit(0);assert(actions==4);
+ tx15_audio_report.reason=TX15_AUDIO_WRITE;tx15_audio_report.last_reg=122;
+ assert(strstr(report(NULL,NULL),"Reason:6") && strstr(report(NULL,NULL),"Reg:122"));
  for(unsigned i=0;i<4;i++)press_[i](NULL,0,data_[i]);assert(!played && !stopped);
  press_[0](NULL,-1,data_[0]);assert(played==1);
  press_[1](NULL,-1,data_[1]);assert(stopped==1);

@@ -32,7 +32,8 @@ int nd_card_begin(struct nd_card *c,const struct nd_sd_ops *ops,void *ctx,uint32
     }
     c->active=1;
     if(ops->init(ctx)) {fail(c,ND_CARD_HW);return 0;}
-    c->report.state=ND_CARD_BUSY;c->phase=POWER;c->next=now+10;c->total_deadline=now+2000;return 1;
+    c->report.state=ND_CARD_BUSY;c->phase=POWER;c->next=now+10;c->total_deadline=now+2000;
+    c->started=c->last_poll=now;return 1;
 }
 static void command(struct nd_card *c,unsigned cmd,uint32_t arg,unsigned response,uint32_t now) {
     c->report.last_command=cmd;c->report.steps++;
@@ -89,6 +90,9 @@ static void response(struct nd_card *c,uint32_t r[4],uint32_t now) {
 }
 void nd_card_poll(struct nd_card *c,uint32_t now) {
     if(c->report.state!=ND_CARD_BUSY)return;
+    c->report.elapsed=now-c->started;
+    if(now-c->last_poll>c->report.max_gap)c->report.max_gap=now-c->last_poll;
+    c->last_poll=now;
     if((int32_t)(now-c->total_deadline)>=0) {fail(c,ND_CARD_TIMEOUT);return;}
     if(c->pending) {
         uint32_t r[4]={0};
