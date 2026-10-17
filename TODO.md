@@ -3,9 +3,11 @@
 更新：2026-10-17。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
-## 2026-10-17 STO2/AUD2 时钟和 I2C 修正版，待 USB 验证
+## 2026-10-17 STO2/AUD2 已识别存储并发声，音量待改善
 
-用户完整照片确认：存储CMD0/CPSMACT停滞，PLLCFGR01090898的PLL1Q输出未开启；旧驱动错误假设可对运行中的PLL1打开Q输出，ST LL手册要求PLL关闭。已改固定媒体PLL2 P/R，输出在PLL2停机时配置、NOR恢复后启用，音频退出不再关闭它，SD以PLL2R/246约399.61kHz运行，CPU/LCD不变。音频Step4/Reg10/I2C8001失败，复现旧毫秒量化使未满1ms事务超时的软件缺陷，改真实周期预算并处理冷启动DWT解锁；是否解释全部音频故障待实机。49项检查、149对象ARM、NDU/ABI/范围通过，包 `local/tx15-usb-release/tx15-media-clock-i2c-fix-20261017.ndu`。未访问设备，无介质写入/模型迁移/启动器更新。下一步一次USB更新后Scan和Play各一次，保留完整诊断。[修正说明](docs/tx15/media-clock-i2c-fix-2026-10-17.md)，[证据](docs/tx15/evidence/2026-10-17/media-clock-i2c-fix.json)。
+用户更新后确认“磁盘有了 声音也有了，但是声音非常的小”：记录介质识别及合成试听音发声基本通过，音量未通过，未给出实际容量/文件系统/音量档位。不扩大为WAV播放、文件写入/模型迁移或音频/RF并行通过。已核对试听版默认3/5、最大5仍有保守衰减；先可用Volume+到5重新试听，无需为此重新刷机。后续正式音量控制与有界目录/WAV文件读取仍待实现。[现场反馈](docs/tx15/evidence/2026-10-17/media-basic-user-acceptance.json)。
+
+用户完整照片确认：存储CMD0/CPSMACT停滞，PLLCFGR01090898的PLL1Q输出未开启；旧驱动错误假设可对运行中的PLL1打开Q输出，ST LL手册要求PLL关闭。已改固定媒体PLL2 P/R，输出在PLL2停机时配置、NOR恢复后启用，音频退出不再关闭它，SD以PLL2R/246约399.61kHz运行，CPU/LCD不变。音频Step4/Reg10/I2C8001失败，复现旧毫秒量化使未满1ms事务超时的软件缺陷，改真实周期预算并处理冷启动DWT解锁。49项检查、149对象ARM、NDU/ABI/范围通过，包 `local/tx15-usb-release/tx15-media-clock-i2c-fix-20261017.ndu`。软件批次未访问设备，无介质写入/模型迁移/启动器更新。后续用户实测结果见上，不再重复要求相同识别/发声测试。[修正说明](docs/tx15/media-clock-i2c-fix-2026-10-17.md)，[证据](docs/tx15/evidence/2026-10-17/media-clock-i2c-fix.json)。
 
 ## 2026-10-17 音频/内置存储实机失败，待 AUD1/STO1 快照（历史）
 

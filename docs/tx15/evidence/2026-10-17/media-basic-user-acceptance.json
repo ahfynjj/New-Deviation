@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "date": "2026-10-17",
+  "package": "local/tx15-usb-release/tx15-media-clock-i2c-fix-20261017.ndu",
+  "package_sha256": "ec5a8ae642ad79cd7f0650c12c1c04d1fc47c018c2a353277207337b3c571923",
+  "user_report": "磁盘有了 声音也有了，但是声音非常的小",
+  "source": "direct user feedback after STO2/AUD2 USB candidate",
+  "reported_pass": ["storage identification", "audible synthesized diagnostic tone"],
+  "remaining_issue": "tone volume is very low",
+  "volume_setting_reported": null,
+  "capacity_reported": null,
+  "filesystem_reported": null,
+  "not_proven": [
+    "directory listing or WAV file playback",
+    "medium write or model migration",
+    "audio loudness acceptance",
+    "RF/Lua/input coexistence under storage/audio load"
+  ],
+  "agent_device_accessed_this_turn": false,
+  "new_firmware_generated_this_turn": false
+}
