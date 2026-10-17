@@ -1,6 +1,7 @@
 # TX15 MAX native audio A0
 
-2026-10-16. Software candidate only; board audio and migrated Lua require user acceptance. No EdgeTX scheduler, mixer or audio framework is linked.
+Updated2026-10-17 AUD2. User AUD1 attempt failed at setup step4/register10 with I2C8001;
+audio has not passed hardware acceptance. No EdgeTX scheduler, mixer or audio framework is linked.
 
 ## Ownership and memory
 
@@ -23,11 +24,11 @@ Existing RF parameter cache (~32 KiB), libc arena (16 KiB), USB/app settings and
 
 - TAS2505 at 7-bit 0x18, reset PH10. Only speaker output in A0; headphone/Bluetooth/input pins are not configured.
 - I2S2/SPI2 AF5: PC6 MCLK, PI0 WS, PI1 BCLK, PI3 SDO. DMA1 Stream4, DMAMUX1 channel4 request40, IRQ15. SPI2 TXDR 16-bit transfers, two 512-frame stereo blocks (16 ms each).
-- PLL1/system clocks and LCD PLL3 remain untouched. PLL2 is reserved for audio: HSE48/M12*(98+2490/8192)/P8 =49.1519775 MHz. SPI123 selects PLL2P; I2S divides by6, MCLK≈8.192 MHz, Fs≈31999.985 Hz. This is a calculated rate, not a measured clock. Future SPI1/3 users must coordinate that shared selector.
+- PLL1/system clocks and LCD PLL3 remain untouched. Fixed media PLL2: HSE48/M12*(98+2490/8192)/P8 =49.1519775 MHz, and /R2=196.60791MHz for SDMMC. Configure both output gates while PLL2 is off, after NOR model/calibration restore; keep it on across audio/storage exit. SPI123 selects PLL2P; I2S divides by6, MCLK≈8.192 MHz, Fs≈31999.985 Hz. These rates are calculated, not measured. Future SPI1/3 users must coordinate the shared selector.
 - Codec uses MCLK directly with NDAC2, MDAC1, DOSR128, PRB_P3/RC4; 16-bit Philips I2S, left channel. Reference stabilization waits45ms, DAC soft-step waits10ms without blocking.
 - First test volume3/5; DAC -6dB, speaker amplifier +6dB, speaker attenuation28dB; synthetic signal peak8192/32768. Max test setting5 remains low gain. Volume0 mutes the speaker amplifier explicitly. No automatic audio event is enabled.
 
-I2C4/PD12,PD13 remains owned by controls.c. Codec requests use that driver's lock, only address0x18, one register operation per main-loop poll, <=1ms timer deadline and finite loop cap. No codec access in IRQ. NACK requests STOP and clears transfer flags; it does not reset I2C4 or PG10 expanders. Normal input recovery remains unchanged. The pre-existing input fault recovery can still reset the bus when the inputs themselves fail. A stuck shared wire can affect both clients; A0 does not claim physical fault immunity.
+I2C4/PD12,PD13 remains owned by controls.c. Codec requests use that driver's lock, only address0x18, one register operation per main-loop poll, actual128000-cycle/1ms deadline at fixed128MHz and finite loop cap. Unlike old tick subtraction, crossing a millisecond boundary does not expire a sub-ms transfer. DWT TRCENA/LSR/LAR/CYCCNTENA are prepared without resetting CYCCNT; the counter remains available to diagnostics. I2CFFFFFFFE means cycle timer unavailable, not a hardware ISR. No codec access in IRQ. NACK requests STOP and clears transfer flags; it does not reset I2C4 or PG10 expanders. Normal input recovery remains unchanged. The pre-existing input fault recovery can still reset the bus when the inputs themselves fail. A stuck shared wire can affect both clients; A0 does not claim physical fault immunity.
 
 DMA IRQ only copies a prepared block to the inactive half, or fills silence and counts underruns; generation/I2C stays in the main loop. DMA errors stop SPI and assert codec reset, then main-loop cleanup changes status to Error. Poll/IRQ cycle cost and RF interval remain hardware acceptance items. A0 emits a faded 1kHz triangle for300ms; this is a synthesized diagnostic, not WAV or a speech test.
 

@@ -23,11 +23,12 @@ void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #include "mix_switch.h"
 #ifdef TX15_AUDIO
 #include "../../../../../hardware/tx15/board/audio.h"
+#include "../../../../../hardware/tx15/board/media_clock.h"
 #endif
 #ifdef TX15_STORAGE
-const char DeviationVersion[33]="New Deviation TX15 STO1";
+const char DeviationVersion[33]="New Deviation TX15 STO2";
 #elif defined(TX15_AUDIO)
-const char DeviationVersion[33]="New Deviation TX15 AUD0";
+const char DeviationVersion[33]="New Deviation TX15 AUD2";
 #elif defined(TX15_STANDALONE)
 const char DeviationVersion[33]="New Deviation TX15 " TX15_MIX_SWITCH_BUILD;
 #else
@@ -53,6 +54,11 @@ void tx15_app_main(void) {
     GUI_HandleButtons(1); MIXER_Init(); PAGE_Init(); PAGE_ChangeByID(PAGEID_MAIN,0);
     tx15_mix_switch_init();
     GUI_DrawScreen();
+#ifdef TX15_AUDIO
+    /* Start media PLL only AFTER the NOR model/calibration restore, whose
+     * guard deliberately rejects a PLL while it is still locking. */
+    (void)tx15_media_clock_init();
+#endif
 #ifdef TX15_ELRS_RC
     tx15_rf_model_start(CLOCK_getms());
 #endif

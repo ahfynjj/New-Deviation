@@ -3,7 +3,11 @@
 更新：2026-10-17。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
-## 2026-10-17 音频/内置存储实机失败，待 AUD1/STO1 快照
+## 2026-10-17 STO2/AUD2 时钟和 I2C 修正版，待 USB 验证
+
+用户完整照片确认：存储CMD0/CPSMACT停滞，PLLCFGR01090898的PLL1Q输出未开启；旧驱动错误假设可对运行中的PLL1打开Q输出，ST LL手册要求PLL关闭。已改固定媒体PLL2 P/R，输出在PLL2停机时配置、NOR恢复后启用，音频退出不再关闭它，SD以PLL2R/246约399.61kHz运行，CPU/LCD不变。音频Step4/Reg10/I2C8001失败，复现旧毫秒量化使未满1ms事务超时的软件缺陷，改真实周期预算并处理冷启动DWT解锁；是否解释全部音频故障待实机。49项检查、149对象ARM、NDU/ABI/范围通过，包 `local/tx15-usb-release/tx15-media-clock-i2c-fix-20261017.ndu`。未访问设备，无介质写入/模型迁移/启动器更新。下一步一次USB更新后Scan和Play各一次，保留完整诊断。[修正说明](docs/tx15/media-clock-i2c-fix-2026-10-17.md)，[证据](docs/tx15/evidence/2026-10-17/media-clock-i2c-fix.json)。
+
+## 2026-10-17 音频/内置存储实机失败，待 AUD1/STO1 快照（历史）
 
 用户报告音频Error、存储Error2，随后读数音频Tests0/DMA25/Errors9/Underruns0；存储Error0/HW0、CMD0、STA2000、RESP0、0MiB/Reads0，采集时机及状态名称未知。两项实机验收均未通过，根因未确认。已补故障原因/寄存器/清理前快照、耗时/轮询间隔，未改硬件参数/超时/协议，无存储写入；46项检查、148对象ARM及USB包验证通过。新候选 `local/tx15-usb-release/tx15-audio-storage-diag-20261017.ndu`，标记AUD1/STO1，待一次更新后各运行一次并拍完整页面；模型/校准仍在NOR。[诊断说明](docs/tx15/audio-storage-fault-capture-2026-10-17.md)。
 

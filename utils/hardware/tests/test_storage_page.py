@@ -22,7 +22,7 @@ static void (*press_[2])(guiObject_t *,s8,const void *);
 static const void *data_[2];
 u32 CLOCK_getms(void){return now;}
 u8 PAGE_SetModal(u8 m){return m;}
-void PAGE_ShowHeader(const char *s){assert(strstr(s,"STO1"));}
+void PAGE_ShowHeader(const char *s){assert(strstr(s,"STO2"));}
 void _GUI_Redraw(guiObject_t *o){(void)o;redraws++;}
 void tx15_storage_scan(unsigned n){assert(n==now);scanned++;}
 void tx15_storage_stop(void){stopped++;}

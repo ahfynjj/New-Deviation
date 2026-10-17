@@ -26,10 +26,12 @@ static uint32_t *word(uint32_t a){assert(a>=TX15_AUDIO_PCM_BASE && a<TX15_AUDIO_
 #define TX15_WRITE32(a,v) wr(a,v)
 #define TX15_AUDIO_WORD(a) (*word(a))
 #define TX15_AUDIO_BARRIER() ((void)0)
+#include "hardware/tx15/board/media_clock.c"
 #include "hardware/tx15/board/audio_transport.c"
 int main(void){
  *reg(0x58024400)=0x33030005; /* PLL1 and LCD PLL3 in use. */
  *reg(0x58024428)=0x00c000c2;
+ *reg(0x58024410)=0x1b;*reg(0x58024418)=0x48;*reg(0x58024430)=0x0101023f;
  *reg(0x5802442c)=0x01010808;
  assert(!tx15_audio_transport_init());assert(tx15_audio_transport_ready()==1);
  assert((rd(0x58024428)&0x3f00000)==0xc00000); /* LCD M3 unchanged. */
@@ -55,7 +57,8 @@ int main(void){
  assert(tx15_audio_report.errors && tx15_audio_transport_ready()<0);
  assert(tx15_audio_report.reason==TX15_AUDIO_DMA && tx15_audio_report.dma_flags==8);
  tx15_audio_transport_stop();assert(!(rd(0x40020070)&1));
- assert((rd(0x58024400)&0x3f000000)==0x33000000);
+ assert((rd(0x58024400)&0x3f000000)==0x3f000000); /* Media clock survives Audio stop. */
+ assert(tx15_media_clock_ready()==1);
  return 0;
 }''',[])
     def test_shared_bus_audio_nack_is_bounded_and_controls_still_sample(self):
@@ -64,6 +67,8 @@ int main(void){
 #include <stdint.h>
 static unsigned tick,phase,index_,addr,count,read_mode,nack,writes,bus_resets,audio_mode;
 static uint32_t regs_[128],cr2;
+static unsigned cycles;
+#define TX15_AUDIO_CYCLES() (cycles+=128)
 static uint32_t rd(uint32_t a){
  if(a==0x2400e02c)return tick;
  if(a==0x58024400)return 5;

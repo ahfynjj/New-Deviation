@@ -34,7 +34,7 @@ static void action(guiObject_t *obj,s8 press,const void *data) {
     GUI_Redraw((guiObject_t *)&status);
 }
 void PAGE_StorageTestInit(int page) {
-    (void)page;PAGE_SetModal(0);PAGE_ShowHeader("Storage test STO1");
+    (void)page;PAGE_SetModal(0);PAGE_ShowHeader("Storage test STO2");
     GUI_CreateLabelBox(&status,20,44,440,174,&LABEL_FONT,report,NULL,NULL);
     GUI_CreateLabelBox(&scan,20,240,210,36,&MENU_FONT,action_name,action,NULL);
     GUI_CreateLabelBox(&cancel,250,240,210,36,&MENU_FONT,action_name,action,(const void *)1);

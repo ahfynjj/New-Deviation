@@ -1,6 +1,12 @@
 # TX15 internal storage S0 ownership
 
-2026-10-16. Native Deviation implementation; no EdgeTX runtime, HAL or filesystem imported.
+Updated2026-10-17 STO2. Native Deviation implementation; no EdgeTX runtime, HAL or filesystem imported.
+
+The original S0 live PLL1Q gate assumption was incorrect. The STO1 photo shows
+PLLCFGR01090898 (DIVQ1EN0) and CMD0/CPSMACT stuck. ST's
+[LL RCC v1.11.2](https://github.com/STMicroelectronics/stm32h7xx-hal-driver/blob/v1.11.2/Inc/stm32h7xx_ll_rcc.h)
+requires PLL1 disabled when enabling Q. The test previously failed to model this write protection.
+Do not use the earlier PLL1Q notes as a valid implementation contract.
 
 ## Fixed reference and probe scope
 
@@ -24,18 +30,22 @@ The implementation is independent MMIO C, using these only as hardware reference
 - `TX15_STORAGE=1` requires native standalone ELRS product and the audio D2 memory contract.
   It is opt-in; ordinary builds do not enable the controller.
 - Manual MAIN MENU → Storage test → Scan only. No boot probe and no automatic retry.
-- PLL1 factors and CPU128MHz are unchanged. Temporarily enable the existing PLL1Q output
-  (128MHz), select it for SDMMC, divide by320 to400kHz. Audio retains independent PLL2;
-  LCD retains PLL3. Preserve/restore only the SDMMC selector and PLL1Q gate owned by the scan.
+- PLL1 and CPU128MHz remain untouched, including its output gates. Fixed application-owned
+  PLL2 provides P49.15198MHz for audio and R196.60791MHz for SDMMC; both outputs are enabled
+  while PLL2 is OFF. SDMMC divider246 gives399.61kHz. The clock is prepared after NOR restore
+  and remains on across page exits; audio stop cannot remove storage clock. LCD retains PLL3.
+  Scan preserves/restores only the SDMMC selector and its own peripheral/pin configuration.
 - Refuse existing SDMMC1/2 use, SDMMC1 IRQ49 enabled, unexpected PLL1/clock profile,
-  enabled MPU/caches or unsuitable DMA address. Leave controller IRQ masked.
+  enabled MPU/caches or unsuitable DMA address. Require media clock ready or return HW2.
+  Leave controller IRQ masked; do not wait for PLL lock in the storage driver.
 - Use SDMMC1's own single-buffer IDMA, not DMA1/DMAMUX/audio stream. Private512B buffer
   aligned32 in DMA-accessible AXI SRAM; never in DTCM. Native caches/MPU remain disabled.
 - Configure1-bit bus,3.3V, CMD/clock and data pins; save/restore only owned pin masks.
   GPIOC/D shared clocks remain on. Reset/power-down SDMMC1 and release its bus clock on exit.
 - Scan success, error, deadline, Stop, page exit and shutdown all release the controller.
-  Shutdown stops storage **before** the existing NOR model/calibration save because its
-  clock guard expects PLL1Q restored. NOR layout and record format remain unchanged.
+  Shutdown stops storage **before** the existing NOR model/calibration save. PLL1 stays
+  compatible with the NOR guard throughout; ready PLL2 is already accepted by that guard.
+  NOR layout and record format remain unchanged.
 
 ## Protocol and deadlines
 

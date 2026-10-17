@@ -33,6 +33,29 @@ static int wait_bounded(uint32_t mask,uint32_t expected,unsigned start,unsigned 
 static int wait_status(uint32_t mask,uint32_t expected,unsigned start) {
     return wait_bounded(mask,expected,start,3);
 }
+#ifndef TX15_AUDIO_CYCLES
+#define TX15_AUDIO_CYCLES() TX15_READ32(0xe0001004u)
+static int audio_clock_start(void) {
+    /* Do not reset CYCCNT: another diagnostic may already be using it. */
+    modify(0xe000edfcu,0,1u<<24);
+    /* Cortex-M7 DWT can be locked after cold boot without a debugger. */
+    if((TX15_READ32(0xe0001fb4u)&3u)==3u)TX15_WRITE32(0xe0001fb0u,0xc5acce55u);
+    if(TX15_READ32(0xe0001000u)&(1u<<25))return -1;
+    modify(0xe0001000u,0,1);
+    return (TX15_READ32(0xe0001000u)&1)?0:-1;
+}
+#else
+static int audio_clock_start(void) {return 0;}
+#endif
+static int wait_audio(uint32_t mask,uint32_t expected,uint32_t start) {
+    for(unsigned n=0;n<20000;n++) {
+        uint32_t status=TX15_READ32(I2C+0x18);
+        if(status&0x3710u)return -1;
+        if((status&mask)==expected)return 0;
+        if((uint32_t)(TX15_AUDIO_CYCLES()-start)>=128000u)break;
+    }
+    return -1;
+}
 static int read_port(unsigned address,uint16_t *value) {
     if(locked)return -1;
     locked=1;
@@ -61,23 +84,24 @@ failed:
 static int audio_transfer(unsigned reg,unsigned *value,int read) {
     audio_status=0xffffffffu; /* Not admitted: no audio transaction snapshot. */
     if(locked || tx15_controls_status!=1 || reg>127 || !(TX15_READ32(I2C)&1))return -1;
+    if(audio_clock_start()) {audio_status=0xfffffffeu;return -1;}
     audio_status=TX15_READ32(I2C+0x18);
-    locked=1;unsigned start=msec();uint32_t base=0x18u<<1;
-    if(wait_bounded(1u<<15,0,start,1))goto failed_audio;
+    locked=1;uint32_t start=TX15_AUDIO_CYCLES(),base=0x18u<<1;
+    if(wait_audio(1u<<15,0,start))goto failed_audio;
     TX15_WRITE32(I2C+0x1c,0x3f38);
     TX15_WRITE32(I2C+4,base|((read?1u:2u)<<16)|(read?0:1u<<25)|(1u<<13));
-    if(wait_bounded(2,2,start,1))goto failed_audio;
+    if(wait_audio(2,2,start))goto failed_audio;
     TX15_WRITE32(I2C+0x28,reg);
     if(read) {
-        if(wait_bounded(64,64,start,1))goto failed_audio;
+        if(wait_audio(64,64,start))goto failed_audio;
         TX15_WRITE32(I2C+4,base|(1u<<10)|(1u<<16)|(1u<<25)|(1u<<13));
-        if(wait_bounded(4,4,start,1))goto failed_audio;
+        if(wait_audio(4,4,start))goto failed_audio;
         *value=TX15_READ32(I2C+0x24)&255;
     } else {
-        if(wait_bounded(2,2,start,1))goto failed_audio;
+        if(wait_audio(2,2,start))goto failed_audio;
         TX15_WRITE32(I2C+0x28,*value);
     }
-    if(wait_bounded(32,32,start,1))goto failed_audio;
+    if(wait_audio(32,32,start))goto failed_audio;
     audio_status=TX15_READ32(I2C+0x18);
     TX15_WRITE32(I2C+0x1c,32);locked=0;return 0;
 failed_audio:

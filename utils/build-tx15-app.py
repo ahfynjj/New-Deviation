@@ -73,7 +73,7 @@ sources.append(generate(root,out))
 sources += [root/'hardware/tx15/board'/n for n in ('display.c','inputs.c','input_filter.c','analog.c','battery.c','rf_uart.c','controls.c','control_decode.c','settings_store.c','settings_nor.c','rf_external.c')]
 sources.append(root/'hardware/tx15/app/startup.S')
 if audio:
- sources += [root/'hardware/tx15/board'/n for n in ('audio_memory.c','audio.c','audio_transport.c')]
+ sources += [root/'hardware/tx15/board'/n for n in ('audio_memory.c','audio.c','audio_transport.c','media_clock.c')]
  # Portable A1 core is cross-compiled but not activated in the AUD0 product.
  # Unreferenced sections are removed by the existing linker GC.
  sources += sorted((root/'src/audio').glob('*.c'))

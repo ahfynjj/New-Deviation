@@ -15,7 +15,7 @@ static uint32_t rd(uint32_t a){return *reg(a);}
 static void wr(uint32_t a,uint32_t v){
  assert(a!=0x58024400 && a!=0x58024428 && a!=0x58024430 && a!=0x58024438 && a!=0x58024440);
  assert(a<0x58001c00 || a>0x58001c28);assert(a!=0x52007080); /* No I2C or SD TX FIFO. */
- if(a==0x5802442c)assert(((v^rd(a))&~(1u<<17))==0);
+ assert(a!=0x5802442c); /* PLL1 output gates cannot be changed while running. */
  if(a==0x52007038)*reg(0x52007034)&=~v;
  *reg(a)=v;
 }
@@ -23,18 +23,20 @@ static void wr(uint32_t a,uint32_t v){
 #define TX15_WRITE32(a,v) wr(a,v)
 #define TX15_STORAGE_DMA_ADDRESS(p) ((uint32_t)0x24050000u)
 #define TX15_STORAGE_BARRIER() ((void)0)
+static int media_ready=1;
+int tx15_media_clock_ready(void){return media_ready;}
 #include "hardware/tx15/board/storage.c"
 int main(void){
  *reg(0x58024400)=0x3f030005;*reg(0x58024410)=0x1b;
  *reg(0x58024418)=0x48;*reg(0x58024428)=0x00c0c0c2; /* Audio M2/LCD M3 in use. */
- *reg(0x58024430)=0x0101023f;*reg(0x5802442c)=0x01090898;
+ *reg(0x58024430)=0x0101023f;*reg(0x5802442c)=0x01290898;
  *reg(0x5802444c)=1u<<16;
  *reg(0x58020800)=0xaaaaaaaa;*reg(0x58020824)=0x87654321;
  *reg(0x58020c00)=0x55555555;*reg(0x58020c20)=0x12345678;
  uint32_t cfg=rd(0x5802442c),c_mode=rd(0x58020800),c_af=rd(0x58020824),d_mode=rd(0x58020c00),d_af=rd(0x58020c20);
  const struct nd_sd_ops *o=&tx15_storage_ops;
- assert(!o->init(NULL));assert(rd(0x52007004)==160 && rd(0x52007000)==3);
- assert((rd(0x5802442c)&(1u<<17)) && !(rd(0x5802444c)&(1u<<16)));
+ assert(!o->init(NULL));assert(rd(0x52007004)==246 && rd(0x52007000)==3);
+ assert(!(rd(0x5802442c)&(1u<<17)) && (rd(0x5802444c)&(1u<<16)));
  unsigned n=used;assert(o->command(NULL,24,0,ND_SD_SHORT)<0 && used==n);
  assert(!o->command(NULL,8,0x1aa,ND_SD_SHORT));assert(rd(0x5200700c)==0x1108);
  uint32_t response[4];assert(!o->response(NULL,response)); /* No busy wait. */
@@ -59,14 +61,15 @@ int main(void){
  *reg(0x52007034)=0x2000;
  o->stop(NULL);
  assert(tx15_storage_hw_report.status==0x2000);
- assert(tx15_storage_hw_report.clkcr==160 && tx15_storage_hw_report.power==3);
- assert(tx15_storage_hw_report.pllcfgr & (1u<<17));
- assert(!tx15_storage_hw_report.selector && tx15_storage_hw_report.cmd==0x1151);
+ assert(tx15_storage_hw_report.clkcr==246 && tx15_storage_hw_report.power==3);
+ assert(tx15_storage_hw_report.pllcfgr & (1u<<21));
+ assert(tx15_storage_hw_report.selector==(1u<<16) && tx15_storage_hw_report.cmd==0x1151);
  assert(rd(0x5802442c)==cfg && rd(0x5802444c)==(1u<<16));
  assert(rd(0x58020800)==c_mode && rd(0x58020824)==c_af && rd(0x58020c00)==d_mode && rd(0x58020c20)==d_af);
  assert(!(rd(0x580244d4)&(1u<<16)) && !rd(0x52007050));
  /* A live second SDMMC consumer prevents taking the shared kernel selector. */
  *reg(0x580244dc)=1u<<9;assert(o->init(NULL)<0);*reg(0x580244dc)=0;
+ media_ready=0;assert(o->init(NULL)<0 && tx15_storage_hw_report.reason==2);media_ready=1;
  assert(!o->init(NULL));assert(o->read_start(NULL,0x800000,0)<0);o->stop(NULL);
  /* Terminal CMD17 errors must survive W1C and release, even in read phase. */
  for(unsigned flag=1;flag<=4;flag*=4){

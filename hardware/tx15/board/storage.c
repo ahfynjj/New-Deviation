@@ -2,6 +2,7 @@
  * ST stm32h750xx.h and ST HAL SD v1.11.2 register/sequence facts;
  * target pin reference in storage-notes.md. GPL-3.0-or-later. */
 #include "storage.h"
+#include "media_clock.h"
 #ifndef TX15_READ32
 #define TX15_READ32(a) (*(volatile uint32_t *)(a))
 #define TX15_WRITE32(a,v) (*(volatile uint32_t *)(a)=(v))
@@ -20,7 +21,7 @@
 #define DATA_FLAGS 0x18000f3au
 static uint32_t dma_buffer[128] __attribute__((aligned(32)));
 static unsigned owned,command_pending,read_pending,last_command,response_kind;
-static uint32_t saved_q,saved_selector,c_gpio[5],d_gpio[5];
+static uint32_t saved_selector,c_gpio[5],d_gpio[5];
 volatile struct tx15_storage_hw_report tx15_storage_hw_report;
 static void snapshot(void) {
     tx15_storage_hw_report.status=R(SD+0x34);
@@ -55,7 +56,7 @@ static void stop(void *ctx) {
     modify(RCC+0xd4,1u<<16,0);(void)R(RCC+0xd4);
     pins(0x58020800u,8,12,c_gpio,1);pins(0x58020c00u,2,2,d_gpio,1);
     modify(RCC+0x4c,1u<<16,saved_selector);
-    modify(RCC+0x2c,1u<<17,saved_q);TX15_STORAGE_BARRIER();
+    TX15_STORAGE_BARRIER();
     owned=command_pending=read_pending=0;
 }
 static int init(void *ctx) {
@@ -73,16 +74,16 @@ static int init(void *ctx) {
        || (R(RCC+0x7c)&(1u<<16)) || (R(0xe000e104u)&(1u<<17))) {
         tx15_storage_hw_report.reason=1;return -1;
     }
-    saved_q=R(RCC+0x2c)&(1u<<17);saved_selector=R(RCC+0x4c)&(1u<<16);
+    if(tx15_media_clock_ready()!=1) {tx15_storage_hw_report.reason=2;return -1;}
+    saved_selector=R(RCC+0x4c)&(1u<<16);
     modify(RCC+0xe0,0,12);(void)R(RCC+0xe0);
     pins(0x58020800u,8,12,c_gpio,0);pins(0x58020c00u,2,2,d_gpio,0);
-    /* Gate existing PLL1Q=128MHz; do not modify running PLL factors.
-     * LCD uses PLL3, audio uses PLL2, both remain untouched. */
-    modify(RCC+0x2c,0,1u<<17);modify(RCC+0x4c,1u<<16,0);
+    /* Fixed media PLL2R is already enabled; never modify running PLL1. */
+    modify(RCC+0x4c,1u<<16,1u<<16);
     modify(RCC+0xd4,0,1u<<16);(void)R(RCC+0xd4);
     modify(RCC+0x7c,0,1u<<16);modify(RCC+0x7c,1u<<16,0);
     W(SD+0x3c,0);W(SD+0x50,0);W(SD+0x2c,0);W(SD+0xc,0);
-    W(SD+0x38,CMD_FLAGS|DATA_FLAGS);W(SD+4,160);W(SD,3);
+    W(SD+0x38,CMD_FLAGS|DATA_FLAGS);W(SD+4,TX15_MEDIA_SD_DIVIDER);W(SD,3);
     owned=1;command_pending=read_pending=0;return 0;
 }
 static int allowed(unsigned cmd,unsigned kind) {

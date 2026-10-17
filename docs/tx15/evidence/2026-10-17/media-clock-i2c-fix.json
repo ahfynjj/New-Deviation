@@ -1,0 +1,123 @@
+{
+  "schema": 1,
+  "date": "2026-10-17",
+  "base": "a2627411",
+  "status": "software-fixes-hardware-pending",
+  "photos": [
+    {
+      "file": "IMG_4992.JPG",
+      "sha256": "a7b892cb7818e3c4831ae7fa66d90bf4d510b06fe64055599687668800349936"
+    },
+    {
+      "file": "IMG_4993.JPG",
+      "sha256": "9d053f81517db40ea992d87682b7f1df4e95e440678a45f34f81f42e3a37abfc"
+    }
+  ],
+  "observed": {
+    "audio": {
+      "reason": 6,
+      "step": 4,
+      "register": 10,
+      "value": 0,
+      "i2c": "00008001",
+      "tests": 0,
+      "dma": 3,
+      "errors": 1,
+      "underruns": 0,
+      "init_ms": 281,
+      "max_gap_ms": 16
+    },
+    "storage": {
+      "error": 2,
+      "hw": 0,
+      "cmd": 0,
+      "sta": "00002000",
+      "resp": "00000000",
+      "elapsed_ms": 282,
+      "max_gap_ms": 142,
+      "clkcr": "000000A0",
+      "power": 3,
+      "pllcfgr": "01090898",
+      "selector": 0,
+      "cmdr": "00001000",
+      "reads": 0
+    }
+  },
+  "findings": [
+    {
+      "issue": "PLL1Q gate live write is protected",
+      "evidence": "photo bit17 is0; ST LL_RCC_PLL1Q_Enable requires PLL1 off",
+      "fix": "fixed PLL2 P/R outputs enabled before PLL2 starts; start after NOR restore; retain across page exits"
+    },
+    {
+      "issue": "millisecond tick quantization causes premature audio I2C timeout",
+      "evidence": "failing fake-hardware regression: sub-ms transfer crosses tick and fails",
+      "fix": "true128000-cycle1ms DWT budget; no retry/bus reset",
+      "hardware_causation": "candidate; requires validation"
+    }
+  ],
+  "tests": {
+    "total": 49,
+    "seconds": 30.142,
+    "result": "OK",
+    "new_tests": 3,
+    "command": "python -m unittest test_media_clock test_audio_deadline test_storage_page test_storage_hw test_storage_card test_storage_volume test_audio_wav test_audio_pcm test_audio_queue test_audio_page test_audio_memory test_audio_hw test_settings_store test_lua_runtime test_source_capture test_switch_capture test_input_dashboard test_controls test_switch_upgrade test_calibration_snapshot test_rf_model test_usb_update_package",
+    "red_green_observed": true
+  },
+  "arm_objects": 149,
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "da73e2300c4ad84226c9141c4155555d0e2a02a525b144402b86f62f443d1636",
+    "payload_sha256": "51718bc3d01f2f8a5fe7fa09566b42732fd668cbb944f25fd915134533c7b428",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true
+  },
+  "package": {
+    "file": "local/tx15-usb-release/tx15-media-clock-i2c-fix-20261017.ndu",
+    "bytes": 708752,
+    "image_bytes": 708624,
+    "crc32": "0x97153e90",
+    "sha256": "ec5a8ae642ad79cd7f0650c12c1c04d1fc47c018c2a353277207337b3c571923",
+    "minimum_boot_api": 1,
+    "settings_abi": 1
+  },
+  "memory": {
+    "bss_end": "0x24056258",
+    "stack_bottom": "0x2407c000",
+    "margin_bytes": 155048,
+    "stack_bytes": 16384
+  },
+  "media_clock": {
+    "pll2p_hz": 49151977.5390625,
+    "pll2r_hz": 196607910.15625,
+    "sd_divider": 246,
+    "sd_bus_hz": 399609.573488313,
+    "lifetime": "from application startup after NOR restore to power loss",
+    "pll1_pll3_unchanged": true
+  },
+  "review": {
+    "finding": "cold M7 DWT may be locked",
+    "fix": "guarded LSR/LAR unlock; no CYCCNT reset; failing regression then pass",
+    "remaining_important": 0
+  },
+  "unchanged": [
+    "audio codec register sequence",
+    "500ms audio initialization deadline",
+    "2s storage deadline",
+    "SD read-only command whitelist",
+    "bootloader",
+    "NOR model/calibration records",
+    "settings ABI"
+  ],
+  "rollback": {
+    "file": "local/tx15-usb-release/tx15-audio-storage-diag-20261017.ndu",
+    "unchanged": true
+  },
+  "device_accessed": false,
+  "flash_written": false,
+  "medium_written": false,
+  "hardware_acceptance": null
+}

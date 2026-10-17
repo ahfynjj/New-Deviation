@@ -4,6 +4,7 @@
  * GPL-3.0-or-later. */
 #include "audio.h"
 #include "audio_memory.h"
+#include "media_clock.h"
 #ifndef TX15_READ32
 #define TX15_READ32(a) (*(volatile uint32_t *)(a))
 #define TX15_WRITE32(a,v) (*(volatile uint32_t *)(a)=(v))
@@ -35,21 +36,16 @@ void tx15_audio_reset_pin(unsigned high) {
     modify(0x58021c00u,3u<<20,1u<<20);
 }
 int tx15_audio_transport_init(void) {
-    /* Refuse to take a live PLL2, SPI2 or stream from another owner. */
-    if(owned || (R(RCC)&0x0c000000u) || (R(RCC+0xe8)&0x4000u)
+    /* PLL2 belongs to the fixed media clock; refuse a live SPI2 or DMA stream. */
+    if(owned || (R(RCC+0xe8)&0x4000u)
        || (R(DMA)&1) || (R(0xe000ed14u)&0x30000u) || (R(0xe000ed94u)&1))return -1;
+    if(tx15_media_clock_init())return -1;
     owned=1;configured=running=fault=0;remaining=0;ready[0]=ready[1]=0;
-    /* HSE48/M12 * (98+2490/8192) / P8 = 49.1519775MHz.
-     * MCLK = kernel/6 = 8.191996MHz; Fs=MCLK/256=31999.985Hz. */
-    modify(RCC+0x28,0x3f000u,12u<<12);
-    modify(RCC+0x2c,0x3800f0u,0x80080u);
-    W(RCC+0x38,(1u<<24)|(1u<<16)|(7u<<9)|97u);
-    W(RCC+0x3c,2490u<<3);modify(RCC+0x2c,0,1u<<4);
-    modify(RCC,0,1u<<26);return 0;
+    return 0;
 }
 int tx15_audio_transport_ready(void) {
     if(!owned || fault)return -1;
-    if(!(R(RCC)&(1u<<27)))return 0;
+    int clock=tx15_media_clock_ready();if(clock!=1)return clock;
     if(configured)return 1;
     modify(RCC+0x50,7u<<12,1u<<12); /* SPI123 kernel = PLL2P. */
     modify(RCC+0xe0,0,(1u<<2)|(1u<<8));(void)R(RCC+0xe0);
@@ -129,5 +125,5 @@ void tx15_audio_transport_stop(void) {
         W(0x4002000cu,0x3d);W(0xe000e280u,1u<<15);
         modify(RCC+0xe8,1u<<14,0);
     }
-    modify(RCC,1u<<26,0);configured=owned=0;ready[0]=ready[1]=remaining=0;
+    configured=owned=0;ready[0]=ready[1]=remaining=0;
 }

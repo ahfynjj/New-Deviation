@@ -36,7 +36,7 @@ static void action(guiObject_t *obj,s8 press,const void *data) {
     GUI_Redraw((guiObject_t *)&status);
 }
 void PAGE_AudioTestInit(int page) {
-    (void)page;PAGE_SetModal(0);PAGE_ShowHeader("Audio test AUD1");
+    (void)page;PAGE_SetModal(0);PAGE_ShowHeader("Audio test AUD2");
     GUI_CreateLabelBox(&status,20,44,440,145,&LABEL_FONT,report,NULL,NULL);
     GUI_CreateLabelBox(&play,20,210,210,36,&MENU_FONT,action_name,action,NULL);
     GUI_CreateLabelBox(&stop,250,210,210,36,&MENU_FONT,action_name,action,(const void *)1);
