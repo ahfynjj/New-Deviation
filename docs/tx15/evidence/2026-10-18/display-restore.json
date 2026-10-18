@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "base": "e73abb88",
+  "status": "performance-regression-mitigation-hardware-pending",
+  "av03_user_report": "感觉系统变得非常得卡顿",
+  "av03_performance_acceptance": "failed",
+  "specific_runtime_cost_measured": false,
+  "change": "disable optional buffered-display path; retain AUD3 attenuation and fixed media clock",
+  "tests": {
+    "total": 15,
+    "seconds": 14.14,
+    "result": "OK",
+    "command": "python -m unittest test_app_adapter test_audio_hw test_audio_page test_usb_update_package test_settings_store test_lua_runtime test_rf_model test_media_clock test_audio_deadline"
+  },
+  "arm_objects": 149,
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "73a16a7a9eeb6566c0262ab20f8791e85bbb43a6fc1250a8ac8baa16a3ec9d7e",
+    "payload_sha256": "1ddf46f870968e53ffeebb11f3c5ae1356af1ff85102d3de0bde741fad98ea96",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false
+  },
+  "package": {
+    "file": "local/tx15-usb-release/tx15-display-restore-20261018.ndu",
+    "bytes": 708752,
+    "image_bytes": 708624,
+    "crc32": "0xf183b88c",
+    "sha256": "a5732807730fc9acc9e938727b3f857561aff8bfb837003cf4ade96081176e29",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "symbol_check": {
+    "defined_tx15_display_buffer_symbols": 0,
+    "result": "OK"
+  },
+  "memory": {
+    "bss_end": "0x24056258",
+    "stack_bottom": "0x2407c000",
+    "margin_bytes": 155048,
+    "stack_bytes": 16384,
+    "runtime_shadow_staging_reuse": false
+  },
+  "unchanged": [
+    "AUD3 volume table",
+    "PLL2 media clock/I2C cycle timing",
+    "model/calibration records",
+    "bootloader",
+    "SD read-only commands",
+    "LTDC/backlight/panel configuration"
+  ],
+  "remaining": [
+    "original local redraw flicker",
+    "on-device timing measurements before further display optimization",
+    "hardware confirmation that responsiveness recovered"
+  ],
+  "agent_device_accessed": false,
+  "flash_written": false,
+  "medium_written": false,
+  "av04_hardware_acceptance": null
+}

@@ -3,7 +3,11 @@
 更新：2026-10-18。仓库：[ahfynjj/New-Deviation](https://github.com/ahfynjj/New-Deviation)。本地：`D:\DEVI移植\deviation`。
 `origin` 为 New Deviation，`upstream` 为 DeviationTX；当前开发分支 `dev/tx15-hardware-bringup`，主分支 `main`。
 
-## 2026-10-18 AV03 音量和变化区域闪烁修正版，待验收
+## 2026-10-18 AV04 撤回显示优化，优先恢复操作响应
+
+用户反馈AV03“感觉系统变得非常得卡顿”，该显示方案性能验收失败，不再作为推荐版本。生成关闭TX15_BUFFERED_DISPLAY的AV04，恢复原GUI/Lua直接绘制，不链接后台缓存/额外复制/显示服务回调，保留AUD3音量与媒体时钟/存储/模型/校准。局部闪烁本轮退回更新前状态，后续必须先取得实机绘制/提交/主循环耗时，再验证加速方案，不能以主机测试代替性能验收。新候选 `local/tx15-usb-release/tx15-display-restore-20261018.ndu`，待一次菜单/输入响应比较。[恢复说明](docs/tx15/display-restore-2026-10-18.md)。
+
+## 2026-10-18 AV03 音量和变化区域闪烁修正版（已报告卡顿，不推荐）
 
 用户确认最大5仍很小，变化区域持续可见闪烁。本版放开试听档位的额外衰减（默认约减少16dB、最大减少20dB），保留静音、DAC/功放增益和测试波形。现有重绘直接擦写扫描缓冲，改为在已过期boot staging中合成，再在GUI/Lua帧结束复制完成的脏区；每512像素操作服务运行任务，不改LTDC/背光/时钟/启动器。它不是VSYNC换帧，仍可能有撕裂，未宣称实机解决。USB候选 `local/tx15-usb-release/tx15-audio-display-fix-20261018.ndu`，About AV03/Audio AUD3；模型/校准和存储只读边界不变，待一次合并音量/菜单/输入/Lua浏览验收。[说明](docs/tx15/audio-display-fix-2026-10-18.md)。
 
