@@ -19,7 +19,7 @@ static void (*press_[4])(guiObject_t *,s8,const void *);
 static const void *data_[4];
 u32 CLOCK_getms(void){return 10;}
 u8 PAGE_SetModal(u8 m){return m;}
-void PAGE_ShowHeader(const char *s){assert(strstr(s,"AUD2"));}
+void PAGE_ShowHeader(const char *s){assert(strstr(s,"AUD3"));}
 void _GUI_Redraw(guiObject_t *o){(void)o;}
 int tx15_audio_hw_test(unsigned now){assert(now==10);played++;return 1;}
 void tx15_audio_hw_stop(void){stopped++;}

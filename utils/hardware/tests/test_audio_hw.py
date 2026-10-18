@@ -153,8 +153,10 @@ int main(void){
  assert(regs[0][4]==0 && regs[0][11]==0x82 && regs[0][12]==0x81);
  assert(regs[0][13]==0 && regs[0][14]==128 && regs[0][27]==0);
  assert(regs[1][48]==0x10 && regs[1][45]==2);
+ assert(regs[1][46]==24); /* Default3 removes the old excessive attenuation. */
  tx15_audio_hw_volume(20);tx15_audio_hw_poll(now++);
  assert(tx15_audio_report.volume==5); /* A0 caps the diagnostic at low gain. */
+ assert(regs[1][46]==0 && regs[0][65]==0xf4);
  tx15_audio_hw_stop();assert(!current_reset && stopped && tx15_audio_report.state==TX15_AUDIO_OFF);
  tx15_audio_hw_volume(0);assert(tx15_audio_hw_test(now));
  unsigned end=now+300;for(;now<end;now++)tx15_audio_hw_poll(now);

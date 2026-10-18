@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "base": "0f095dd0",
+  "user_report": "最大音量声音也非常的小，屏幕一直闪，主要是画面变化的位置",
+  "status": "software-candidate-hardware-pending",
+  "tests": {
+    "total": 56,
+    "seconds": 30.724,
+    "result": "OK",
+    "command": "python -m unittest test_display_buffer test_display test_app_adapter test_media_clock test_audio_deadline test_storage_page test_storage_hw test_storage_card test_storage_volume test_audio_wav test_audio_pcm test_audio_queue test_audio_page test_audio_memory test_audio_hw test_settings_store test_lua_runtime test_source_capture test_switch_capture test_input_dashboard test_controls test_switch_upgrade test_calibration_snapshot test_rf_model test_usb_update_package",
+    "new_display_tests": 2,
+    "red_green_observed": true,
+    "harness_issue": "integration macro shadowed local front/back pointer names; fixed mock array names; not product fault"
+  },
+  "arm_objects": 150,
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "211b527848d2c9cec88b2b06cfb05b9c111dbee55d46926d35ba923504b2bc4f",
+    "payload_sha256": "a59c6a407298389e92f03e45ddd786750a7f4e90748fab0f7036049a23dadfc1",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": true
+  },
+  "package": {
+    "file": "local/tx15-usb-release/tx15-audio-display-fix-20261018.ndu",
+    "bytes": 709392,
+    "image_bytes": 709264,
+    "crc32": "0xa2900853",
+    "sha256": "c49ba73355f56f8e7411a0bd2f97137c7c97d6ae2193890960490a6399461e69",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "memory": {
+    "bss_end": "0x24056508",
+    "stack_bottom": "0x2407c000",
+    "margin_bytes": 154360,
+    "stack_bytes": 16384,
+    "scanout": [
+      "0xd0000000",
+      "0xd004b000"
+    ],
+    "resources": [
+      "0xd0080000",
+      "0xd0100000"
+    ],
+    "shadow": [
+      "0xd0100000",
+      "0xd014b000"
+    ],
+    "shadow_lifetime": "reuse boot staging only after verified loader handoff; standalone product only",
+    "loader_whitelist_changed": false
+  },
+  "display": {
+    "method": "completed dirty rectangle compositing; CPU copy to existing scanout",
+    "vblank_swap": false,
+    "yield_pixel_operations": 512,
+    "service": "CLOCK_ResetWatchdog after RF/input init; no GUI dispatch",
+    "lua_fill_and_present_routed": true,
+    "no_op_frames_skipped": true,
+    "measured_runtime_or_visual_quality": null
+  },
+  "audio": {
+    "volume_default": 3,
+    "range": [
+      0,
+      5
+    ],
+    "old_default_attenuation_register": 56,
+    "old_max_attenuation_register": 40,
+    "new_attenuation_registers": [
+      127,
+      72,
+      48,
+      24,
+      12,
+      0
+    ],
+    "zero_volume_speaker_muted": true,
+    "dac_gain_db": -6,
+    "speaker_gain_db": 6,
+    "tone_peak": 8192,
+    "volume_persisted": false,
+    "actual_loudness_or_distortion_measured": false
+  },
+  "review": {
+    "mode": "focused-read-only",
+    "remaining_critical_or_important": 0
+  },
+  "rollback": {
+    "file": "local/tx15-usb-release/tx15-media-clock-i2c-fix-20261017.ndu",
+    "sha256": "ec5a8ae642ad79cd7f0650c12c1c04d1fc47c018c2a353277207337b3c571923",
+    "unchanged": true
+  },
+  "unchanged": [
+    "panel/PLL/LTDC/backlight configuration",
+    "bootloader",
+    "NOR model/calibration",
+    "settings ABI",
+    "SD read-only whitelist"
+  ],
+  "device_accessed": false,
+  "flash_written": false,
+  "medium_written": false,
+  "hardware_acceptance": null
+}

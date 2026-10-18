@@ -4,6 +4,9 @@
  * Independent bare-metal driver; no EdgeTX application/runtime dependency.
  */
 #include "display.h"
+#ifdef TX15_BUFFERED_DISPLAY
+#include "display_buffer.h"
+#endif
 #define R(a) (*(volatile uint32_t *)(a))
 #define RCC 0x58024400u
 #define LTDC 0x50001000u
@@ -81,10 +84,18 @@ int tx15_display_init(void) {
     return 0;
 }
 void tx15_display_pixel(unsigned x,unsigned y,uint16_t color) {
+#ifdef TX15_BUFFERED_DISPLAY
+    tx15_display_buffer_pixel(x,y,color);
+#else
     if(x<TX15_LCD_WIDTH && y<TX15_LCD_HEIGHT)
         ((volatile uint16_t *)TX15_LCD_FB)[tx15_display_offset(x,y)]=color;
+#endif
 }
 void tx15_display_fill(uint16_t color) {
+#ifdef TX15_BUFFERED_DISPLAY
+    tx15_display_buffer_rect(0,0,TX15_LCD_WIDTH,TX15_LCD_HEIGHT,color);
+#else
     for(unsigned i=0;i<TX15_LCD_BYTES/2;i++) ((volatile uint16_t *)TX15_LCD_FB)[i]=color;
     __asm volatile("dsb" ::: "memory");
+#endif
 }

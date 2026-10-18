@@ -10,6 +10,9 @@
 #include "runtime.h"
 #include "lua/runner.h"
 #include "../../../../../hardware/tx15/board/display.h"
+#ifdef TX15_BUFFERED_DISPLAY
+#include "../../../../../hardware/tx15/board/display_buffer.h"
+#endif
 #ifdef TX15_AUDIO
 #include "../../../../../hardware/tx15/board/audio_memory.h"
 #define LUA_HEAP ((unsigned char *)TX15_AUDIO_D2_BASE)
@@ -45,11 +48,15 @@ static void fill(int x,int y,int w,int h,u16 color)
     if(right>480)right=480;
     if(bottom>320)bottom=320;
     if(x>=right || y>=bottom) return;
+#ifdef TX15_BUFFERED_DISPLAY
+    tx15_display_buffer_rect(x,y,right-x,bottom-y,color);
+#else
     for(int row=y;row<bottom;row++) {
         volatile u16 *p=(volatile u16 *)TX15_LCD_FB+row*480+x;
         for(int column=x;column<right;column++) *p++=color;
         if(!(row&7)) service(NULL);
     }
+#endif
 }
 static void clear(void *ctx) { (void)ctx;fill(0,0,480,320,0xffff); }
 static void rect(void *ctx,int x,int y,int w,int h,u16 color,int solid)
@@ -142,6 +149,9 @@ void tx15_lua_tool(void)
                 clear(NULL);text(NULL,5,50,"Lua stopped",ND_BOLD,0);text(NULL,5,90,tool.error,0,0);
                 text(NULL,5,130,"Press EXIT to return",0,0);error_drawn=1;
             }
+#ifdef TX15_BUFFERED_DISPLAY
+            LCD_ForceUpdate();
+#endif
         }
         if(leave || tool.state==ND_LUA_EXITED)break;
 #ifndef TX15_ELRS_PRODUCT

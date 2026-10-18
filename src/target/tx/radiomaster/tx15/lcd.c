@@ -1,6 +1,9 @@
 /* New Deviation native TX15 application adapter; GPL-3.0-or-later. */
 #include "common.h"
 #include "../../../../../hardware/tx15/board/display.h"
+#ifdef TX15_BUFFERED_DISPLAY
+#include "../../../../../hardware/tx15/board/display_buffer.h"
+#endif
 static unsigned left, right, top, bottom, x, y;
 static int step;
 static unsigned active;
@@ -29,4 +32,8 @@ void LCD_DrawMappedStart(unsigned a,unsigned b,unsigned c,unsigned d,enum DrawDi
 void LCD_DrawMappedPixel(unsigned c) { LCD_DrawPixel(c); }
 void LCD_DrawMappedPixelXY(unsigned a,unsigned b,unsigned c) { LCD_DrawPixelXY(a,b,c); }
 void LCD_DrawMappedStop(void) { LCD_DrawStop(); }
-void LCD_ForceUpdate(void) { /* LTDC continuously scans the uncached framebuffer. */ }
+void LCD_ForceUpdate(void) {
+#ifdef TX15_BUFFERED_DISPLAY
+    tx15_display_buffer_flush();
+#endif
+}

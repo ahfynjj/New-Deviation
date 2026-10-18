@@ -57,7 +57,7 @@ int tx15_audio_hw_test(unsigned now) {
     tx15_audio_report.state=TX15_AUDIO_RESET;return 1;
 }
 void tx15_audio_hw_volume(unsigned level) {
-    /* First hardware acceptance is deliberately limited to low speaker gain. */
+    /* Keep amplifier gain fixed; volume adjusts speaker attenuation only. */
     if(level>5)level=5;
     tx15_audio_report.volume=level;volume_dirty=2;
 }
@@ -76,7 +76,8 @@ void tx15_audio_hw_poll(unsigned now) {
         if(volume_dirty) {
             unsigned level=tx15_audio_report.volume;
             if(level && volume_dirty==2) {
-                if(codec_write(46,80-8*level)) {fail(TX15_AUDIO_VOLUME);return;}
+                static const uint8_t attenuation[]={127,72,48,24,12,0};
+                if(codec_write(46,attenuation[level])) {fail(TX15_AUDIO_VOLUME);return;}
                 volume_dirty=1;
             } else {
                 if(codec_write(48,level?0x10:0)) {fail(TX15_AUDIO_VOLUME);return;}

@@ -21,14 +21,19 @@ void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #include "../../../../../hardware/tx15/board/controls.h"
 #include "input_dashboard.h"
 #include "mix_switch.h"
+#ifdef TX15_BUFFERED_DISPLAY
+#include "../../../../../hardware/tx15/board/display_buffer.h"
+#endif
 #ifdef TX15_AUDIO
 #include "../../../../../hardware/tx15/board/audio.h"
 #include "../../../../../hardware/tx15/board/media_clock.h"
 #endif
-#ifdef TX15_STORAGE
+#ifdef TX15_BUFFERED_DISPLAY
+const char DeviationVersion[33]="New Deviation TX15 AV03";
+#elif defined(TX15_STORAGE)
 const char DeviationVersion[33]="New Deviation TX15 STO2";
 #elif defined(TX15_AUDIO)
-const char DeviationVersion[33]="New Deviation TX15 AUD2";
+const char DeviationVersion[33]="New Deviation TX15 AUD3";
 #elif defined(TX15_STANDALONE)
 const char DeviationVersion[33]="New Deviation TX15 " TX15_MIX_SWITCH_BUILD;
 #else
@@ -42,6 +47,9 @@ void tx15_app_main(void) {
     (void)tx15_audio_hw_init();
 #endif
     CONFIG_LoadTx(); CONFIG_ReadDisplay(); CONFIG_ReadModel(1);
+#ifdef TX15_BUFFERED_DISPLAY
+    tx15_display_buffer_init(); /* Cold-loader staging is no longer needed. */
+#endif
 #ifndef TX15_ELRS_RC
     Model.protocol=PROTOCOL_NONE;
 #endif
@@ -66,6 +74,9 @@ void tx15_app_main(void) {
     tx15_rf_discovery_init(CLOCK_getms());
 #endif
     ((volatile u32 *)0x2400e000u)[2]=3;
+#ifdef TX15_BUFFERED_DISPLAY
+    tx15_display_buffer_set_service(CLOCK_ResetWatchdog);
+#endif
 #if defined(TX15_ELRS_LUA) && !defined(TX15_ELRS_RC)
     tx15_lua_tool();
 #endif
