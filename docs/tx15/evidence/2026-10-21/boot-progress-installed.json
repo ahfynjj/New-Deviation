@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "utc": "2026-10-21T13:54:01.858596+00:00",
+  "operation": "power-progress-boot-only-installed",
+  "session": "local\\hardware-session\\boot-only-20261021-215401",
+  "plan": {
+    "schema": 1,
+    "operation": "internal-boot-only",
+    "device_uid": "1c0039000e51333234363236",
+    "internal_address": "0x08000000",
+    "internal_erase_bytes": 131072,
+    "internal_program_bytes": 27616,
+    "boot_sha256": "450bc5c9940c9eec82e48f9e3995e743aaa48aefc0bfc0bb91acd458d92ff325",
+    "original_internal_sha256": "337b9104809c29d53c03dd8f602f30e11a444a693e6c9624c6f26f1fd5c97fa0",
+    "original_external_sha256": "4ac6d574e8f502ec487baa057073a051cda429574b9bcc98524eeca0e85de3db",
+    "external_erase_bytes": 0,
+    "external_program_bytes": 0
+  },
+  "internal_full_bank_readback_verified": true,
+  "external_first_mib_unchanged": true,
+  "external_mutation_commands": 0,
+  "cpu_halted_verified": true,
+  "hardware_cold_boot_acceptance": "pending-user-observation",
+  "host_tests_passed": 44,
+  "review": "independent review found no blocking issue"
+}
