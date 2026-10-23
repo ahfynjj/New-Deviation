@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "date": "2026-10-23",
+  "base": "6f01e122",
+  "status": "usb-candidate-not-installed",
+  "feature": "native shutdown countdown with exact cancellation restore",
+  "tests_passed": 13,
+  "arm_objects": 150,
+  "package": {
+    "file": "local/tx15-usb-release/tx15-power-countdown-20261023.ndu",
+    "bytes": 709744,
+    "image_bytes": 709616,
+    "crc32": "0xd5508101",
+    "sha256": "57334f5584dd0793a9345aa5c4a04bd2a9c108e231992b1a1e8191523bca879e",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "ce40cd8e64389eafbb9c1432f28e10f4e22610b71e99690dd7250be24dbede38",
+    "payload_sha256": "5df8ee2676395eeccb1012da48ffadab2142cde9eeaf262f14dbaf05c185137d",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false
+  },
+  "modal": {
+    "hold_ms": 2000,
+    "initial_release_guard_ms": 20,
+    "backup_address": "0xd0200000",
+    "backup_bytes": 138240,
+    "display_rectangle": [
+      60,
+      64,
+      360,
+      192
+    ],
+    "input_mixer_rf_services_continue": true,
+    "cancel_restores_saved_pixels": true,
+    "commit_uses_original_shutdown": true
+  },
+  "review": "independent review found no blocking issue",
+  "device_accessed": false,
+  "flash_written": false,
+  "hardware_acceptance": "pending"
+}

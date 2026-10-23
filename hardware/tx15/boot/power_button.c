@@ -9,6 +9,6 @@ int tx15_power_button_poll(struct tx15_power_button *b,uint32_t now,int pressed)
     }
     if(!pressed)b->tracking=0;
     else if(!b->tracking) {b->tracking=1;b->since=now;}
-    else if((uint32_t)(now-b->since)>=2000u)b->shutdown=1;
+    else if((uint32_t)(now-b->since)>=TX15_POWER_HOLD_MS)b->shutdown=1;
     return b->shutdown;
 }

@@ -20,12 +20,13 @@
   "external_first_mib_unchanged": true,
   "external_mutation_commands": 0,
   "cpu_halted_verified": true,
-  "hardware_cold_boot_acceptance": "pending-user-observation",
+  "hardware_cold_boot_acceptance": "user-confirmed-immediate-feedback-release-and-normal-start",
   "host_tests_passed": 19,
   "review": "independent review found no blocking issue",
   "changes": [
     "Stackless blue LED after PH12 hold before supply/clock/RAM/panel waits",
     "DWT elapsed-time panel waits preserve CYCCNT and existing474ms minimum sequence",
     "Green LED after image validation copy and readback"
-  ]
+  ],
+  "user_report": "非常正常，这就是我要的效果。"
 }

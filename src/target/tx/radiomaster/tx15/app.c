@@ -31,7 +31,7 @@ void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #ifdef TX15_BUFFERED_DISPLAY
 const char DeviationVersion[33]="New Deviation TX15 AV03";
 #elif defined(TX15_STORAGE)
-const char DeviationVersion[33]="New Deviation TX15 AV04";
+const char DeviationVersion[33]="New Deviation TX15 PW01";
 #elif defined(TX15_AUDIO)
 const char DeviationVersion[33]="New Deviation TX15 AUD3";
 #elif defined(TX15_STANDALONE)

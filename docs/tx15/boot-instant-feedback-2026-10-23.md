@@ -55,5 +55,6 @@ Installed on 2026-10-23: full internal-bank readback matched, external first
 MiB remained byte-identical, and the CPU was confirmed halted at exit.
 Evidence: `evidence/2026-10-23/boot-instant-r3-installed.json`. Current backup
 and command journal: `local/hardware-session/boot-only-20261023-222957/`.
-LED visibility, release-on-blue operation, screen timing and USB update entry
-acceptance remain pending user observation.
+The user confirmed the immediate feedback, release-on-blue operation, faster
+screen response and normal startup: "非常正常，这就是我要的效果。"
+USB update entry after r3 remains a separate acceptance check.

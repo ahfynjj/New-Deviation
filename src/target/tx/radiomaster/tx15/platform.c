@@ -3,9 +3,7 @@
 #include "runtime.h"
 #include "boot_contract.h"
 #ifdef TX15_STANDALONE
-#include "../../../../../hardware/tx15/board/power.h"
-#include "../../../../../hardware/tx15/boot/power_button.h"
-static struct tx15_power_button power_button;
+#include "power_ui.h"
 #endif
 #ifdef TX15_ELRS_RC
 #include "rf_rc.h"
@@ -15,8 +13,7 @@ static struct tx15_power_button power_button;
 u32 CLOCK_getms(void) { return REPORT[11]; }
 void CLOCK_ResetWatchdog(void) {
 #ifdef TX15_STANDALONE
-    if(tx15_power_button_poll(&power_button,CLOCK_getms(),
-        (tx15_power_status()&TX15_BUTTON_PRESSED)!=0)) PWR_Shutdown();
+    tx15_power_ui_poll();
 #endif
     /* RAM bootstrap does not start IWDG. Keep sampling/heartbeat alive while
      * original Deviation pages run their own cooperative wait loops. */
