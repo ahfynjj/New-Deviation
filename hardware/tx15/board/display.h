@@ -12,7 +12,8 @@ static inline uint32_t tx15_display_offset(unsigned x, unsigned y) {
     return y * TX15_LCD_WIDTH + x;
 }
 /* Requires PLL128, initialized SDRAM, caches/MPU off and reset LTDC/PLL3.
- * Caller owns reset-context recovery. No persistent writes. */
+ * Uses DWT at fixed core128 for panel delays; preserves CYCCNT. Returns 3
+ * if the counter cannot advance. Caller owns recovery. No persistent writes. */
 int tx15_display_init(void);
 void tx15_display_pixel(unsigned x, unsigned y, uint16_t color);
 void tx15_display_fill(uint16_t color);

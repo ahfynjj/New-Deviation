@@ -21,8 +21,9 @@
   "external_first_mib_unchanged": true,
   "external_mutation_commands": 0,
   "cpu_halted_verified": true,
-  "hardware_cold_boot_acceptance": "pending-user-observation",
+  "hardware_cold_boot_acceptance": "user-confirmed-power-on-loading-and-application-entry",
   "host_tests_passed": 14,
   "review": "independent review found no blocking issue",
-  "fix": "Permit fully ready LCD PLL3 during boot NOR initialization; retain PLL1 and PLL2 checks"
+  "fix": "Permit fully ready LCD PLL3 during boot NOR initialization; retain PLL1 and PLL2 checks",
+  "remaining_limitation": "User reports long wait before visible feedback; requests immediate acknowledgement."
 }

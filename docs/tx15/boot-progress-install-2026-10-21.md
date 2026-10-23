@@ -70,7 +70,10 @@ external first MiB remained byte-identical, including models and calibration.
 The CPU was confirmed halted at tool exit. See
 `evidence/2026-10-23/boot-progress-r2-installed.json`; current backups and
 the journal are in `local/hardware-session/boot-only-20261023-220708/`.
-r2 cold-boot feedback, application entry and USB entry acceptance remain pending.
+The user confirmed r2 shows POWER ON/LOADING and enters Deviation, but feedback
+still appears too late. The immediate acknowledgement correction and its
+acceptance boundary are described in `boot-instant-feedback-2026-10-23.md`.
+USB entry acceptance after these changes remains a separate check.
 
 Recovery also requires the original candidate and `usb-boot-kit` folders;
 preserve these with the session snapshot. Recovery does not load the saved

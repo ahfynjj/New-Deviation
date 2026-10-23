@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "utc": "2026-10-23T14:29:57.635908+00:00",
+  "operation": "instant-feedback-boot-r3-installed",
+  "session": "local\\hardware-session\\boot-only-20261023-222957",
+  "plan": {
+    "schema": 1,
+    "operation": "internal-boot-only",
+    "device_uid": "1c0039000e51333234363236",
+    "internal_address": "0x08000000",
+    "internal_erase_bytes": 131072,
+    "internal_program_bytes": 27872,
+    "boot_sha256": "225f4c079eefc50dd6306cc77010655907ce5ccb5a03eecc96a0ecc86f6e1f6f",
+    "original_internal_sha256": "d54b6ba84dfedbc95189f4ac0ab9509be696f3f46575f93b5f68d6bee010d233",
+    "original_external_sha256": "4ac6d574e8f502ec487baa057073a051cda429574b9bcc98524eeca0e85de3db",
+    "external_erase_bytes": 0,
+    "external_program_bytes": 0
+  },
+  "internal_full_bank_readback_verified": true,
+  "external_first_mib_unchanged": true,
+  "external_mutation_commands": 0,
+  "cpu_halted_verified": true,
+  "hardware_cold_boot_acceptance": "pending-user-observation",
+  "host_tests_passed": 19,
+  "review": "independent review found no blocking issue",
+  "changes": [
+    "Stackless blue LED after PH12 hold before supply/clock/RAM/panel waits",
+    "DWT elapsed-time panel waits preserve CYCCNT and existing474ms minimum sequence",
+    "Green LED after image validation copy and readback"
+  ]
+}

@@ -20,11 +20,13 @@ UID = '1c0039000e51333234363236'
 CANDIDATE_SHAS = {
     'bc4e7c93d36da80e5adcc06b27d0ba88cee523c88f6724d06bb51b76b08d9221',
     'f54425735f8f8c525c38e40a1852934abdfa0f4b97438aac00e389179772f149',
+    '225f4c079eefc50dd6306cc77010655907ce5ccb5a03eecc96a0ecc86f6e1f6f',
 }
 OLD_PADDED_SHA = '737940be15412eca5b494cd190e01ea545d4929f6ee031d8db3945fb533c1de3'
 CURRENT_BANK_SHAS = {
     '337b9104809c29d53c03dd8f602f30e11a444a693e6c9624c6f26f1fd5c97fa0',
     '4d27518303b7df61b0b86cd8453550261e7d667b753bf70f8ed94e82843883d6',
+    'd54b6ba84dfedbc95189f4ac0ab9509be696f3f46575f93b5f68d6bee010d233',
 }
 
 
@@ -126,7 +128,7 @@ def main():
     modes = parser.add_mutually_exclusive_group(required=True)
     modes.add_argument('--install', action='store_true')
     modes.add_argument('--recover', type=Path, help='Previous boot-only session folder')
-    parser.add_argument('--candidate', type=Path, default=ROOT/'local/tx15-hardware/boot-progress-r2-20261021')
+    parser.add_argument('--candidate', type=Path, default=ROOT/'local/tx15-hardware/boot-instant-r3-20261023')
     args = parser.parse_args()
     if not args.arm or not sys.stdin.isatty(): parser.error('Requires --arm and interactive power-held gate')
     elf = (args.candidate/'tx15-boot-usb.elf').read_bytes()

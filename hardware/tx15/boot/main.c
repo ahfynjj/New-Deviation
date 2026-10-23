@@ -138,6 +138,8 @@ void Boot_Main(void) {
     probe_report.ram_words|=TX15_BOOT_IMAGE|TX15_BOOT_COPIED;
 #ifdef TX15_USB_UPDATE
     tx15_boot_screen(2,1,1);
+    /* Status green: the complete image has been validated, copied, read back. */
+    R(0x58022018u)=(1u<<11)|(1u<<26);
 #else
     tx15_display_fill(0);unsigned display=tx15_display_init();
     if(display)fail(128u|(display<<8));

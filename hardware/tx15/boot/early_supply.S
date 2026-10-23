@@ -12,7 +12,11 @@ tx15_boot_supply_early:
  /* Assert power hold without a C prologue or AXI/DTCM stack access. */
  ldr r0,=0x580244e0
  ldr r1,[r0]
+#ifdef TX15_USB_UPDATE
+ orr r1,r1,#0x180 /* GPIOH hold and GPIOI status LED */
+#else
  orr r1,r1,#0x80
+#endif
  str r1,[r0]
  ldr r1,[r0]
  ldr r0,=0x58021c18
@@ -27,6 +31,31 @@ tx15_boot_supply_early:
  bic r1,r1,#0x03000000
  orr r1,r1,#0x01000000
  str r1,[r0]
+#ifdef TX15_USB_UPDATE
+ /* Immediate blue acknowledgement AFTER PH12 hold, BEFORE any stack, RAM,
+  * PLL/SDRAM or LCD wait. TX15 status RGB: PI8 red, PI10 blue, PI11 green.
+  * Preload color first; preserve PI7 encoder and PI9 LCD command data. */
+ ldr r0,=0x58022018
+ ldr r1,=0x09000400
+ str r1,[r0]
+ ldr r0,=0x58022004
+ ldr r1,[r0]
+ bic r1,r1,#0xd00
+ str r1,[r0]
+ ldr r0,=0x58022008
+ ldr r1,[r0]
+ bic r1,r1,#0xf30000
+ str r1,[r0]
+ ldr r0,=0x5802200c
+ ldr r1,[r0]
+ bic r1,r1,#0xf30000
+ str r1,[r0]
+ ldr r0,=0x58022000
+ ldr r1,[r0]
+ bic r1,r1,#0xf30000
+ orr r1,r1,#0x510000
+ str r1,[r0]
+#endif
  /* Only finalize an already enabled LDO; never switch away from bypass. */
  ldr r0,=0x5802480c
  ldr r1,[r0]
