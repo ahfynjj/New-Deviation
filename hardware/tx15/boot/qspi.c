@@ -65,9 +65,13 @@ static enum tx15_qspi_result receive(unsigned opcode,uint32_t offset,uint8_t *ds
 enum tx15_qspi_result tx15_boot_qspi_init(uint32_t *id,uint32_t budget)
 {
     if (id) *id=0;
+    /* LCD progress may already own PLL3. NOR uses HCLK/PLL1, not PLL3;
+     * permit only PLL3 fully off or enabled AND ready, without changing it. */
+    uint32_t cr=TX15_READ32(0x58024400u),lcd_pll=cr&0x30000000u;
     if (!id || !budget || owned || (TX15_READ32(AHB3)&0x4000u)
             || (TX15_READ32(RESET)&0x4000u)
-            || (TX15_READ32(0x58024400u)&0x3f0f001du)!=0x3030005u
+            || (cr&0x0f0f001du)!=0x3030005u
+            || (lcd_pll && lcd_pll!=0x30000000u)
             || (TX15_READ32(0x58024410u)&0x3fu)!=0x1bu
             || (TX15_READ32(0x58024418u)&0xf7fu)!=0x48u
             || (TX15_READ32(0x58024428u)&0x3f3u)!=0xc2u

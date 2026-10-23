@@ -39,9 +39,42 @@ has now completed: internal 128 KiB readback matched, external first 1 MiB was
 unchanged, and the CPU was confirmed halted at exit. Evidence is in
 `evidence/2026-10-21/boot-progress-installed.json`; the current backup and full
 command journal are in `local/hardware-session/boot-only-20261021-215401/`.
-User observation of cold-boot feedback and USB entry remains pending.
+The first version failed cold-boot acceptance as described below.
+
+## Cold-boot failure and r2 correction
+
+The user reported that pressing only POWER entered USB UPDATE, displaying
+WAITING / CONNECT DATA USB / READ ONLY. This first progress BL therefore failed
+normal cold-boot acceptance despite correct Flash readback. The saved external
+application passed header, segment CRC and vector validation on the host.
+
+Root cause: early display initialization enables PLL3; the boot NOR initializer
+still required RCC_CR to contain only the PLL1 clock state. The real QSPI host
+harness reproduced rejection with PLL3 ON+READY. The guard now permits PLL3
+fully off or ON+READY while retaining all PLL1, PLL2 and NOR clock checks.
+Tests also reject incomplete PLL3 startup and missing PLL1 readiness. After
+the fix the same harness passes. USB session initialization resets the
+receiver's displayed ERROR to WAITING, explaining the observed status while
+the updater remains read-only. No updater-status change is included here.
+
+Replacement candidate: `local/tx15-hardware/boot-progress-r2-20261021/`.
+Raw 27,624 bytes, SHA256
+`f54425735f8f8c525c38e40a1852934abdfa0f4b97438aac00e389179772f149`.
+Padded 27,648 bytes, SHA256
+`53309bb9a1947ee4e57ca6153ab7de3619eb3430f3cb1d36d4e9bf3da1397741`.
+The BL-only tool defaults to r2 and accepts the exact installed r1 full-bank
+hash in addition to the original USB BL; unknown banks still stop before erase.
+Fourteen relevant tests passed and the resident USB ARM build completed.
+r2 was installed on 2026-10-23. Full internal-bank readback matched and the
+external first MiB remained byte-identical, including models and calibration.
+The CPU was confirmed halted at tool exit. See
+`evidence/2026-10-23/boot-progress-r2-installed.json`; current backups and
+the journal are in `local/hardware-session/boot-only-20261023-220708/`.
+r2 cold-boot feedback, application entry and USB entry acceptance remain pending.
 
 Recovery also requires the original candidate and `usb-boot-kit` folders;
 preserve these with the session snapshot. Recovery does not load the saved
 reader copies directly. Independent review found no blocking issue for this
 installation with those inputs available.
+When recovering an r1 session, specify its preserved r1 folder explicitly with
+`--candidate local/tx15-hardware/boot-progress-20261021`; the default is now r2.

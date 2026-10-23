@@ -12,5 +12,5 @@ class BootQspiTests(unittest.TestCase):
                 str(ROOT/'utils/hardware/tests/boot_qspi_test.c'),'-o',str(exe)],
                 env=env,capture_output=True,text=True,encoding='utf8',errors='replace')
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)
-            result=subprocess.run([str(exe)],env=env,capture_output=True,text=True)
+            result=subprocess.run([str(exe)],env=env,capture_output=True,text=True,encoding='utf8',errors='replace')
             self.assertEqual(result.returncode,0,result.stdout+result.stderr)

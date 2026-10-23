@@ -79,6 +79,17 @@ int main(void) {
     assert(tx15_boot_qspi_read(0xffffff,bytes,2,20)==TX15_QSPI_BAD_STATE);
     assert(tx15_boot_qspi_read(0,0,1,20)==TX15_QSPI_BAD_STATE);assert(commands==old);
     tx15_boot_qspi_stop();assert(ahb3==0x1010 && !(rst&0x4000));
+    /* Progress boot initializes the independent LCD PLL3 before NOR reads. */
+    reset();cr|=0x30000000;
+    assert(tx15_boot_qspi_init(&id,20)==TX15_QSPI_OK);
+    assert(tx15_boot_qspi_read(128,bytes,64,20)==TX15_QSPI_OK);
+    tx15_boot_qspi_stop();
+    reset();cr|=0x10000000;
+    assert(tx15_boot_qspi_init(&id,20)==TX15_QSPI_BAD_STATE);assert(!writes);
+    reset();cr|=0x20000000;
+    assert(tx15_boot_qspi_init(&id,20)==TX15_QSPI_BAD_STATE);assert(!writes);
+    reset();cr|=0x30000000;cr&=~0x02000000;
+    assert(tx15_boot_qspi_init(&id,20)==TX15_QSPI_BAD_STATE);assert(!writes);
     reset();ahb3|=0x4000;assert(tx15_boot_qspi_init(&id,20)==TX15_QSPI_BAD_STATE);assert(!writes);
     reset();cfgr=0;assert(tx15_boot_qspi_init(&id,20)==TX15_QSPI_BAD_STATE);assert(!writes);
     reset();stuck=1;assert(tx15_boot_qspi_init(&id,20)==TX15_QSPI_TIMEOUT);assert(!id);tx15_boot_qspi_stop();

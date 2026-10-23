@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from boot_only_update import Plan, BootJournal, execute
+from boot_only_update import Plan, BootJournal, execute, validate_current_bank
 from flash_journal import Journal
 
 
@@ -54,6 +54,9 @@ class Tests(unittest.TestCase):
         self.backend.internal = b'Z'*131072
         with self.assertRaises(ValueError): self.run_update()
         self.assertEqual(self.backend.mutations, [])
+    def test_unknown_current_bank_never_allowed(self):
+        for data in (b'X'*131072, b'\xff'*131072, b'X'*64):
+            with self.assertRaises(ValueError): validate_current_bank(data)
     def test_external_intents_always_refused(self):
         j = BootJournal.create(self.path, self.plan, 'install', self.plan.seal)
         for op, data in [('external-erase',4096), ('external-program',b'X'*256)]:

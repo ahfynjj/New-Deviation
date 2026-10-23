@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "utc": "2026-10-23T14:07:08.074361+00:00",
+  "operation": "power-progress-boot-r2-installed",
+  "session": "local\\hardware-session\\boot-only-20261023-220708",
+  "plan": {
+    "schema": 1,
+    "operation": "internal-boot-only",
+    "device_uid": "1c0039000e51333234363236",
+    "internal_address": "0x08000000",
+    "internal_erase_bytes": 131072,
+    "internal_program_bytes": 27648,
+    "boot_sha256": "53309bb9a1947ee4e57ca6153ab7de3619eb3430f3cb1d36d4e9bf3da1397741",
+    "original_internal_sha256": "4d27518303b7df61b0b86cd8453550261e7d667b753bf70f8ed94e82843883d6",
+    "original_external_sha256": "4ac6d574e8f502ec487baa057073a051cda429574b9bcc98524eeca0e85de3db",
+    "external_erase_bytes": 0,
+    "external_program_bytes": 0
+  },
+  "candidate_raw_sha256": "f54425735f8f8c525c38e40a1852934abdfa0f4b97438aac00e389179772f149",
+  "internal_full_bank_readback_verified": true,
+  "external_first_mib_unchanged": true,
+  "external_mutation_commands": 0,
+  "cpu_halted_verified": true,
+  "hardware_cold_boot_acceptance": "pending-user-observation",
+  "host_tests_passed": 14,
+  "review": "independent review found no blocking issue",
+  "fix": "Permit fully ready LCD PLL3 during boot NOR initialization; retain PLL1 and PLL2 checks"
+}

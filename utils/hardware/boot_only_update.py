@@ -17,8 +17,20 @@ from flash_transaction import sha, _internal
 
 ROOT = Path(__file__).resolve().parents[2]
 UID = '1c0039000e51333234363236'
-CANDIDATE_SHA = 'bc4e7c93d36da80e5adcc06b27d0ba88cee523c88f6724d06bb51b76b08d9221'
+CANDIDATE_SHAS = {
+    'bc4e7c93d36da80e5adcc06b27d0ba88cee523c88f6724d06bb51b76b08d9221',
+    'f54425735f8f8c525c38e40a1852934abdfa0f4b97438aac00e389179772f149',
+}
 OLD_PADDED_SHA = '737940be15412eca5b494cd190e01ea545d4929f6ee031d8db3945fb533c1de3'
+CURRENT_BANK_SHAS = {
+    '337b9104809c29d53c03dd8f602f30e11a444a693e6c9624c6f26f1fd5c97fa0',
+    '4d27518303b7df61b0b86cd8453550261e7d667b753bf70f8ed94e82843883d6',
+}
+
+
+def validate_current_bank(data):
+    if len(data) != 131072 or sha(data) not in CURRENT_BANK_SHAS:
+        raise ValueError('Live internal BL differs from reviewed installed BL; no erase')
 
 
 @dataclass(frozen=True)
@@ -114,14 +126,14 @@ def main():
     modes = parser.add_mutually_exclusive_group(required=True)
     modes.add_argument('--install', action='store_true')
     modes.add_argument('--recover', type=Path, help='Previous boot-only session folder')
-    parser.add_argument('--candidate', type=Path, default=ROOT/'local/tx15-hardware/boot-progress-20261021')
+    parser.add_argument('--candidate', type=Path, default=ROOT/'local/tx15-hardware/boot-progress-r2-20261021')
     args = parser.parse_args()
     if not args.arm or not sys.stdin.isatty(): parser.error('Requires --arm and interactive power-held gate')
     elf = (args.candidate/'tx15-boot-usb.elf').read_bytes()
     raw = (args.candidate/'tx15-boot-usb.bin').read_bytes()
     metadata = json.loads((args.candidate/'build.json').read_text(encoding='utf8'))
     usb_boot_update.validate_boot(elf, raw, metadata)
-    if sha(raw) != CANDIDATE_SHA: raise ValueError('Unreviewed progress boot image')
+    if sha(raw) not in CANDIDATE_SHAS: raise ValueError('Unreviewed progress boot image')
     kit_folder = ROOT/'local/tx15-hardware/install/usb-boot-kit'
     reader = (kit_folder/'reader.bin').read_bytes()
     reader_elf = (kit_folder/'reader.elf').read_bytes()
@@ -152,8 +164,7 @@ def main():
                     action = 'recover'
                 else:
                     internal = backend.read_internal(0x08000000, 131072)
-                    if internal != old+b'\xff'*(131072-len(old)):
-                        raise ValueError('Live internal BL differs from reviewed installed BL; no erase')
+                    validate_current_bank(internal)
                     external = backend.read_external(0, 1048576)
                     plan = Plan(boot, internal, external)
                     action = 'install'
