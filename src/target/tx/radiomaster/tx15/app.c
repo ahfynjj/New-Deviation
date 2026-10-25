@@ -21,6 +21,11 @@ void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #include "../../../../../hardware/tx15/board/controls.h"
 #include "input_dashboard.h"
 #include "mix_switch.h"
+#ifdef TX15_FRAME_SWAP
+#include "frame_swap.h"
+#include "runtime.h"
+static void tx15_app_frame_service(void){(void)tx15_runtime_poll(CLOCK_getms());}
+#endif
 #ifdef TX15_BUFFERED_DISPLAY
 #include "../../../../../hardware/tx15/board/display_buffer.h"
 #endif
@@ -28,7 +33,9 @@ void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #include "../../../../../hardware/tx15/board/audio.h"
 #include "../../../../../hardware/tx15/board/media_clock.h"
 #endif
-#ifdef TX15_BUFFERED_DISPLAY
+#ifdef TX15_FRAME_SWAP
+const char DeviationVersion[33]="New Deviation TX15 RD02";
+#elif defined(TX15_BUFFERED_DISPLAY)
 const char DeviationVersion[33]="New Deviation TX15 AV03";
 #elif defined(TX15_STATUS_REGIONS)
 const char DeviationVersion[33]="New Deviation TX15 RD01";
@@ -49,6 +56,9 @@ void tx15_app_main(void) {
     (void)tx15_audio_hw_init();
 #endif
     CONFIG_LoadTx(); CONFIG_ReadDisplay(); CONFIG_ReadModel(1);
+#ifdef TX15_FRAME_SWAP
+    (void)tx15_frame_init(); /* Loader staging is expired; RF not started yet. */
+#endif
 #ifdef TX15_BUFFERED_DISPLAY
     tx15_display_buffer_init(); /* Cold-loader staging is no longer needed. */
 #endif
@@ -76,6 +86,10 @@ void tx15_app_main(void) {
     tx15_rf_discovery_init(CLOCK_getms());
 #endif
     ((volatile u32 *)0x2400e000u)[2]=3;
+#ifdef TX15_FRAME_SWAP
+    /* Hardware services only: no GUI, button dispatch or power modal reentry. */
+    tx15_frame_set_service(tx15_app_frame_service);
+#endif
 #ifdef TX15_BUFFERED_DISPLAY
     tx15_display_buffer_set_service(CLOCK_ResetWatchdog);
 #endif

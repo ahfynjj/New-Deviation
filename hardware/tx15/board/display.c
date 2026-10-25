@@ -4,6 +4,9 @@
  * Independent bare-metal driver; no EdgeTX application/runtime dependency.
  */
 #include "display.h"
+#ifdef TX15_FRAME_SWAP
+#include "../../../src/target/tx/radiomaster/tx15/frame_swap.h"
+#endif
 #ifdef TX15_BUFFERED_DISPLAY
 #include "display_buffer.h"
 #endif
@@ -115,7 +118,9 @@ int tx15_display_init(void) {
     return 0;
 }
 void tx15_display_pixel(unsigned x,unsigned y,uint16_t color) {
-#ifdef TX15_BUFFERED_DISPLAY
+#ifdef TX15_FRAME_SWAP
+    tx15_frame_pixel(x,y,color);
+#elif defined(TX15_BUFFERED_DISPLAY)
     tx15_display_buffer_pixel(x,y,color);
 #else
     if(x<TX15_LCD_WIDTH && y<TX15_LCD_HEIGHT)
@@ -123,7 +128,9 @@ void tx15_display_pixel(unsigned x,unsigned y,uint16_t color) {
 #endif
 }
 void tx15_display_fill(uint16_t color) {
-#ifdef TX15_BUFFERED_DISPLAY
+#ifdef TX15_FRAME_SWAP
+    tx15_frame_rect(0,0,TX15_LCD_WIDTH,TX15_LCD_HEIGHT,color);
+#elif defined(TX15_BUFFERED_DISPLAY)
     tx15_display_buffer_rect(0,0,TX15_LCD_WIDTH,TX15_LCD_HEIGHT,color);
 #else
     for(unsigned i=0;i<TX15_LCD_BYTES/2;i++) ((volatile uint16_t *)TX15_LCD_FB)[i]=color;

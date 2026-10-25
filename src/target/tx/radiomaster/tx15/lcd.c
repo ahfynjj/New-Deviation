@@ -1,6 +1,9 @@
 /* New Deviation native TX15 application adapter; GPL-3.0-or-later. */
 #include "common.h"
 #include "../../../../../hardware/tx15/board/display.h"
+#ifdef TX15_FRAME_SWAP
+#include "frame_swap.h"
+#endif
 #ifdef TX15_STATUS_REGIONS
 #include "display_region.h"
 #endif
@@ -36,7 +39,12 @@ void LCD_DrawPixelXY(unsigned x0,unsigned y0,unsigned color) {
 #endif
         tx15_display_pixel(x0,y0,(uint16_t)color);
 }
-void LCD_DrawStop(void) { active=0; }
+void LCD_DrawStop(void) {
+    active=0;
+#ifdef TX15_FRAME_SWAP
+    tx15_frame_service();
+#endif
+}
 /* RGB panels have no character-map window hardware. Deviation's mapped
  * drawing operations use the same absolute pixel coordinates here. */
 void LCD_DrawMappedStart(unsigned a,unsigned b,unsigned c,unsigned d,enum DrawDir dir) { LCD_DrawStart(a,b,c,d,dir); }
@@ -44,7 +52,9 @@ void LCD_DrawMappedPixel(unsigned c) { LCD_DrawPixel(c); }
 void LCD_DrawMappedPixelXY(unsigned a,unsigned b,unsigned c) { LCD_DrawPixelXY(a,b,c); }
 void LCD_DrawMappedStop(void) { LCD_DrawStop(); }
 void LCD_ForceUpdate(void) {
-#ifdef TX15_BUFFERED_DISPLAY
+#ifdef TX15_FRAME_SWAP
+    tx15_frame_present();
+#elif defined(TX15_BUFFERED_DISPLAY)
     tx15_display_buffer_flush();
 #endif
 }

@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "date": "2026-10-25",
+  "base": "23765f25",
+  "status": "usb-candidate-not-installed",
+  "root_cause": "Lua clear/fill wrote visible framebuffer and direct LCD_ForceUpdate was a no-op; RD01 bounded labels did not cover these paths",
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "3704270fb8af1dbcdebb04ad88b811845589aa6edec37b729f46edc6248c6236",
+    "payload_sha256": "d54e9eaa8707cd1a51e19a171f50313e9425a63102349418209a2fd5ec4efd9e",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false,
+    "status_regions": false,
+    "frame_swap": true
+  },
+  "arm_objects": 152,
+  "tests_passed": 25,
+  "package": {
+    "file": "local/tx15-usb-release/tx15-frame-swap-rd02-20261025.ndu",
+    "bytes": 711096,
+    "image_bytes": 710968,
+    "crc32": "0x4167e50c",
+    "sha256": "d381f8e21f80e287cb9b3f44f5c026f51ec516a47c30d377b59cd668f69c71f2",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "buffers": {
+    "a": "0xd0000000..0xd004b000",
+    "b": "0xd0100000..0xd014b000",
+    "bytes_each": 307200,
+    "power_snapshot": "0xd0200000..0xd0221c00"
+  },
+  "presentation": {
+    "ltdc": "layer1 CFBAR then SRCR VBR=2, wait for self-cleared reload before old-front reuse",
+    "copy": "DMA2D RGB565 M2M, 480x320, zero offsets",
+    "timeout_ms": 40,
+    "fallback": "VBR timeout freezes writes; DMA failure resets only DMA2D then serviced CPU word copy",
+    "pixel_comparison": false,
+    "per_pixel_service": false,
+    "idle_copy": false
+  },
+  "review": "Independent read-only review found no important blocking findings; physical latency and RF gaps remain unmeasured",
+  "coverage": [
+    "real board LCD plus full Lua tool loop",
+    "hidden clear/text/rect/line",
+    "no commit before Lua run ends",
+    "alternating buffers and partial update retention",
+    "empty commits",
+    "boundary clipping",
+    "reentrant presentation",
+    "DMA error and timeout reset before CPU recovery",
+    "VBR pending frame immutable on timeout",
+    "stopped DWT finite loop budget",
+    "unknown scan configuration rejection",
+    "actual power modal cancellation restoring both frames",
+    "existing official Lua/RF/settings/audio regressions"
+  ],
+  "hardware_acceptance": "pending: ELRS Lua plus normal menu/bar flicker, scrolling latency, RF continuity, power cancellation and settings retention",
+  "device_accessed": false,
+  "flash_written": false
+}

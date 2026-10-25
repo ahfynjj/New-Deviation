@@ -7,12 +7,22 @@
 #include "../../../../../hardware/tx15/board/power.h"
 #include "../../../../../hardware/tx15/boot/power_button.h"
 #include "../../../../../hardware/tx15/board/display.h"
+#ifdef TX15_FRAME_SWAP
+#include "frame_swap.h"
+#define TX15_POWER_UI_FRAME tx15_frame_draw_address()
+#else
+#define TX15_POWER_UI_FRAME TX15_LCD_FB
+#endif
 #ifndef TX15_POWER_UI_MEMORY
 #define TX15_POWER_UI_MEMORY(a) ((volatile uint16_t *)(uintptr_t)(a))
 #endif
 #ifndef TX15_POWER_UI_PIXEL
+#ifdef TX15_FRAME_SWAP
+#define TX15_POWER_UI_PIXEL(x,y,c) tx15_frame_pixel(x,y,c)
+#else
 #define TX15_POWER_UI_PIXEL(x,y,c) \
-    (TX15_POWER_UI_MEMORY(TX15_LCD_FB)[tx15_display_offset(x,y)]=(c))
+    (TX15_POWER_UI_MEMORY(TX15_POWER_UI_FRAME)[tx15_display_offset(x,y)]=(c))
+#endif
 #endif
 /* Runtime-only reuse of expired USB updater shadow / RAM-chain source. Normal
  * app resources end at D0100000, optional display shadow at D014B000. This
@@ -35,7 +45,10 @@ static const uint8_t glyphs[][5]={
  {3,4,120,4,3},{97,81,73,69,67}};
 static void service(void){(void)tx15_runtime_poll(CLOCK_getms());}
 static void snapshot(unsigned restore) {
-    volatile uint16_t *frame=TX15_POWER_UI_MEMORY(TX15_LCD_FB);
+#ifdef TX15_FRAME_SWAP
+    if(!tx15_frame_ready())return; /* A pending timed-out swap must stay immutable. */
+#endif
+    volatile uint16_t *frame=TX15_POWER_UI_MEMORY(TX15_POWER_UI_FRAME);
     volatile uint16_t *copy=TX15_POWER_UI_MEMORY(BACKUP);
     for(unsigned y=0;y<HEIGHT;y++) {
         for(unsigned x=0;x<WIDTH;x++) {
@@ -44,6 +57,14 @@ static void snapshot(unsigned restore) {
         }
         if(!(y&7u))service();
     }
+#ifdef TX15_FRAME_SWAP
+    if(restore)tx15_frame_damage();
+#endif
+}
+static void present(void){
+#ifdef TX15_FRAME_SWAP
+    tx15_frame_present();
+#endif
 }
 static void rect(unsigned x,unsigned y,unsigned w,unsigned h,uint16_t color) {
     for(unsigned j=0;j<h;j++) {
@@ -85,9 +106,9 @@ void tx15_power_ui_poll(void) {
         service();now=CLOCK_getms();
         pressed=(tx15_power_status()&TX15_BUTTON_PRESSED)!=0;
         if(tx15_power_button_poll(&power_button,now,pressed)) {
-            saving();PWR_Shutdown();power_busy=0;return;
+            saving();present();PWR_Shutdown();power_busy=0;return;
         }
-        if(!pressed) {snapshot(1);power_busy=0;return;}
+        if(!pressed) {snapshot(1);present();power_busy=0;return;}
         uint32_t elapsed=now-power_button.since;
         unsigned seconds=(TX15_POWER_HOLD_MS-elapsed+999u)/1000u;
         unsigned width=(elapsed/50u)*300u/(TX15_POWER_HOLD_MS/50u);
@@ -99,6 +120,7 @@ void tx15_power_ui_poll(void) {
         if(width>last_width) {
             rect(90+last_width,190,width-last_width,8,ACCENT);last_width=width;
         }
+        present();
     }
 }
 #else
