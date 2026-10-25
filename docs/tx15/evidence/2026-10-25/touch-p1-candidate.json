@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "date": "2026-10-25",
+  "base": "a54aa8bb",
+  "status": "usb-candidate-not-installed",
+  "phase": "P1 diagnostics only",
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "f9ab9404c9ef0fb3eaced195d85625ed54ad9cba26290784344dd7e41407dceb",
+    "payload_sha256": "fd369fb1c4deba8cc426e03d57b7216e50fefc2cccd16ca2b7d6562876717e29",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false,
+    "status_regions": false,
+    "frame_swap": true,
+    "touch_diagnostic": true
+  },
+  "arm_objects": 155,
+  "tests_passed": 46,
+  "test_modules": [
+    "test_i2c_bus",
+    "test_touch_input",
+    "test_touch_driver",
+    "test_touch_page",
+    "test_touch_runtime",
+    "test_controls",
+    "test_audio_hw",
+    "test_audio_deadline",
+    "test_media_clock",
+    "test_audio_page",
+    "test_frame_swap",
+    "test_power_ui",
+    "test_display_region",
+    "test_display_buffer",
+    "test_app_adapter",
+    "test_usb_update_package",
+    "test_lua_runtime",
+    "test_rf_model",
+    "test_settings_store",
+    "test_rf_settings",
+    "test_switch_capture",
+    "test_input_dashboard"
+  ],
+  "package": {
+    "file": "local/tx15-usb-release/tx15-touch-p1-ui01-20261025.ndu",
+    "bytes": 713960,
+    "image_bytes": 713832,
+    "sha256": "aa5cb37e7c37580cad2a14a94818158a07d002088a78476ad405399f661e1a14",
+    "crc32": "0x4d945660",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "shared_i2c": {
+    "register_prefix_bytes": [
+      1,
+      2
+    ],
+    "max_payload_bytes": 4,
+    "deadline_cycles": 128000,
+    "clock_hz": 128000000,
+    "bus_timing_unchanged": "approximately 98kHz",
+    "lock_owner": "controls.c",
+    "terminal_status_preserved": true
+  },
+  "touch": {
+    "addresses": [
+      "0x5d",
+      "0x14"
+    ],
+    "strict_id": "911 followed by NUL or space",
+    "resolution_read": "0x8048 length4",
+    "status": "0x814e",
+    "point_reads": [
+      "0x814f length4",
+      "0x8153 length4"
+    ],
+    "allowed_write": "identified device 0x814e=0 only",
+    "gpio_writes": false,
+    "config_writes": false,
+    "automatic_probe": false,
+    "page_entry_starts_probe": true,
+    "global_gui_touch": false,
+    "map": "trial flags, not persisted",
+    "event_queue": 8
+  },
+  "resources": {
+    "bytes": 464375,
+    "limit": 524288,
+    "new_bitmaps": false
+  },
+  "review": "Independent read-only review found total-deadline gap; reproduced in red test, fixed and rechecked; no important remaining findings",
+  "review_extra_test_limit": "Six optional portable PCM/queue/WAV tests attempted by reviewer could not compile because its harness lacked string.h; they are not included in the stated 46 passing tests. Portable audio modules are unchanged.",
+  "hardware_acceptance": "pending: GT911 identity, raw resolution, corner/center mapping, reset requirement, bus timing, normal controls/audio/RF and RD02 display responsiveness",
+  "device_accessed": false,
+  "flash_written": false
+}

@@ -41,6 +41,9 @@ PAGEDEF(PAGEID_ELRSLUA, PAGE_ElrsLuaInit, NULL, NULL, MAIN_MENU, _tr_noop("ELRS 
 #ifdef TX15_AUDIO
 PAGEDEF(PAGEID_AUDIOTEST, PAGE_AudioTestInit, PAGE_AudioTestEvent, PAGE_AudioTestExit, MAIN_MENU, "Audio test")
 #endif
+#ifdef TX15_TOUCH_DIAGNOSTIC
+PAGEDEF(PAGEID_TOUCHTEST, PAGE_TouchTestInit, PAGE_TouchTestEvent, PAGE_TouchTestExit, MAIN_MENU, "Touch test")
+#endif
 
 //Model menu
 #ifdef TX15_STORAGE

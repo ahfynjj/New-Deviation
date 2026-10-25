@@ -33,7 +33,9 @@ static void tx15_app_frame_service(void){(void)tx15_runtime_poll(CLOCK_getms());
 #include "../../../../../hardware/tx15/board/audio.h"
 #include "../../../../../hardware/tx15/board/media_clock.h"
 #endif
-#ifdef TX15_FRAME_SWAP
+#ifdef TX15_TOUCH_DIAGNOSTIC
+const char DeviationVersion[33]="New Deviation TX15 UI01";
+#elif defined(TX15_FRAME_SWAP)
 const char DeviationVersion[33]="New Deviation TX15 RD02";
 #elif defined(TX15_BUFFERED_DISPLAY)
 const char DeviationVersion[33]="New Deviation TX15 AV03";

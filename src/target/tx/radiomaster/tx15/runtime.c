@@ -11,6 +11,9 @@
 #endif
 #include "../../../../../hardware/tx15/board/analog.h"
 #include "../../../../../hardware/tx15/board/controls.h"
+#ifdef TX15_TOUCH_DIAGNOSTIC
+#include "../../../../../hardware/tx15/board/touch.h"
+#endif
 #ifdef TX15_STORAGE
 #include "storage_tool.h"
 #endif
@@ -34,7 +37,12 @@ int tx15_runtime_poll(unsigned now) {
 #ifdef TX15_AUDIO
     tx15_audio_hw_poll(now);
 #endif
-    if((u32)(now-sampled)<MEDIUM_PRIORITY_MSEC) return 0;
+    if((u32)(now-sampled)<MEDIUM_PRIORITY_MSEC) {
+#ifdef TX15_TOUCH_DIAGNOSTIC
+        tx15_touch_poll(now);
+#endif
+        return 0;
+    }
     sampled=now;
     tx15_controls_poll(now);
     tx15_analog_sample();
@@ -46,5 +54,8 @@ int tx15_runtime_poll(unsigned now) {
         refreshed=now;
         priority_ready|=1u<<LOW_PRIORITY;
     }
+#ifdef TX15_TOUCH_DIAGNOSTIC
+    tx15_touch_poll(now); /* Main-thread I2C only; never dispatch GUI/Lua here. */
+#endif
     return 1;
 }

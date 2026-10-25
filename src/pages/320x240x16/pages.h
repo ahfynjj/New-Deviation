@@ -58,6 +58,11 @@ void PAGE_SplashEvent();
 void PAGE_SplashExit();
 
 // Menu
+#ifdef TX15_TOUCH_DIAGNOSTIC
+void PAGE_TouchTestInit(int page);
+void PAGE_TouchTestEvent(void);
+void PAGE_TouchTestExit(void);
+#endif
 #ifdef TX15_STORAGE
 void PAGE_StorageTestInit(int page);
 void PAGE_StorageTestEvent(void);
