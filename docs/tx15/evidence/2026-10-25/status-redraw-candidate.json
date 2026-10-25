@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "date": "2026-10-25",
+  "base": "35dbcc65",
+  "status": "usb-candidate-not-installed",
+  "reproduction": "Audio test status invalidated440x145 every200ms even if unchanged, visible background erase before text",
+  "changes": [
+    "Only invalidate changed diagnostic rows",
+    "Compose fully bounded labels no taller than 32 rows then copy the completed rectangle",
+    "Preserve direct rendering for text that overflows its label, including selection offsets"
+  ],
+  "tests_passed": 16,
+  "arm_objects": 151,
+  "package": {
+    "file": "local/tx15-usb-release/tx15-status-redraw-20261025.ndu",
+    "bytes": 710768,
+    "image_bytes": 710640,
+    "crc32": "0xe29ac5e6",
+    "sha256": "2c11b8673f1b6e7724fe9e9a9f194397cc19445ed8373af61042dedb8e2c717f",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "63ad8bfa312212a6594f21bc772f921b9a571a5504d127537bebd350d4b46bb7",
+    "payload_sha256": "5f73270e3e9649b78cff2d27cd476cb11d314efc8ae1c203a0151968a5cf027d",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false,
+    "status_regions": true
+  },
+  "compositor": {
+    "scratch": "0xd0300000",
+    "scratch_bytes": 30720,
+    "max_height": 32,
+    "per_pixel_compare": false,
+    "global_dirty_bounds": false,
+    "max_draw_cycles_and_commit_cycles_recorded": true
+  },
+  "hardware_acceptance": "pending; confirm idle Audio page stable, changed numbers readable, menu response and ELRS continuity",
+  "device_accessed": false,
+  "flash_written": false,
+  "review": "Overflow clipping regression reproduced, fixed and retested against original direct helper; no blocking findings remain; target timing pending"
+}

@@ -10,6 +10,9 @@ product=os.environ.get('TX15_ELRS_PRODUCT')=='1'
 audio=os.environ.get('TX15_AUDIO')=='1'
 storage=os.environ.get('TX15_STORAGE')=='1'
 buffered=os.environ.get('TX15_BUFFERED_DISPLAY')=='1'
+regions=os.environ.get('TX15_STATUS_REGIONS')=='1'
+if regions and (not (standalone and product) or buffered):
+ raise ValueError('Status regions require standalone product direct display')
 if buffered and not (standalone and product):
  raise ValueError('Buffered display reuses expired cold-loader staging; standalone product only')
 if storage and not (audio and standalone and product):
@@ -41,6 +44,7 @@ if product:flags.append('-DTX15_ELRS_PRODUCT=1')
 if audio:flags.append('-DTX15_AUDIO=1')
 if storage:flags.append('-DTX15_STORAGE=1')
 if buffered:flags.append('-DTX15_BUFFERED_DISPLAY=1')
+if regions:flags.append('-DTX15_STATUS_REGIONS=1')
 if os.environ.get('TX15_PERSISTENCE')=='1':flags.append('-DTX15_PERSISTENCE=1')
 if standalone:flags.append('-DTX15_STANDALONE=1')
 if os.environ.get('TX15_ELRS_DISCOVERY') == '1':
@@ -137,6 +141,6 @@ if len(payload.read_bytes())>0xf0000:raise ValueError('Application overlaps nati
  'payload_sha256':hashlib.sha256(payload.read_bytes()).hexdigest(),
  'rf_enabled':any(os.environ.get(n)=='1' for n in ('TX15_ELRS_LUA','TX15_ELRS_DISCOVERY','TX15_ELRS_RC')),
  'persistent_settings':os.environ.get('TX15_PERSISTENCE')=='1',
- 'audio_diagnostic':audio,'storage_read_only':storage,'buffered_display':buffered},indent=2),encoding='utf8')
+ 'audio_diagnostic':audio,'storage_read_only':storage,'buffered_display':buffered,'status_regions':regions},indent=2),encoding='utf8')
 print('Checked native boot payload:',payload,'(requires cold-start loader; not directly flashable)')
 print('No device accessed; hardware acceptance remains pending.')

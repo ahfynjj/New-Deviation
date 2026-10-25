@@ -3,6 +3,45 @@ import unittest
 import test_switch_upgrade as switches
 class AudioPageTests(unittest.TestCase):
     run_c=switches.SwitchUpgradeTests.run_c
+    def test_idle_status_is_not_redrawn_and_only_changed_line_is_invalidated(self):
+        self.run_c(r'''
+#include <assert.h>
+#include <string.h>
+#define TX15_AUDIO 1
+#include "common.h"
+#include "gui/gui.h"
+#include "config/display.h"
+#include "hardware/tx15/board/audio.h"
+struct display_settings Display;
+volatile struct tx15_audio_report tx15_audio_report;
+static guiObject_t *rows[6];static unsigned count,redraws,mask,ms;
+u32 CLOCK_getms(void){return ms;}
+u8 PAGE_SetModal(u8 m){return m;}
+void PAGE_ShowHeader(const char *s){(void)s;}
+void _GUI_Redraw(guiObject_t *o){
+    redraws++;for(unsigned i=0;i<count;i++)if(rows[i]==o)mask|=1u<<i;
+}
+int tx15_audio_hw_test(unsigned now){(void)now;return 1;}
+void tx15_audio_hw_stop(void){}
+void tx15_audio_hw_volume(unsigned v){tx15_audio_report.volume=v;}
+guiObject_t *GUI_CreateLabelBox(guiLabel_t *o,u16 x,u16 y,u16 w,u16 h,const struct LabelDesc *d,
+ const char *(*name)(guiObject_t *,const void *),void (*cb)(guiObject_t *,s8,const void *),const void *data){
+ (void)x;(void)y;(void)w;(void)h;(void)d;(void)name;(void)data;
+ if(!cb){assert(count<6);rows[count++]=(guiObject_t *)o;}
+ return (guiObject_t *)o;
+}
+#include "src/pages/320x240x16/audio_test_page.c"
+int main(void){
+ PAGE_AudioTestInit(0);redraws=mask=0;
+ for(ms=200;ms<=2000;ms+=200)PAGE_AudioTestEvent();
+ assert(!redraws);assert(count==6);
+ tx15_audio_report.dma_irqs=7;ms+=200;PAGE_AudioTestEvent();
+ assert(redraws==1 && mask==2);
+ redraws=mask=0;ms+=200;PAGE_AudioTestEvent();assert(!redraws);
+ tx15_audio_report.reason=6;tx15_audio_report.last_reg=122;
+ ms+=200;PAGE_AudioTestEvent();assert(redraws==2 && mask==5);
+ return 0;
+}''',[])
     def test_action_names_dispatch_and_exit_stops_audio(self):
         self.run_c(r'''
 #include <assert.h>
@@ -19,7 +58,7 @@ static void (*press_[4])(guiObject_t *,s8,const void *);
 static const void *data_[4];
 u32 CLOCK_getms(void){return 10;}
 u8 PAGE_SetModal(u8 m){return m;}
-void PAGE_ShowHeader(const char *s){assert(strstr(s,"AUD3"));}
+void PAGE_ShowHeader(const char *s){assert(strstr(s,"AUD4"));}
 void _GUI_Redraw(guiObject_t *o){(void)o;}
 int tx15_audio_hw_test(unsigned now){assert(now==10);played++;return 1;}
 void tx15_audio_hw_stop(void){stopped++;}

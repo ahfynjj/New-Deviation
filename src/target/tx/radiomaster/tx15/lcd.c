@@ -1,6 +1,9 @@
 /* New Deviation native TX15 application adapter; GPL-3.0-or-later. */
 #include "common.h"
 #include "../../../../../hardware/tx15/board/display.h"
+#ifdef TX15_STATUS_REGIONS
+#include "display_region.h"
+#endif
 #ifdef TX15_BUFFERED_DISPLAY
 #include "../../../../../hardware/tx15/board/display_buffer.h"
 #endif
@@ -14,7 +17,11 @@ void LCD_DrawStart(unsigned x0,unsigned y0,unsigned x1,unsigned y1,enum DrawDir 
 }
 void LCD_DrawPixel(unsigned color) {
     if(!active) return;
-    tx15_display_pixel(x,y,(uint16_t)color);
+#ifdef TX15_STATUS_REGIONS
+    if(tx15_region_active)tx15_region_pixel(x,y,(uint16_t)color);
+    else
+#endif
+        tx15_display_pixel(x,y,(uint16_t)color);
     if(x<right) x++;
     else {
         x=left;
@@ -23,7 +30,11 @@ void LCD_DrawPixel(unsigned color) {
     }
 }
 void LCD_DrawPixelXY(unsigned x0,unsigned y0,unsigned color) {
-    tx15_display_pixel(x0,y0,(uint16_t)color);
+#ifdef TX15_STATUS_REGIONS
+    if(tx15_region_active)tx15_region_pixel(x0,y0,(uint16_t)color);
+    else
+#endif
+        tx15_display_pixel(x0,y0,(uint16_t)color);
 }
 void LCD_DrawStop(void) { active=0; }
 /* RGB panels have no character-map window hardware. Deviation's mapped
