@@ -57,8 +57,14 @@ void _menu_init(int page)
         idx++;
         i++;
     }
+#ifdef TX15_MENU_TOUCH
+    GUI_CreateScrollable(&gui->scrollable, 0, HEADER_HEIGHT, LCD_WIDTH, MENU_CONTENT_HEIGHT,
+                     LINE_SPACE, idx, row_cb, NULL, NULL, NULL);
+    tx15_menu_footer_init();
+#else
     GUI_CreateScrollable(&gui->scrollable, 0, HEADER_HEIGHT, LCD_WIDTH, LCD_HEIGHT - HEADER_HEIGHT,
                      LINE_SPACE, idx, row_cb, NULL, NULL, NULL);
+#endif
 }
 
 void PAGE_MenuInit(int page)

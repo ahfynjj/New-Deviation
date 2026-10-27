@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "base": "faffe31c",
+  "status": "usb-candidate-not-installed",
+  "phase": "P2a native menus only",
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "0e6de398f48b131bb92395a7164dca21cecaf06b7fdcfae66a28905e4583bb61",
+    "payload_sha256": "21eb7c517cc81c6a60a3635b7a1a222ea59a56d73045bbbb8d2f74cb804bb756",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false,
+    "status_regions": false,
+    "frame_swap": true,
+    "touch_diagnostic": true,
+    "menu_touch": true
+  },
+  "arm_objects": 156,
+  "tests_passed": 49,
+  "test_modules": [
+    "test_menu_touch",
+    "test_i2c_bus",
+    "test_touch_input",
+    "test_touch_driver",
+    "test_touch_page",
+    "test_touch_runtime",
+    "test_controls",
+    "test_audio_hw",
+    "test_audio_deadline",
+    "test_media_clock",
+    "test_audio_page",
+    "test_frame_swap",
+    "test_power_ui",
+    "test_display_region",
+    "test_display_buffer",
+    "test_app_adapter",
+    "test_usb_update_package",
+    "test_lua_runtime",
+    "test_rf_model",
+    "test_settings_store",
+    "test_rf_settings",
+    "test_switch_capture",
+    "test_input_dashboard"
+  ],
+  "package": {
+    "path": "local\\tx15-usb-release\\tx15-menu-touch-ui02-20261027.ndu",
+    "bytes": 715128,
+    "sha256": "bd9c77b89dc18e30c90669be40979e8b6cdceb53724be7e17837518a44d8ea45",
+    "image_bytes": 715000,
+    "image_crc": "0x9dff46ff",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "entry": "0x24035f49",
+  "segments": [
+    {
+      "address": "0x24010000",
+      "bytes": 250553
+    },
+    {
+      "address": "0xd0080000",
+      "bytes": 464375
+    }
+  ],
+  "map": 0,
+  "resources_bytes": 464375,
+  "resource_limit": 524288,
+  "review": "One independent review identified held-contact activation after delayed probe; observed-zero-contact gate added and regression passed. Modal guard also covered.",
+  "hardware_feedback": "P1 user reports clicks approximately correct, Map 0 trial. UI02 not yet tested.",
+  "device_accessed": false,
+  "flash_written": false
+}

@@ -38,9 +38,17 @@ void tx15_touch_stop(uint32_t now){
     tx15_touch_input_cancel(&touch_input,now);tx15_touch_report.state=TX15_TOUCH_OFF;
     tx15_touch_report.points=0;
 }
+void tx15_touch_set_map(unsigned flags,uint32_t now){
+    flags&=7u;
+    if(touch_map.flags==flags)return;
+    if(touch_input.active)tx15_touch_input_cancel(&touch_input,now);
+    touch_map.flags=flags;tx15_touch_report.map_flags=flags;
+}
 void tx15_touch_cycle_map(uint32_t now){
+    tx15_touch_set_map(touch_map.flags+1u,now);
+}
+void tx15_touch_require_release(uint32_t now){
     tx15_touch_input_cancel(&touch_input,now);
-    touch_map.flags=(touch_map.flags+1u)&7u;tx15_touch_report.map_flags=touch_map.flags;
 }
 int tx15_touch_take(struct tx15_touch_event *event){
     if(!tx15_touch_input_take(&touch_input,event))return 0;

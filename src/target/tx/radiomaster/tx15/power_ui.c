@@ -2,6 +2,9 @@
  * unchanged on cancellation. No model writes until PWR_Shutdown commits. */
 #include "common.h"
 #include "power_ui.h"
+#ifdef TX15_MENU_TOUCH
+#include "menu_touch.h"
+#endif
 #ifdef TX15_STANDALONE
 #include "runtime.h"
 #include "../../../../../hardware/tx15/board/power.h"
@@ -100,6 +103,9 @@ void tx15_power_ui_poll(void) {
     (void)tx15_power_button_poll(&power_button,now,pressed);
     if(!power_button.released || !power_button.tracking || !pressed)return;
     power_busy=1; /* Protect watchdog reentry from any rendering/service path. */
+#ifdef TX15_MENU_TOUCH
+    tx15_menu_touch_suspend();
+#endif
     snapshot(0);begin();
     unsigned last_second=0,last_width=0;
     for(;;) {

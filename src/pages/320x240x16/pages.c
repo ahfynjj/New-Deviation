@@ -13,6 +13,9 @@
  along with Deviation.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "pages.h"
+#ifdef TX15_MENU_TOUCH
+#include "menu_touch.h"
+#endif
 
 struct _gui_objs gui_objs;
 static struct page_obj * const gui = &gui_objs.page;
@@ -52,6 +55,9 @@ void PAGE_ChangeByID(enum PageID id, s8 menuPage)
 {
     if ( modal || GUI_IsModal())
         return;
+#ifdef TX15_MENU_TOUCH
+    tx15_menu_touch_suspend();
+#endif
     PAGE_SaveCurrentPos();
     page_scrollable = NULL;
     PAGE_Exit();
@@ -119,8 +125,17 @@ void PAGE_ShowHeader(const char *title)
         obj = GUI_CreateIcon(&gui->exitico, 0, 0, &icons[ICON_EXIT], changepage_cb, (void *)0);
         GUI_SetSelectable(obj, 0);
     }
-    if(title)
+    if(title) {
+#ifdef TX15_MENU_TOUCH
+        if(cur_page==PAGEID_MENU || cur_page==PAGEID_MODELMNU || cur_page==PAGEID_TXMENU){
+            struct LabelDesc font=TITLE_FONT;
+            font.font=BUTTON_FONT.font;
+            GUI_CreateLabelBox(&gui->title,40,0,LCD_WIDTH-40,TX15_UI_HEADER,
+                &font,GUI_Localize,NULL,(void *)title);
+        } else
+#endif
         GUI_CreateLabelBox(&gui->title, 40, 10, LCD_WIDTH - 40, 0, &TITLE_FONT, GUI_Localize, NULL, (void *)title);
+    }
     //obj = GUI_CreateIcon(&gui->previco, LCD_WIDTH-64, 0, &icons[ICON_PREVPAGE], changepage_cb, (void *)-1);
     //GUI_SetSelectable(obj, 0);
     //obj = GUI_CreateIcon(&gui->nextico, LCD_WIDTH-32, 0, &icons[ICON_NEXTPAGE], changepage_cb, (void *)1);

@@ -15,5 +15,8 @@ void tx15_touch_start(uint32_t now);
 void tx15_touch_stop(uint32_t now);
 void tx15_touch_poll(uint32_t now);
 void tx15_touch_cycle_map(uint32_t now);
+void tx15_touch_set_map(unsigned flags,uint32_t now);
+/* Gate application gestures until the controller reports zero contacts. */
+void tx15_touch_require_release(uint32_t now);
 int tx15_touch_take(struct tx15_touch_event *event);
 #endif

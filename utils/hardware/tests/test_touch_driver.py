@@ -59,5 +59,20 @@ int main(void){
  busy=0;tx15_touch_start(600);advance(600,620);
  tx15_touch_stop(620);before=calls;advance(620,1000);
  assert(calls==before && tx15_touch_report.state==TX15_TOUCH_OFF);
+ /* Menu mapping override before contact must not block the first tap. */
+ tx15_touch_start(1000);advance(1000,1020);tx15_touch_set_map(0,1020);
+ assert(!tx15_touch_report.map_flags);
+ ready=0x81;advance(1020,1050);
+ assert(tx15_touch_take(&event) && event.kind==TX15_TOUCH_DOWN);
+ tx15_touch_set_map(0,1050);assert(!tx15_touch_take(&event));
+ tx15_touch_set_map(1,1050);
+ assert(tx15_touch_take(&event) && event.kind==TX15_TOUCH_CANCEL);
+ /* A held finger across delayed discovery/Lua return must not become a tap. */
+ tx15_touch_start(1100);tx15_touch_require_release(1100);
+ busy=1;advance(1100,1400);busy=0;advance(1400,1420);
+ ready=0x81;advance(1420,1450);assert(!tx15_touch_take(&event));
+ ready=0x80;advance(1450,1480);assert(!tx15_touch_take(&event));
+ ready=0x81;advance(1480,1510);
+ assert(tx15_touch_take(&event) && event.kind==TX15_TOUCH_DOWN);
  return 0;
 }''',['hardware/tx15/board/touch.c','hardware/tx15/board/touch_input.c'])

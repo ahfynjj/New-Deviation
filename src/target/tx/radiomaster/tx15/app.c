@@ -21,6 +21,9 @@ void tx15_request_lua_for(unsigned slot) {if(slot<2)lua_requested=slot+1;}
 #include "../../../../../hardware/tx15/board/controls.h"
 #include "input_dashboard.h"
 #include "mix_switch.h"
+#ifdef TX15_MENU_TOUCH
+#include "menu_touch.h"
+#endif
 #ifdef TX15_FRAME_SWAP
 #include "frame_swap.h"
 #include "runtime.h"
@@ -33,7 +36,9 @@ static void tx15_app_frame_service(void){(void)tx15_runtime_poll(CLOCK_getms());
 #include "../../../../../hardware/tx15/board/audio.h"
 #include "../../../../../hardware/tx15/board/media_clock.h"
 #endif
-#ifdef TX15_TOUCH_DIAGNOSTIC
+#ifdef TX15_MENU_TOUCH
+const char DeviationVersion[33]="New Deviation TX15 UI02";
+#elif defined(TX15_TOUCH_DIAGNOSTIC)
 const char DeviationVersion[33]="New Deviation TX15 UI01";
 #elif defined(TX15_FRAME_SWAP)
 const char DeviationVersion[33]="New Deviation TX15 RD02";
@@ -110,10 +115,17 @@ void tx15_app_main(void) {
 #else
             if(lua_requested) {
                 unsigned slot=lua_requested-1;lua_requested=0;
+#ifdef TX15_MENU_TOUCH
+                tx15_menu_touch_suspend();
+#endif
                 if(tx15_rf_lua_select(slot)->slot==(int)slot)tx15_lua_tool();
             }
 #endif
-            PAGE_Event(); GUI_RefreshScreen();
+            PAGE_Event();
+#ifdef TX15_MENU_TOUCH
+            tx15_menu_touch_poll();
+#endif
+            GUI_RefreshScreen();
         }
     }
 }
