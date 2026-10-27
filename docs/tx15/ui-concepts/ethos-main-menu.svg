@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320">
+<rect width="480" height="320" fill="#14181E"/>
+<text x="12" y="9" dy="17.6" text-anchor="start" font-family="Segoe UI,sans-serif" font-size="22" font-weight="700" fill="#F3F5F7">Main menu</text>
+<text x="468" y="13" dy="12.8" text-anchor="end" font-family="Segoe UI,sans-serif" font-size="16" font-weight="400" fill="#AEB8C4">8.18 V</text>
+<polyline points="0,36 480,36" fill="none" stroke="#35404D" stroke-width="1" stroke-linejoin="round"/>
+<rect x="12" y="52" width="146" height="96" rx="8" fill="#232A33" stroke="#FF9E32" stroke-width="2"/>
+<polyline points="85,64 89,78 104,86 104,89 88,86 88,95 94,99 76,99 82,95 82,86 66,89 66,86 81,78 85,64" fill="none" stroke="#FF9E32" stroke-width="2" stroke-linejoin="round"/>
+<text x="85" y="116" dy="14.4" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="18" font-weight="700" fill="#F3F5F7">Model menu</text>
+<rect x="167" y="52" width="146" height="96" rx="8" fill="#232A33" stroke="#35404D" stroke-width="1"/>
+<rect x="222" y="72" width="36" height="28" rx="5" fill="none" stroke="#AEB8C4" stroke-width="2"/>
+<polyline points="236,72 242,64" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<rect x="227" y="81" width="10" height="10" rx="5" fill="none" stroke="#AEB8C4" stroke-width="2"/>
+<polyline points="232,82 235,78" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<rect x="243" y="81" width="10" height="10" rx="5" fill="none" stroke="#AEB8C4" stroke-width="2"/>
+<polyline points="248,82 251,78" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<text x="240" y="116" dy="14.4" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="18" font-weight="400" fill="#F3F5F7">Transmitter</text>
+<rect x="322" y="52" width="146" height="96" rx="8" fill="#232A33" stroke="#35404D" stroke-width="1"/>
+<polyline points="395,100 395,65 390,70 395,65 400,70" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="395,89 383,82 383,74" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="395,83 407,76 407,72" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<rect x="380" y="70" width="6" height="6" rx="3" fill="#AEB8C4" stroke="none" stroke-width="1"/>
+<rect x="404" y="67" width="6" height="6" rx="0" fill="#AEB8C4" stroke="none" stroke-width="1"/>
+<text x="395" y="116" dy="14.4" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="18" font-weight="400" fill="#F3F5F7">USB</text>
+<rect x="12" y="156" width="146" height="96" rx="8" fill="#232A33" stroke="#35404D" stroke-width="1"/>
+<polyline points="85,186 85,174.0 85,168.0 85,174.0 85,186" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="77,194 77,178.0 85,172.0 93,178.0 93,194" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="69,202 69,182.0 85,176.0 101,182.0 101,202" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="85,186 85,204" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<text x="85" y="220" dy="14.4" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="18" font-weight="400" fill="#F3F5F7">ELRS Lua</text>
+<rect x="167" y="156" width="146" height="96" rx="8" fill="#232A33" stroke="#35404D" stroke-width="1"/>
+<polyline points="223,182 232,182 243,173 243,202 232,193 223,193 223,182" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="249,180 254,187 249,195" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<polyline points="254,174 260,187 254,201" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<text x="240" y="220" dy="14.4" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="18" font-weight="400" fill="#F3F5F7">Audio test</text>
+<rect x="322" y="156" width="146" height="96" rx="8" fill="#232A33" stroke="#35404D" stroke-width="1"/>
+<rect x="384" y="169" width="23" height="34" rx="4" fill="none" stroke="#AEB8C4" stroke-width="2"/>
+<polyline points="395,193 395,180 399,180 400,191 407,188 411,192 406,205" fill="none" stroke="#AEB8C4" stroke-width="2" stroke-linejoin="round"/>
+<text x="395" y="220" dy="14.4" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="18" font-weight="400" fill="#F3F5F7">Touch test</text>
+<polyline points="0,268 480,268" fill="none" stroke="#35404D" stroke-width="1" stroke-linejoin="round"/>
+<rect x="12" y="276" width="112" height="40" rx="6" fill="#232A33" stroke="#35404D" stroke-width="1"/>
+<text x="68.0" y="286" dy="14.4" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="18" font-weight="700" fill="#F3F5F7">Back</text>
+<rect x="264" y="276" width="44" height="40" rx="6" fill="#232A33" stroke="#35404D" stroke-width="1"/>
+<text x="286.0" y="286" dy="14.4" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="18" font-weight="700" fill="#F3F5F7">&lt;</text>
+<text x="366" y="287" dy="12.8" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="16" font-weight="400" fill="#AEB8C4">1 / 2</text>
+<rect x="424" y="276" width="44" height="40" rx="6" fill="#232A33" stroke="#35404D" stroke-width="1"/>
+<text x="446.0" y="286" dy="14.4" text-anchor="middle" font-family="Segoe UI,sans-serif" font-size="18" font-weight="700" fill="#F3F5F7">&gt;</text>
+</svg>
