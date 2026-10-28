@@ -264,9 +264,12 @@ void MIXPAGE_RedrawGraphs()
         case MIXERTEMPLATE_COMPLEX:
 #ifdef TX15_CARD_UI
             GUI_Redraw(&tx15_mix_card_position);
+            GUI_Redraw(&tx15_mix_card_output);
 #endif
             GUI_Redraw(&gui3->graph);
+#ifndef TX15_CARD_UI
             GUI_Redraw(&gui3->bar);
+#endif
             break;
         default: break;
     }

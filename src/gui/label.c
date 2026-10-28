@@ -76,6 +76,7 @@ void GUI_DrawLabel(struct guiObject *obj)
 #ifdef TX15_CARD_UI
     if(label->desc.style==LABEL_CARD){tx15_card_draw_label(label,str);return;}
     if(label->desc.style==LABEL_PANEL){tx15_card_draw_plate(obj,str,&label->desc);return;}
+    if(label->desc.style>=LABEL_MIX_ROW && label->desc.style<=LABEL_MIX_ACTION){tx15_card_draw_plate(obj,str,&label->desc);return;}
 #endif
     GUI_DrawLabelHelper(obj->box.x, obj->box.y, obj->box.width, obj->box.height, str, &label->desc, obj == objSELECTED);
 }

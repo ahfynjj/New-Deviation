@@ -109,6 +109,10 @@ void GUI_DrawObject(struct guiObject *obj)
     /* Draw after the normal focus outline, otherwise its width=2 border
      * erases the edit indicator. Orange distinguishes editing from focus. */
     if(obj==objSELECTED && obj->Type==TextSelect
+#ifdef TX15_CARD_UI
+        && (((guiTextSelect_t *)obj)->desc.style<LABEL_MIX_ROW
+            || ((guiTextSelect_t *)obj)->desc.style>LABEL_MIX_ACTION)
+#endif
         && (((guiTextSelect_t *)obj)->enable&TX15_SWITCH_EDITING)
         && obj->box.width>2 && obj->box.height>2)
         LCD_DrawRect(obj->box.x+1,obj->box.y+1,obj->box.width-2,obj->box.height-2,0xfdc0);

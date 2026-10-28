@@ -6,6 +6,67 @@
 #include "mix_switch.h"
 static struct display_settings saved;
 static unsigned active;
+static struct {guiObject_t *object;const char *caption;} mix_rows[5];
+void tx15_card_mix_rows_reset(void){memset(mix_rows,0,sizeof(mix_rows));}
+void tx15_card_mix_row(guiTextSelect_t *field,const char *caption){
+    for(unsigned i=0;i<5;i++)if(!mix_rows[i].object || mix_rows[i].object==(guiObject_t *)field){
+        mix_rows[i].object=(guiObject_t *)field;mix_rows[i].caption=caption;
+        field->desc.style=LABEL_MIX_ROW;return;
+    }
+}
+/* ASCII names are shortened visibly; never spill into the next touch zone. */
+static void mix_text(const char *text,unsigned x,unsigned y,unsigned w,unsigned h,
+        unsigned font,unsigned color,int right){
+    char short_text[96];snprintf(short_text,sizeof(short_text),"%s",text);
+    LCD_SetFont(font);u16 tw,th;
+    LCD_GetStringDimensions((const u8 *)short_text,&tw,&th);
+    if(tw>w || th>h){LCD_SetFont(LABEL_FONT.font);LCD_GetStringDimensions((const u8 *)short_text,&tw,&th);}
+    unsigned n=strlen(short_text),trimmed=0;
+    while(n && tw>w){short_text[--n]=0;trimmed=1;LCD_GetStringDimensions((const u8 *)short_text,&tw,&th);}
+    if(trimmed && n){short_text[n-1]='~';LCD_GetStringDimensions((const u8 *)short_text,&tw,&th);}
+    while(n && tw>w){short_text[--n]=0;LCD_GetStringDimensions((const u8 *)short_text,&tw,&th);}
+    if(!n || th>h)return;
+    LCD_SetFontColor(color);LCD_PrintStringXY(right?x+w-tw:x,y+(h-th)/2,short_text);
+}
+static void mix_chevron(unsigned x,unsigned y,unsigned c){
+    LCD_DrawLine(x,y-4,x+6,y,c);LCD_DrawLine(x+6,y,x,y+4,c);
+}
+static void mix_plate(guiObject_t *obj,const char *text,const struct LabelDesc *font){
+    unsigned x=obj->box.x,y=obj->box.y,w=obj->box.width,h=obj->box.height;
+    unsigned editing=obj->Type==TextSelect && (((guiTextSelect_t *)obj)->enable&TX15_SWITCH_EDITING);
+    unsigned focus=GUI_GetSelected()==obj;
+    LCD_FillRect(x,y,w,h,TX15_CARD_BG);
+    if(font->style==LABEL_MIX_TEXT){LCD_FillRect(x,y,w,h,font->fill_color);mix_text(text,x,y,w,h,font->font,font->font_color,font->align==ALIGN_RIGHT);return;}
+    if(font->style==LABEL_MIX_TITLE){
+        if(focus || editing)LCD_DrawRoundRect(x,y,w,h,5,TX15_CARD_ACCENT);
+        mix_text(text,x+(editing?40:0),y,w-(editing?80:8),h,font->font,font->font_color,0);
+    }else{
+        LCD_FillRoundRect(x,y,w,h,5,font->fill_color);
+        if(font->style!=LABEL_MIX_CURVE || focus || editing)
+            LCD_DrawRoundRect(x,y,w,h,5,focus || editing?TX15_CARD_ACCENT:font->outline_color);
+        if(editing)LCD_DrawRoundRect(x+1,y+1,w-2,h-2,4,TX15_CARD_ACCENT);
+        if(font->style==LABEL_MIX_ROW){
+            const char *caption="";
+            for(unsigned i=0;i<5;i++)if(mix_rows[i].object==obj){caption=mix_rows[i].caption;break;}
+            mix_text(caption,x+(editing?44:12),y,64,h,LABEL_FONT.font,TX15_CARD_MUTED,0);
+            if(editing)mix_text("EDIT",x+110,y,30,h,LABEL_FONT.font,TX15_CARD_ACCENT,0);
+            mix_text(text,x+148,y,w-148-(editing?40:36),h,font->font,font->font_color,1);
+            if(!editing)mix_chevron(x+w-24,y+h/2,TX15_CARD_MUTED);
+        }else if(font->style==LABEL_MIX_CURVE){
+            if(!editing)mix_text("Curve",x+12,y,52,h,LABEL_FONT.font,TX15_CARD_MUTED,0);
+            mix_text(text,x+(editing?40:68),y,w-(editing?80:80),h,LABEL_FONT.font,font->font_color,1);
+        }else{
+            LCD_SetFont(font->font);u16 tw,th;LCD_GetStringDimensions((const u8 *)text,&tw,&th);
+            if(tw>w-12 || th>h-4){LCD_SetFont(LABEL_FONT.font);LCD_GetStringDimensions((const u8 *)text,&tw,&th);}
+            if(tw<=w-12 && th<=h-4){LCD_SetFontColor(font->font_color);LCD_PrintStringXY(x+(w-tw)/2,y+(h-th)/2,text);}
+        }
+    }
+    if(editing){
+        LCD_DrawFastHLine(x+12,y+h/2,16,TX15_CARD_ACCENT);
+        LCD_DrawFastHLine(x+w-28,y+h/2,16,TX15_CARD_ACCENT);
+        LCD_DrawFastVLine(x+w-20,y+h/2-8,17,TX15_CARD_ACCENT);
+    }
+}
 struct LabelDesc tx15_card_font(unsigned large){
     struct LabelDesc font=large?BUTTON_FONT:LABEL_FONT;
     font.style=LABEL_PANEL;font.align=ALIGN_CENTER;
@@ -13,6 +74,7 @@ struct LabelDesc tx15_card_font(unsigned large){
     font.outline_color=TX15_CARD_EDGE;return font;
 }
 void tx15_card_draw_plate(guiObject_t *obj,const char *text,const struct LabelDesc *font){
+    if(font->style>=LABEL_MIX_ROW && font->style<=LABEL_MIX_ACTION){mix_plate(obj,text,font);return;}
     unsigned x=obj->box.x,y=obj->box.y,w=obj->box.width,h=obj->box.height;
     LCD_FillRect(x,y,w,h,TX15_CARD_BG); /* Clear the previous square focus outline, including corners. */
     LCD_FillRoundRect(x,y,w,h,5,font->fill_color);
@@ -43,7 +105,7 @@ void tx15_card_page_theme(int page){
     for(unsigned i=0;i<NUM_LABELS;i++)Display.font[i].font_color=TX15_CARD_FG;
     Display.xygraph.bg_color=TX15_CARD_FILL;Display.xygraph.fg_color=TX15_CARD_ACCENT;
     Display.xygraph.grid_color=TX15_CARD_EDGE;Display.xygraph.axis_color=TX15_CARD_MUTED;
-    Display.xygraph.point_color=TX15_CARD_FG;Display.xygraph.outline_color=TX15_CARD_EDGE;
+    Display.xygraph.point_color=TX15_CARD_ACCENT;Display.xygraph.outline_color=TX15_CARD_EDGE;
 }
 void tx15_card_draw_label(guiLabel_t *label,const char *text){
     guiObject_t *obj=(guiObject_t *)label;

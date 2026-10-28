@@ -14,10 +14,10 @@ class MixerTouchTests(unittest.TestCase):
                 code=code.replace('mp->cur_template=MIXERTEMPLATE_EXPO_DR;assert(!PAGE_MixCardActive());',r'''
  tx15_mix_card_more_cb(NULL,-1,NULL); /* back to Basic */
  selected=(guiObject_t *)&gui3->scale;gui3->scale.enable=1|TX15_SWITCH_EDITING;
- assert(PAGE_MixCardHit(112,190)==106 && PAGE_MixCardHit(300,190)==107);
+ assert(PAGE_MixCardHit(24,190)==106 && PAGE_MixCardHit(300,190)==107);
  assert(PAGE_MixCardHit(210,190)==3);
  PAGE_MixCardTap(300,190);assert(steps==1);
- PAGE_MixCardTap(112,190);assert(steps==0);
+ PAGE_MixCardTap(24,190);assert(steps==0);
  mp->cur_template=MIXERTEMPLATE_SIMPLE;mp->firstObj=NULL;
  tx15_mix_simple_cards();assert(PAGE_MixCardActive());
  assert(PAGE_MixCardHit(30,55)==0 && PAGE_MixCardHit(30,235)==-1);

@@ -35,6 +35,12 @@ const struct ImageMap image_map[] = {
 
 void _gui_hilite_selected(struct guiObject *obj)
 {
+#ifdef TX15_CARD_UI
+    /* Native Mix plates paint their own rounded focus inside their bounds. */
+    enum LabelType style=obj->Type==TextSelect?((guiTextSelect_t *)obj)->desc.style:
+        obj->Type==Label?((guiLabel_t *)obj)->desc.style:LABEL_CENTER;
+    if(style>=LABEL_MIX_ROW && style<=LABEL_MIX_ACTION)return;
+#endif
     int i;
     for(i = 0; i < Display.select_width; i++)
         LCD_DrawRect(obj->box.x+i, obj->box.y+i, obj->box.width-2*i, obj->box.height-2*i, Display.select_color);

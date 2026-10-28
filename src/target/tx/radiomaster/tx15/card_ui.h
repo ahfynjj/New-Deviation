@@ -8,6 +8,8 @@ struct LabelDesc tx15_card_font(unsigned large);
 void tx15_card_page_theme(int page);
 void tx15_card_draw_label(guiLabel_t *label,const char *text);
 void tx15_card_draw_plate(guiObject_t *obj,const char *text,const struct LabelDesc *font);
+void tx15_card_mix_rows_reset(void);
+void tx15_card_mix_row(guiTextSelect_t *field,const char *caption);
 int PAGE_MixCardHit(unsigned x,unsigned y);
 void PAGE_MixCardTap(unsigned x,unsigned y);
 int PAGE_MixCardActive(void);

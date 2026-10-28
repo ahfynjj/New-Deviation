@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "base": "34cc7065",
+  "status": "usb-candidate-not-installed",
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "66363f4167ddce3baf20450dcb5fd0297f3ee2a7c62b556a0510783734119f3a",
+    "payload_sha256": "19a9fe37ef4e8d0dc394131ca97edf76933ae3635ae4382cd797cd641ff551ac",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false,
+    "status_regions": false,
+    "frame_swap": true,
+    "touch_diagnostic": true,
+    "menu_touch": true,
+    "card_ui": true
+  },
+  "tests_passed": 66,
+  "arm_objects": 157,
+  "resources_bytes": 464375,
+  "package": {
+    "path": "local\\tx15-usb-release\\tx15-complex-ui05-20261029.ndu",
+    "bytes": 721544,
+    "sha256": "a30e3e8201a34d70afbef28d149b89b195c44ed9ad9057bf80c2dab07a73541d",
+    "image_bytes": 721416,
+    "image_crc": "0x3d21dd4f",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "scope": "Complex main visual redesign: unified rows, EDIT and rounded focus, percentage fields, curve/output panel, footer actions; native callbacks/capture/save/cancel retained.",
+  "review": "One independent static review approved; reviewer independently ran 6 card/mix tests.",
+  "device_accessed": false,
+  "flash_written": false,
+  "hardware_acceptance": "Pending USB: physical typography/refresh, +/- and wheel/EXIT, Simple/More/template rebuild, capture, OK/Cancel persistence."
+}

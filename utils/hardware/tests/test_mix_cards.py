@@ -18,6 +18,7 @@ static struct advmixcfg_obj_g3 *gui3=&objects.u.g3;
 static struct advmixcfg_obj_g1 *gui1=&objects.u.g1;
 static unsigned fields,labels,graphs,sources,values,touches,saves,changes;
 static guiObject_t *selected;
+char tempstring[TEMPSTRINGLENGTH];
 int PAGE_GetID(void){return PAGEID_MIXTEMPL;}
 guiObject_t *GUI_GetSelected(void){return selected;}
 void GUI_SetSelected(guiObject_t *o){selected=o;}
@@ -80,6 +81,8 @@ void tx15_mix_value_register(guiTextSelect_t *o){(void)o;values++;}
 void tx15_mix_field_touch(guiObject_t *o){selected=o;touches++;}
 void tx15_mix_field_step(guiObject_t *o,int d){(void)o;(void)d;}
 void tx15_mix_switch_forget(guiObject_t *o){(void)o;}
+void tx15_card_mix_rows_reset(void){}
+void tx15_card_mix_row(guiTextSelect_t *o,const char *s){(void)o;(void)s;}
 #include "src/pages/320x240x16/advanced/mixer_cards.inc"
 int main(void){
  mp->cur_template=MIXERTEMPLATE_COMPLEX;mp->cur_mixer=&mp->mixer[0];mp->num_mixers=2;

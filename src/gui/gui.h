@@ -69,6 +69,11 @@ enum LabelType {
 #ifdef TX15_CARD_UI
     LABEL_CARD,
     LABEL_PANEL,
+    LABEL_MIX_ROW,
+    LABEL_MIX_TEXT,
+    LABEL_MIX_TITLE,
+    LABEL_MIX_CURVE,
+    LABEL_MIX_ACTION,
 #endif
 #endif
 
