@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "base": "9f579e53",
+  "status": "usb-candidate-not-installed",
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "d51b47f2f190ecc967cc509775b99d87640ebe89ffdcd42dec9412cec144313f",
+    "payload_sha256": "1e1f2156e243d79b838484b6e0a2151f8b10e8ca9e1c07322c643fbcdb210db8",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false,
+    "status_regions": false,
+    "frame_swap": true,
+    "touch_diagnostic": true,
+    "menu_touch": true,
+    "card_ui": true
+  },
+  "tests_passed": 61,
+  "arm_objects": 157,
+  "resources_bytes": 464375,
+  "package": {
+    "path": "local\\tx15-usb-release\\tx15-card-speed-ui03r1-20261028.ndu",
+    "bytes": 718504,
+    "sha256": "e3b4289a036fd81b77bc44ebc5e325d6798e322d469ad2e6cb7c7034ade05bbd",
+    "image_bytes": 718376,
+    "image_crc": "0x84d5b8a9",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "storage_finding": "Seventh enumerated item verified reachable by actual linked scrollable logic via rotary and Next; missing page indicator made it undiscoverable.",
+  "performance_finding": "Actual FillRect 146x96 previously called LCD_DrawPixel 14016 times; now one existing bulk writer call. Rounded fill avoids per-pixel fills as well. No measured device latency.",
+  "review": "One independent review found no actionable regression; preserve primitive/frame presentation boundary.",
+  "device_accessed": false,
+  "flash_written": false,
+  "hardware_acceptance": "Pending USB: Storage test discoverability, menu switching/edit responsiveness and visual consistency; no claim all lag resolved."
+}

@@ -38,6 +38,7 @@ enum {NUM_X=8,NUM_WIDTH=32,MENU_X=48,MENU_WIDTH=404};
 #define MENU_CONTENT_HEIGHT (TX15_UI_LIST_ROWS*TX15_UI_ROW_HEIGHT)
 #endif
 static void tx15_menu_footer_init(void);
+static guiLabel_t menu_footer[3];
 #else
 enum {
     NUM_X             = 0,
@@ -63,6 +64,7 @@ static int row_cb(int absrow, int relrow, int y, void *data)
 {
     (void)data;
 #ifdef TX15_CARD_UI
+    OBJ_SET_DIRTY((guiObject_t *)&menu_footer[2],1);
     unsigned page=0,index=0;
     for(unsigned col=0;col<3;col++){
         unsigned target=absrow*3+col;
@@ -104,16 +106,37 @@ static int row_cb(int absrow, int relrow, int y, void *data)
 #endif
 }
 #ifdef TX15_MENU_TOUCH
-static guiLabel_t menu_footer[3];
+#ifdef TX15_CARD_UI
+static const char *tx15_menu_footer_text(guiObject_t *obj,const void *data){
+    (void)obj;
+    unsigned which=(uintptr_t)data;
+    if(which==0)return "Back";
+    if(which==1)return "Previous";
+    static char caption[24];
+    unsigned pages=(tx15_menu_items+5)/6;
+    if(!pages)pages=1;
+    unsigned page=(PAGE_MenuTouchRow()+1)/2+1;
+    if(page>pages)page=pages;
+    snprintf(caption,sizeof(caption),"%s %u/%u",page<pages?"Next":"End",page,pages);
+    return caption;
+}
+#endif
 static void tx15_menu_footer_init(void){
+#ifndef TX15_CARD_UI
     static const char *const names[]={"Back","Previous","Next"};
+#endif
     struct LabelDesc font=BUTTON_FONT;
 #ifdef TX15_CARD_UI
     font=tx15_card_font(1);
 #endif
     for(unsigned i=0;i<3;i++)
+#ifdef TX15_CARD_UI
+        GUI_CreateLabelBox(&menu_footer[i],8+i*160,TX15_UI_FOOTER_Y,144,40,
+            &font,tx15_menu_footer_text,NULL,(const void *)(uintptr_t)i);
+#else
         GUI_CreateLabelBox(&menu_footer[i],8+i*160,TX15_UI_FOOTER_Y,144,40,
             &font,NULL,NULL,names[i]);
+#endif
 }
 int PAGE_MenuTouchRow(void){return GUI_ScrollableCurrentRow(&gui->scrollable);}
 void PAGE_MenuTouchScroll(int direction){
@@ -128,6 +151,7 @@ void PAGE_MenuTouchScroll(int direction){
     int row=PAGE_MenuTouchRow()+(direction>0?visible:-visible);
     if(row<0)row=0;
     if(row>last)row=last;
+    if(row==PAGE_MenuTouchRow())return;
     GUI_SetSelected(GUI_ShowScrollableRowOffset(&gui->scrollable,row<<8));
 }
 void PAGE_MenuTouchTap(unsigned x,unsigned y){

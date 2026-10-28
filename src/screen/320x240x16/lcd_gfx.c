@@ -18,6 +18,9 @@ All text above must be included in any redistribution
 #include <stdlib.h>
 #include <stdio.h>
 #include "gui/gui.h"
+#ifdef TX15_FRAME_SWAP
+#include "target/tx/radiomaster/tx15/frame_swap.h"
+#endif
 
 /* helper functions */
 
@@ -25,18 +28,30 @@ All text above must be included in any redistribution
 
 void LCD_DrawFastVLine(int16_t x, int16_t y, 
                  int16_t h, uint16_t color) {
+#ifdef TX15_FRAME_SWAP
+    if(x<0 || h<=0)return;
+    if(y<0){h+=y;y=0;}
+    if(h<=0)return;
+    tx15_frame_rect(x,y,1,h,color);tx15_frame_service();
+#else
     LCD_DrawStart(x, y, x, y + h -1, DRAW_NWSE); // bug fix: should be y+ h-1
     while(h--)
         LCD_DrawPixel(color);
     LCD_DrawStop();
+#endif
 }
 
 #if !defined(_DEVO12_TARGET_H_) || defined(EMULATOR)
 void LCD_DrawFastHLine(u16 x, u16 y, u16 w, u16 color) {
+#ifdef TX15_FRAME_SWAP
+    if(!w)return;
+    tx15_frame_rect(x,y,w,1,color);tx15_frame_service();
+#else
     LCD_DrawStart(x, y, x + w - 1, y, DRAW_NWSE);
     while(w--)
         LCD_DrawPixel(color);
     LCD_DrawStop();
+#endif
 }
 #endif
 
@@ -209,11 +224,16 @@ void LCD_DrawRect(u16 x, u16 y, u16 w, u16 h, u16 color)
 #if !defined(_DEVO12_TARGET_H_) || defined(EMULATOR)
 void LCD_FillRect(u16 x, u16 y, u16 w, u16 h, u16 color)
 {
+#ifdef TX15_FRAME_SWAP
+    if(!w || !h)return;
+    tx15_frame_rect(x,y,w,h,color);tx15_frame_service();
+#else
     u32 bytes = (u32)w * h;
     LCD_DrawStart(x, y, x + w - 1, y + h - 1, DRAW_NWSE);  // Bug fix: should be y+h-1 instead of y+h
     while(bytes--)
         LCD_DrawPixel(color);
     LCD_DrawStop();
+#endif
 }
 #endif
 
