@@ -10,6 +10,8 @@
 #define SUPPORT_MULTI_LANGUAGE 0
 #define SUPPORT_XN297DUMP 0
 #define TX15_RAM_APPLICATION 1
+/* Physical native keys already pass the 20ms board input filter. */
+#define BUTTON_DEBOUNCE_MS 10
 
 #define TXID 0xF0  /* RAM application identity; not a DFU identifier. */
 #define LCD_WIDTH 480

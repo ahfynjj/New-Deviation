@@ -19,10 +19,10 @@ int main(void) {
  for(int i=0;i<10;i++) { assert(!tx15_input_filter_step(&f,1,3).pressed); tx15_input_filter_step(&f,0,3); }
  const unsigned phase[]={1,0,2,3}; int sum=0;
  for(int i=0;i<4;i++) sum+=tx15_input_filter_step(&f,0,phase[i]).rotation;
- assert(sum==1);
+ assert(sum==2); /* two physical detents in a full electrical cycle */
  const unsigned reverse[]={2,0,1,3}; sum=0;
  for(int i=0;i<4;i++) sum+=tx15_input_filter_step(&f,0,reverse[i]).rotation;
- assert(sum==-1);
+ assert(sum==-2);
  assert(!tx15_input_filter_step(&f,0,0).rotation);
  assert(!tx15_input_filter_step(&f,0,3).rotation);
  /* A key already held at startup must be released before generating a press. */

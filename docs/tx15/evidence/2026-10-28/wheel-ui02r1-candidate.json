@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "base": "e9a0ca96",
+  "status": "usb-candidate-not-installed",
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "b47bfe6c2e8a5696bdd96ddaf5ca4bb8bb2a52f49f939b617d62690955a9e6db",
+    "payload_sha256": "e16ee1813c79f910733138617708a4769662a05ff1e111f0038f7336bdabaeb4",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false,
+    "status_regions": false,
+    "frame_swap": true,
+    "touch_diagnostic": true,
+    "menu_touch": true
+  },
+  "tests_passed": 51,
+  "arm_objects": 156,
+  "resources_bytes": 464375,
+  "package": {
+    "path": "local\\tx15-usb-release\\tx15-wheel-1step-ui02r1-20261028.ndu",
+    "bytes": 715128,
+    "sha256": "6aeb212ffe4a865c436fd25cd215acfe0c229a152b8182f7dd9478414ac2209c",
+    "image_bytes": 715000,
+    "image_crc": "0x323cbb71",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "entry": "0x24035f49",
+  "encoder_edges_per_detent": 2,
+  "button_pulse_ms": 20,
+  "button_release_ms": 20,
+  "native_secondary_debounce_ms": 10,
+  "queue_limit": 32,
+  "review": "Independent read-only review: no blocking findings. Physical-key/longpress coverage omission subsequently covered by real ScanButtons/BUTTON_Handler host test.",
+  "hardware_acceptance": "Pending: single-detent count, fast turns/reversal, physical controls and ELRS Lua on TX15.",
+  "device_accessed": false,
+  "flash_written": false
+}

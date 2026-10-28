@@ -26,19 +26,31 @@ volatile u8 priority_ready;
 static unsigned sample_calls;
 int tx15_analog_sample(void) { sample_calls++; return 0; }
 #include "hardware/tx15/board/inputs.h"
-static unsigned up_releases, down_releases;
+static unsigned up_releases, down_releases, wheel_longpress;
+static unsigned enter_presses,enter_releases,enter_longpress,exit_presses,exit_releases,exit_longpress;
 void AUTODIMMER_Check(void) {}
 static unsigned count_action(u32 button,unsigned flags,void *data) {
  (void)data;
+ if(flags & BUTTON_PRESS) {
+  if(button==CHAN_ButtonMask(BUT_ENTER))enter_presses++;
+  if(button==CHAN_ButtonMask(BUT_EXIT))exit_presses++;
+ }
+ if(flags & BUTTON_LONGPRESS) {
+  if(button==CHAN_ButtonMask(BUT_UP) || button==CHAN_ButtonMask(BUT_DOWN))wheel_longpress++;
+  if(button==CHAN_ButtonMask(BUT_ENTER))enter_longpress++;
+  if(button==CHAN_ButtonMask(BUT_EXIT))exit_longpress++;
+ }
  if(flags & BUTTON_RELEASE) {
   if(button==CHAN_ButtonMask(BUT_UP)) up_releases++;
   if(button==CHAN_ButtonMask(BUT_DOWN)) down_releases++;
+  if(button==CHAN_ButtonMask(BUT_ENTER))enter_releases++;
+  if(button==CHAN_ButtonMask(BUT_EXIT))exit_releases++;
  }
  return 1;
 }
-static u32 test_ms; static int rotation;
+static u32 test_ms; static int rotation;static unsigned physical_keys;
 u32 CLOCK_getms(void) { return test_ms; }
-unsigned tx15_inputs_state(void) { return 0; }
+unsigned tx15_inputs_state(void) { return physical_keys; }
 struct tx15_input_event tx15_inputs_take(void) { struct tx15_input_event e={0,rotation}; rotation=0; return e; }
 u32 ScanButtons(void) { SCANBODY
 
@@ -76,8 +88,9 @@ int main(void) {
  test_ms=200; rotation=-1; assert(ScanButtons()==CHAN_ButtonMask(BUT_UP));
  test_ms=300; assert(ScanButtons()==0);
  buttonAction_t action={0};
- BUTTON_RegisterCallback(&action,CHAN_ButtonMask(BUT_UP)|CHAN_ButtonMask(BUT_DOWN),
-   BUTTON_PRESS|BUTTON_RELEASE,count_action,0);
+ BUTTON_RegisterCallback(&action,CHAN_ButtonMask(BUT_UP)|CHAN_ButtonMask(BUT_DOWN)
+   |CHAN_ButtonMask(BUT_ENTER)|CHAN_ButtonMask(BUT_EXIT),
+   BUTTON_PRESS|BUTTON_RELEASE|BUTTON_LONGPRESS,count_action,0);
  /* Feed ten detent events each way through the real Deviation debounce and
   * callback dispatcher. GUI navigation consumes the release, not the press. */
  for(test_ms=500;test_ms<6500;test_ms+=5) {
@@ -86,6 +99,26 @@ int main(void) {
   BUTTON_Handler();
  }
  assert(up_releases==10 && down_releases==10);
+ /* Fast 12.5-detent/s turns must deliver every release to real callbacks. */
+ for(test_ms=6500;test_ms<11500;test_ms+=5) {
+  if(test_ms>=6500 && test_ms<8500 && (test_ms-6500)%80==0) rotation=-1;
+  if(test_ms>=9000 && test_ms<11000 && (test_ms-9000)%80==0) rotation=1;
+  BUTTON_Handler();
+ }
+ assert(up_releases==35 && down_releases==35);
+ /* A GUI stall can coalesce detents: the adapter must preserve a burst. */
+ rotation=-12;
+ for(;test_ms<13000;test_ms+=5)BUTTON_Handler();
+ assert(up_releases==47 && down_releases==35);
+ assert(!wheel_longpress);
+ /* Already-debounced physical key state must retain short/long semantics. */
+ for(;test_ms<13800;test_ms+=5) {
+  physical_keys=test_ms<13600?TX15_ENTER:
+    test_ms>=13650 && test_ms<13750?TX15_EXIT:0;
+  BUTTON_Handler();
+ }
+ assert(enter_presses==1 && enter_releases==1 && enter_longpress==1);
+ assert(exit_presses==1 && exit_releases==1 && !exit_longpress);
  LCD_DrawStart(4,5,5,6,DRAW_NWSE);
  for(int i=0;i<5;i++) LCD_DrawPixel(1);
  assert(n==4 && px[0]==4 && py[0]==5 && px[3]==5 && py[3]==6);

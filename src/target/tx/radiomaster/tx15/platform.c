@@ -20,20 +20,25 @@ void CLOCK_ResetWatchdog(void) {
     if(tx15_runtime_poll(CLOCK_getms())) REPORT[12]++;
 }
 u32 ScanButtons(void) {
+    /* Native GPIO keys are already debounced. Keep synthetic press/release
+     * long enough for BUTTON_DEBOUNCE_MS, without the old 5-items/s limit. */
+    enum {WHEEL_PULSE_MS=20,WHEEL_QUEUE_MAX=32};
     static int queued;
     static u32 until, pulse;
     static unsigned phase;
     struct tx15_input_event e=tx15_inputs_take();
-    queued+=e.rotation; if(queued>8) queued=8; if(queued<-8) queued=-8;
+    queued+=e.rotation;
+    if(queued>WHEEL_QUEUE_MAX)queued=WHEEL_QUEUE_MAX;
+    if(queued<-WHEEL_QUEUE_MAX)queued=-WHEEL_QUEUE_MAX;
     u32 now=CLOCK_getms();
     if(phase && (s32)(now-until)>=0) {
-        if(phase==1) { pulse=0; phase=2; until=now+100; }
+        if(phase==1) { pulse=0; phase=2; until=now+WHEEL_PULSE_MS; }
         else phase=0;
     }
     if(!phase && queued) {
         /* CHAN_ButtonMask does not parenthesize its argument internally. */
         pulse=queued>0 ? CHAN_ButtonMask(BUT_DOWN) : CHAN_ButtonMask(BUT_UP);
-        queued+=(queued>0)?-1:1; phase=1; until=now+100;
+        queued+=(queued>0)?-1:1; phase=1; until=now+WHEEL_PULSE_MS;
     }
     unsigned raw=tx15_inputs_state();
     u32 trims=0;

@@ -14,16 +14,17 @@ struct tx15_input_event tx15_input_filter_step(struct tx15_input_filter *f,unsig
             f->stable^=mask; if(f->stable&mask) e.pressed|=mask;
         }
     }
-    /* Four Gray-code edges per step. Reject skipped states instead of guessing
-     * motion. TX15 wiring is inverted: 3 -> 1 -> 0 -> 2 -> 3 is positive. */
+    /* TX15 has two detents per complete Gray cycle: two edges per click.
+     * Reject skipped states instead of guessing motion. Positive sequence:
+     * 3 -> 1 -> 0 (one click) -> 2 -> 3 (next click). */
     phase&=3;
     unsigned old=f->phase, diff=old^phase;
     if(diff==3) f->partial=0;
     else if(diff) {
         unsigned next=(old==3)?1:(old==1)?0:(old==0)?2:3;
         f->partial+=(phase==next)?1:-1;
-        if(f->partial>=4) { e.rotation=1; f->partial=0; }
-        if(f->partial<=-4) { e.rotation=-1; f->partial=0; }
+        if(f->partial>=2) { e.rotation=1; f->partial=0; }
+        if(f->partial<=-2) { e.rotation=-1; f->partial=0; }
     }
     f->phase=phase;
     if(keys&TX15_ENTER) { f->partial=0; e.rotation=0; }
