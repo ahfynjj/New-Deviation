@@ -121,7 +121,11 @@ static const char *templatetype_cb(guiObject_t *obj, int dir, void *data)
     u8 changed;
     mp->cur_template = GUI_TextSelectHelper(mp->cur_template, 0, Model.type == MODELTYPE_HELI ? MIXERTEMPLATE_MAX_HELI : MIXERTEMPLATE_MAX_PLANE, dir, 1, 1, &changed);
     if (changed) {
+#ifdef TX15_CARD_UI
+        MIXPAGE_ChangeTemplate(1);
+#else
         MIXPAGE_ChangeTemplate(0);
+#endif
         return "";
     }
     return _tr(MIXER_TemplateName(mp->cur_template));

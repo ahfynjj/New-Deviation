@@ -26,6 +26,10 @@
 static struct advmixcfg_obj_g1 * const gui1 = &gui_objs.u.advmixcfg.u.g1;
 static struct advmixcfg_obj_g2 * const gui2 = &gui_objs.u.advmixcfg.u.g2;
 static struct advmixcfg_obj_g3 * const gui3 = &gui_objs.u.advmixcfg.u.g3;
+#ifdef TX15_CARD_UI
+#include "card_ui.h"
+#include "mixer_cards.inc"
+#endif
 
 #if LCD_WIDTH == 320
     //320x240
@@ -67,6 +71,9 @@ static const int GRAPH_Y = ((220 - 40 - 150) / 2 + 40);
 
 static void _show_titlerow()
 {
+#ifdef TX15_CARD_UI
+    if(mp->cur_template==MIXERTEMPLATE_COMPLEX){tx15_mix_card_header();return;}
+#endif
     GUI_CreateLabelBox(&gui->chan, 4, 10, COL_TEMPLATE - 4, 14, &TITLE_FONT, MIXPAGE_ChanNameProtoCB, NULL, (void *)((long)mp->cur_mixer->dest));
     GUI_CreateTextSelect(&gui->tmpl, COL_TEMPLATE, 8, TEXTSELECT_96, NULL, templatetype_cb, (void *)((long)mp->channel));
     PAGE_CreateCancelButton(LCD_WIDTH-160, 4, okcancel_cb);
@@ -158,6 +165,9 @@ static void _show_expo_dr()
 
 static void _show_complex(int page_change)
 {
+#ifdef TX15_CARD_UI
+    tx15_mix_complex_cards(page_change);return;
+#endif
     (void)page_change;
     //Row 1
     if (! mp->firstObj) {
@@ -245,6 +255,9 @@ void MIXPAGE_RedrawGraphs()
                 GUI_Redraw(&gui2->graph[1]);
             break;
         case MIXERTEMPLATE_COMPLEX:
+#ifdef TX15_CARD_UI
+            GUI_Redraw(&tx15_mix_card_position);
+#endif
             GUI_Redraw(&gui3->graph);
             GUI_Redraw(&gui3->bar);
             break;
@@ -256,7 +269,12 @@ static inline guiObject_t * _get_obj(int idx, int objid)
 {
     (void)objid;
     switch(idx) {
-        case COMPLEX_TRIM: return (guiObject_t *)&gui3->trim;
+        case COMPLEX_TRIM:
+#ifdef TX15_CARD_UI
+            return tx15_mix_card_more?(guiObject_t *)&tx15_mix_card_trim:NULL;
+#else
+            return (guiObject_t *)&gui3->trim;
+#endif
         case COMMON_SRC:
             return (guiObject_t *)(mp->cur_template == MIXERTEMPLATE_SIMPLE ? &gui1->src
                                    : mp->cur_template == MIXERTEMPLATE_EXPO_DR ? &gui2->src

@@ -58,6 +58,9 @@ void _menu_init(int page)
         i++;
     }
 #ifdef TX15_MENU_TOUCH
+#ifdef TX15_CARD_UI
+    tx15_menu_items=idx;idx=(idx+2)/3;
+#endif
     GUI_CreateScrollable(&gui->scrollable, 0, HEADER_HEIGHT, LCD_WIDTH, MENU_CONTENT_HEIGHT,
                      LINE_SPACE, idx, row_cb, NULL, NULL, NULL);
     tx15_menu_footer_init();

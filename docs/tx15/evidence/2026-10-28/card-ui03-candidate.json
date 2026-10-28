@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "base": "b319556f",
+  "status": "usb-candidate-not-installed",
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "b30d006e4b764f460d1f611c6dbc5da01438ab81cdf1964dc029b3bb0cfb4691",
+    "payload_sha256": "09b936b9a0318b7bd7eedf6c770cbb24b330dc07b244192224b3edc8b3cbd64e",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false,
+    "status_regions": false,
+    "frame_swap": true,
+    "touch_diagnostic": true,
+    "menu_touch": true,
+    "card_ui": true
+  },
+  "tests_passed": 59,
+  "arm_objects": 157,
+  "resources_bytes": 464375,
+  "package": {
+    "path": "local\\tx15-usb-release\\tx15-card-ui03-20261028.ndu",
+    "bytes": 718432,
+    "sha256": "ba980a7e311183f33d61cd34468dc6d9db0fecd4228f70e09efedcdbc7fb3efa",
+    "image_bytes": 718304,
+    "image_crc": "0xae7d9d7e",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "entry": "0x24036bc9",
+  "new_layout": [
+    "three native menu categories",
+    "Complex Mix primary and More"
+  ],
+  "rotary_only": [
+    "Simple/Expo",
+    "curve/reorder child pages",
+    "ELRS Lua"
+  ],
+  "value_edit": "tap to arm/confirm; wheel adjusts; no touch keypad yet",
+  "review": "Independent read-only review found no blocking bug. Linked-object teardown/template-edit/child-return/save behavior still needs live acceptance.",
+  "device_accessed": false,
+  "flash_written": false
+}

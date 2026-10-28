@@ -14,6 +14,8 @@ regions=os.environ.get('TX15_STATUS_REGIONS')=='1'
 swap=os.environ.get('TX15_FRAME_SWAP')=='1'
 touch=os.environ.get('TX15_TOUCH_DIAGNOSTIC')=='1'
 menu_touch=os.environ.get('TX15_MENU_TOUCH')=='1'
+cards=os.environ.get('TX15_CARD_UI')=='1'
+if cards and not menu_touch:raise ValueError('Card UI requires native menu touch')
 if menu_touch and not touch:
  raise ValueError('Native menu touch requires touch diagnostic support')
 if touch and not (standalone and product):
@@ -57,6 +59,7 @@ if regions:flags.append('-DTX15_STATUS_REGIONS=1')
 if swap:flags.append('-DTX15_FRAME_SWAP=1')
 if touch:flags.append('-DTX15_TOUCH_DIAGNOSTIC=1')
 if menu_touch:flags.append('-DTX15_MENU_TOUCH=1')
+if cards:flags.append('-DTX15_CARD_UI=1')
 if os.environ.get('TX15_PERSISTENCE')=='1':flags.append('-DTX15_PERSISTENCE=1')
 if standalone:flags.append('-DTX15_STANDALONE=1')
 if os.environ.get('TX15_ELRS_DISCOVERY') == '1':
@@ -154,6 +157,6 @@ if len(payload.read_bytes())>0xf0000:raise ValueError('Application overlaps nati
  'payload_sha256':hashlib.sha256(payload.read_bytes()).hexdigest(),
  'rf_enabled':any(os.environ.get(n)=='1' for n in ('TX15_ELRS_LUA','TX15_ELRS_DISCOVERY','TX15_ELRS_RC')),
  'persistent_settings':os.environ.get('TX15_PERSISTENCE')=='1',
- 'audio_diagnostic':audio,'storage_read_only':storage,'buffered_display':buffered,'status_regions':regions,'frame_swap':swap,'touch_diagnostic':touch,'menu_touch':menu_touch},indent=2),encoding='utf8')
+ 'audio_diagnostic':audio,'storage_read_only':storage,'buffered_display':buffered,'status_regions':regions,'frame_swap':swap,'touch_diagnostic':touch,'menu_touch':menu_touch,'card_ui':cards},indent=2),encoding='utf8')
 print('Checked native boot payload:',payload,'(requires cold-start loader; not directly flashable)')
 print('No device accessed; hardware acceptance remains pending.')

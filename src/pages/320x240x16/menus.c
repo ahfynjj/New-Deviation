@@ -22,11 +22,21 @@
 
 #ifdef TX15_MENU_TOUCH
 #include "menu_touch.h"
+#ifdef TX15_CARD_UI
+#include "card_ui.h"
+static unsigned tx15_menu_items;
+#define HEADER_HEIGHT 52
+#define LINE_SPACE 104
+#define LINE_HEIGHT 96
+#define MENU_CONTENT_HEIGHT 208
+enum {NUM_X=0,NUM_WIDTH=0,MENU_X=12,MENU_WIDTH=146};
+#else
 enum {NUM_X=8,NUM_WIDTH=32,MENU_X=48,MENU_WIDTH=404};
 #define HEADER_HEIGHT TX15_UI_HEADER
 #define LINE_SPACE TX15_UI_ROW_HEIGHT
 #define LINE_HEIGHT TX15_UI_ROW_HEIGHT
 #define MENU_CONTENT_HEIGHT (TX15_UI_LIST_ROWS*TX15_UI_ROW_HEIGHT)
+#endif
 static void tx15_menu_footer_init(void);
 #else
 enum {
@@ -52,6 +62,22 @@ static void menu_press_cb(guiObject_t *obj, s8 press_type, const void *data)
 static int row_cb(int absrow, int relrow, int y, void *data)
 {
     (void)data;
+#ifdef TX15_CARD_UI
+    unsigned page=0,index=0;
+    for(unsigned col=0;col<3;col++){
+        unsigned target=absrow*3+col;
+        while(1){
+            menu_get_next_rowidx(&page);
+            if(page>=PAGEID_LAST)return col;
+            if(index==target)break;
+            index++;page++;
+        }
+        struct LabelDesc font=tx15_card_font(1);font.style=LABEL_CARD;
+        GUI_CreateLabelBox(&gui->name[relrow*3+col],12+col*155,y,146,96,
+            &font,menu_name_cb,menu_press_cb,(const void *)(uintptr_t)page);
+    }
+    return 3;
+#else
     int idx = 0;
     unsigned i = 0;
     while(1) {
@@ -75,12 +101,16 @@ static int row_cb(int absrow, int relrow, int y, void *data)
         i++;
     }
     return 1;
+#endif
 }
 #ifdef TX15_MENU_TOUCH
 static guiLabel_t menu_footer[3];
 static void tx15_menu_footer_init(void){
     static const char *const names[]={"Back","Previous","Next"};
     struct LabelDesc font=BUTTON_FONT;
+#ifdef TX15_CARD_UI
+    font=tx15_card_font(1);
+#endif
     for(unsigned i=0;i<3;i++)
         GUI_CreateLabelBox(&menu_footer[i],8+i*160,TX15_UI_FOOTER_Y,144,40,
             &font,NULL,NULL,names[i]);
@@ -90,7 +120,11 @@ void PAGE_MenuTouchScroll(int direction){
     int count=gui->scrollable.item_count;
     int visible=GUI_ScrollableVisibleRows(&gui->scrollable);
     if(visible<=0)return;
+#ifdef TX15_CARD_UI
+    visible=2;int last=count?((count-1)/2)*2:0;
+#else
     int last=count>visible?count-visible:0;
+#endif
     int row=PAGE_MenuTouchRow()+(direction>0?visible:-visible);
     if(row<0)row=0;
     if(row>last)row=last;
@@ -100,8 +134,15 @@ void PAGE_MenuTouchTap(unsigned x,unsigned y){
     int hit=tx15_menu_touch_hit(x,y);
     if(hit==6){PAGE_Pop();return;}
     if(hit==7 || hit==8){PAGE_MenuTouchScroll(hit==8?1:-1);return;}
-    if(hit<0 || hit>=GUI_ScrollableVisibleRows(&gui->scrollable))return;
+    if(hit<0)return;
+#ifdef TX15_CARD_UI
+    int row=PAGE_MenuTouchRow()*3+hit,idx=0;
+    if(hit>=6 || (unsigned)row>=tx15_menu_items)return;
+    GUI_SetSelected((guiObject_t *)&gui->name[hit]);
+#else
+    if(hit>=GUI_ScrollableVisibleRows(&gui->scrollable))return;
     int row=PAGE_MenuTouchRow()+hit,idx=0;
+#endif
     unsigned page=0;
     while(1){
         menu_get_next_rowidx(&page);

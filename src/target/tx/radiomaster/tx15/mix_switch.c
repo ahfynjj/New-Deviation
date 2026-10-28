@@ -16,6 +16,7 @@ static unsigned long_handled,exit_consumed;
 
 void tx15_mix_switch_register(guiTextSelect_t *field) {field->enable|=TX15_SWITCH_FIELD;}
 void tx15_mix_source_register(guiTextSelect_t *field) {field->enable|=TX15_SOURCE_FIELD;}
+void tx15_mix_value_register(guiTextSelect_t *field) {field->enable|=TX15_VALUE_FIELD;}
 static int read_knobs(int armed,int values[2]) {
     values[0]=CHAN_ReadInput(INP_S1);values[1]=CHAN_ReadInput(INP_S2);
     return tx15_knob_capture_step(&knobs,values,tx15_analog_status==4,armed);
@@ -25,7 +26,9 @@ static guiTextSelect_t *selected_field(void) {
     guiObject_t *obj=GUI_GetSelected();
     if(!obj || obj->Type!=TextSelect || !OBJ_IS_USED(obj) || OBJ_IS_HIDDEN(obj))return NULL;
     guiTextSelect_t *field=(guiTextSelect_t *)obj;
-    return (field->enable&(TX15_SWITCH_FIELD|TX15_SOURCE_FIELD)) && (field->enable&1) && field->InputValueCB?field:NULL;
+    return (field->enable&(TX15_SWITCH_FIELD|TX15_SOURCE_FIELD|TX15_VALUE_FIELD))
+        && (field->enable&1) && field->ValueCB
+        && ((field->enable&TX15_VALUE_FIELD) || field->InputValueCB)?field:NULL;
 }
 static void end_edit(void) {
     if(editing) {editing->enable&=~TX15_SWITCH_EDITING;GUI_Redraw((guiObject_t *)editing);}
@@ -84,9 +87,15 @@ void tx15_mix_switch_init(void) {
         CHAN_ButtonMask(BUT_UP)|CHAN_ButtonMask(BUT_DOWN)|CHAN_ButtonMask(BUT_LEFT)|CHAN_ButtonMask(BUT_RIGHT),
         BUTTON_PRESS|BUTTON_RELEASE|BUTTON_LONGPRESS|BUTTON_PRIORITY,buttons,NULL);
 }
+void tx15_mix_field_touch(guiObject_t *field){
+    if(editing && (guiObject_t *)editing!=field)end_edit();
+    GUI_SetSelected(field);
+    (void)buttons(CHAN_ButtonMask(BUT_ENTER),BUTTON_RELEASE,NULL);
+}
 void tx15_mix_switch_poll(void) {
     if(!editing)return;
     if(editing!=selected_field()) {end_edit();return;}
+    if(editing->enable&TX15_VALUE_FIELD)return; /* Numeric fields never capture hardware sources. */
     unsigned source;int value=CHAN_MAX_VALUE;
     if(editing->enable&TX15_SOURCE_FIELD) {
         int values[2];int event=read_knobs(1,values);

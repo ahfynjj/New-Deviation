@@ -8,6 +8,9 @@
 #define TX15_SWITCH_FIELD 4u
 #define TX15_SWITCH_EDITING 8u
 #define TX15_SOURCE_FIELD 16u
+#define TX15_VALUE_FIELD 32u
+void tx15_mix_value_register(guiTextSelect_t *field);
+void tx15_mix_field_touch(guiObject_t *field);
 void tx15_mix_switch_register(guiTextSelect_t *field);
 void tx15_mix_source_register(guiTextSelect_t *field);
 void tx15_mix_switch_init(void);

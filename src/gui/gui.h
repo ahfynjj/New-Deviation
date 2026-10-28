@@ -66,6 +66,10 @@ enum LabelType {
     LABEL_INVERTED,
 #else
     LABEL_LISTBOX,
+#ifdef TX15_CARD_UI
+    LABEL_CARD,
+    LABEL_PANEL,
+#endif
 #endif
 
 };

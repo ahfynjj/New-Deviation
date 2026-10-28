@@ -17,6 +17,9 @@
 #define ENABLE_GUIOBJECT
 #include "gui.h"
 #include "config/display.h"
+#ifdef TX15_CARD_UI
+#include "target/tx/radiomaster/tx15/card_ui.h"
+#endif
 
 #include "_textsel.c"
 

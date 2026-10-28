@@ -17,6 +17,9 @@
 #define ENABLE_GUIOBJECT
 #include "gui.h"
 #include "config/display.h"
+#ifdef TX15_CARD_UI
+#include "target/tx/radiomaster/tx15/card_ui.h"
+#endif
 
 #include "_label.c"
 
@@ -70,6 +73,10 @@ void GUI_DrawLabel(struct guiObject *obj)
     else
         str = (const char *)label->cb_data;
 
+#ifdef TX15_CARD_UI
+    if(label->desc.style==LABEL_CARD){tx15_card_draw_label(label,str);return;}
+    if(label->desc.style==LABEL_PANEL){tx15_card_draw_plate(obj,str,&label->desc);return;}
+#endif
     GUI_DrawLabelHelper(obj->box.x, obj->box.y, obj->box.width, obj->box.height, str, &label->desc, obj == objSELECTED);
 }
 

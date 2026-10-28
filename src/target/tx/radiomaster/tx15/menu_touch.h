@@ -5,8 +5,16 @@
 /* 0..5 rows, 6 Back, 7 Previous, 8 Next; gaps/header are not targets. */
 static inline int tx15_menu_touch_hit(unsigned x,unsigned y){
     if(x>=TX15_UI_WIDTH || y>=TX15_UI_HEIGHT)return -1;
+#ifdef TX15_CARD_UI
+    if(x>=12 && y>=52){
+        unsigned col=(x-12)/155,row=(y-52)/104;
+        if(col<3 && row<2 && (x-12)%155<146 && (y-52)%104<96)
+            return row*3+col;
+    }
+#else
     if(y>=TX15_UI_CONTENT_Y && y<TX15_UI_CONTENT_Y+TX15_UI_LIST_ROWS*TX15_UI_ROW_HEIGHT)
         return (y-TX15_UI_CONTENT_Y)/TX15_UI_ROW_HEIGHT;
+#endif
     if(y>=TX15_UI_FOOTER_Y && x>=8){
         unsigned slot=(x-8)/160;
         if(slot<3 && (x-8)%160<144)return 6+slot;

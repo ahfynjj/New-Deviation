@@ -32,6 +32,11 @@ static const struct ImageMap *_textself_image_map(enum ButtonType type, int enab
 
 void _DrawTextSelectHelper(struct guiTextSelect *select, const char *str)
 {
+#ifdef TX15_CARD_UI
+    if(select->type==TEXTSELECT_TEXT){
+        tx15_card_draw_plate((guiObject_t *)select,str,&select->desc);return;
+    }
+#endif
     u16 x, y, w, h;
     struct guiBox *box = &select->header.box;
 // only used for RTC config in Devo12

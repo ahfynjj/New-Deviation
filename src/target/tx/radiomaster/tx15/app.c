@@ -36,7 +36,9 @@ static void tx15_app_frame_service(void){(void)tx15_runtime_poll(CLOCK_getms());
 #include "../../../../../hardware/tx15/board/audio.h"
 #include "../../../../../hardware/tx15/board/media_clock.h"
 #endif
-#ifdef TX15_MENU_TOUCH
+#ifdef TX15_CARD_UI
+const char DeviationVersion[33]="New Deviation TX15 UI03";
+#elif defined(TX15_MENU_TOUCH)
 const char DeviationVersion[33]="New Deviation TX15 UI02-R1";
 #elif defined(TX15_TOUCH_DIAGNOSTIC)
 const char DeviationVersion[33]="New Deviation TX15 UI01";

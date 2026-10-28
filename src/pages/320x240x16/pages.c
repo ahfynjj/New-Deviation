@@ -15,6 +15,9 @@
 #include "pages.h"
 #ifdef TX15_MENU_TOUCH
 #include "menu_touch.h"
+#ifdef TX15_CARD_UI
+#include "card_ui.h"
+#endif
 #endif
 
 struct _gui_objs gui_objs;
@@ -63,6 +66,9 @@ void PAGE_ChangeByID(enum PageID id, s8 menuPage)
     PAGE_Exit();
     GUI_SelectionNotify(NULL);
     cur_page = id;
+#ifdef TX15_CARD_UI
+    tx15_card_page_theme(id);
+#endif
     BUTTON_InterruptLongPress(); //Make sure button press is not passed to the new page
     if (cur_page == PAGEID_MAIN)
         quick_page_enabled = 1;
