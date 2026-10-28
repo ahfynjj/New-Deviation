@@ -18,15 +18,19 @@ class CardUITests(unittest.TestCase):
 #include "menu_touch.h"
 #include "hardware/tx15/board/touch.h"
 struct tx15_touch_report tx15_touch_report;
-static unsigned ms,taps,stops;static int enabled=1,generation,pending;
+static unsigned ms,taps,stops;static int enabled=1,generation,pending,page=PAGEID_MIXTEMPL,list_row,scrolls;
 static struct tx15_touch_event queued;
 u32 CLOCK_getms(void){return ms;}
-int PAGE_GetID(void){return PAGEID_MIXTEMPL;}
+int PAGE_GetID(void){return page;}
 guiObject_t *GUI_IsModal(void){return NULL;}
 int PAGE_MixCardActive(void){return enabled;}
 int PAGE_MixCardGeneration(void){return generation;}
 int PAGE_MixCardHit(unsigned x,unsigned y){return x<300 && y>=44 && y<84?0:-1;}
 void PAGE_MixCardTap(unsigned x,unsigned y){assert(PAGE_MixCardHit(x,y)==0);taps++;}
+int PAGE_MixerTouchRow(void){return list_row;}
+int PAGE_MixerTouchHit(unsigned x,unsigned y){return x<300 && y>=44 && y<264?1:-1;}
+void PAGE_MixerTouchTap(unsigned x,unsigned y){assert(PAGE_MixerTouchHit(x,y)==1);taps++;}
+void PAGE_MixerTouchScroll(int d){scrolls+=d;list_row+=d*5;}
 int PAGE_MenuTouchRow(void){assert(0);return 0;}
 void PAGE_MenuTouchTap(unsigned x,unsigned y){(void)x;(void)y;assert(0);}
 void PAGE_MenuTouchScroll(int d){(void)d;assert(0);}
@@ -47,6 +51,13 @@ int main(void){
  event(TX15_TOUCH_UP,60,340);assert(taps==1);
  event(TX15_TOUCH_DOWN,60,400);enabled=0;
  event(TX15_TOUCH_UP,60,420);assert(taps==1 && stops==1);
+ page=PAGEID_MIXER;ms=500;tx15_menu_touch_poll();tx15_touch_report.state=TX15_TOUCH_READY;
+ event(TX15_TOUCH_DOWN,60,620);event(TX15_TOUCH_UP,60,640);assert(taps==2);
+ event(TX15_TOUCH_UP,60,650);assert(taps==2); /* duplicate release */
+ event(TX15_TOUCH_DOWN,200,700);event(TX15_TOUCH_MOVE,130,720);
+ event(TX15_TOUCH_UP,100,740);assert(scrolls==1 && taps==2);
+ event(TX15_TOUCH_DOWN,60,800);list_row++;
+ event(TX15_TOUCH_UP,60,820);assert(taps==2);
  return 0;
 }''',[])
     def test_numeric_edit_touch_and_physical_exit(self):
@@ -78,6 +89,7 @@ int main(void){
 #include "pages.h"
 #include "config/display.h"
 #include "card_ui.h"
+#include "mix_switch.h"
 struct display_settings Display;
 static unsigned font,prints,clears;
 guiObject_t *GUI_GetSelected(void){return NULL;}
@@ -105,8 +117,10 @@ int main(void){
  guiTextSelect_t field={0};field.type=TEXTSELECT_TEXT;field.header.Type=TextSelect;
  field.header.box=(struct guiBox){108,44,196,40};field.desc=tx15_card_font(1);field.ValueCB=value;
  GUI_DrawTextSelect((guiObject_t *)&field);assert(prints==1 && clears>=1);
+ field.enable=1|TX15_SWITCH_EDITING;
+ GUI_DrawTextSelect((guiObject_t *)&field);assert(prints==2);
  guiLabel_t label={0};label.header.box=(struct guiBox){322,156,146,96};label.desc=tx15_card_font(1);
- tx15_card_draw_label(&label,"Transmitter menu");assert(prints==2);
+ tx15_card_draw_label(&label,"Transmitter menu");assert(prints==3);
  tx15_card_page_theme(PAGEID_EDITCURVE);assert(!memcmp(&original,&Display,sizeof(Display)));
  return 0;
 }''',[])

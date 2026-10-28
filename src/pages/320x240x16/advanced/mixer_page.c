@@ -19,6 +19,10 @@
 #include "../icons.h"
 
 #include "../../common/advanced/_mixer_page.c"
+#ifdef TX15_CARD_UI
+#include "card_ui.h"
+#include "mixer_list_cards.inc"
+#endif
 
 void PAGE_MixerExit()
 {
@@ -26,6 +30,9 @@ void PAGE_MixerExit()
 
 static void _show_title()
 {
+#ifdef TX15_CARD_UI
+    tx15_mixer_list_title();return;
+#endif
     mp->max_scroll = Model.num_channels + NUM_VIRT_CHANNELS > ENTRIES_PER_PAGE ?
                           Model.num_channels + NUM_VIRT_CHANNELS - ENTRIES_PER_PAGE
                         : Model.num_channels + NUM_VIRT_CHANNELS;
@@ -83,6 +90,9 @@ static int row_cb(int absrow, int relrow, int y, void *data)
 
 static void _show_page()
 {
+#ifdef TX15_CARD_UI
+    tx15_mixer_list_page();return;
+#endif
     // Note for future maintenance: DO NOT use logical view to draw all the channel items at a time for this page:  I just
     // gave it a try, it spent very long time to construct all the 30 items and could trigger watch-dog to reboot !!!
     int init_y = LCD_HEIGHT == 240 ? 44 : 48;

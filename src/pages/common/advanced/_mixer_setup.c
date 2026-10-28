@@ -145,6 +145,9 @@ static u8 touch_cb(s16 x, s16 y, void *data);
 
 static void show_none()
 {
+#ifdef TX15_CARD_UI
+    if(mp->cur_template==MIXERTEMPLATE_NONE){tx15_mix_none_cards();return;}
+#endif
     mp->firstObj = NULL;
     //Row 0
 }

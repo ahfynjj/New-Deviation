@@ -92,6 +92,13 @@ void tx15_mix_field_touch(guiObject_t *field){
     GUI_SetSelected(field);
     (void)buttons(CHAN_ButtonMask(BUT_ENTER),BUTTON_RELEASE,NULL);
 }
+void tx15_mix_field_step(guiObject_t *field,int direction){
+    if((direction!=1 && direction!=-1) || !editing
+        || field!=(guiObject_t *)editing || selected_field()!=editing)return;
+    editing->ValueCB(field,direction,editing->cb_data);
+    /* ValueCB may rebuild the template or enter another page. */
+    if((guiObject_t *)editing==field && selected_field()==editing)GUI_Redraw(field);
+}
 void tx15_mix_switch_poll(void) {
     if(!editing)return;
     if(editing!=selected_field()) {end_edit();return;}

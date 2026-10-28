@@ -15,18 +15,21 @@ static unsigned down_x,down_y;
 static int eligible(int page){
 #ifdef TX15_CARD_UI
     if(page==PAGEID_MIXTEMPL)return PAGE_MixCardActive();
+    if(page==PAGEID_MIXER)return 1;
 #endif
     return page==PAGEID_MENU || page==PAGEID_MODELMNU || page==PAGEID_TXMENU;
 }
 static int position(void){
 #ifdef TX15_CARD_UI
     if(PAGE_GetID()==PAGEID_MIXTEMPL)return PAGE_MixCardGeneration();
+    if(PAGE_GetID()==PAGEID_MIXER)return PAGE_MixerTouchRow();
 #endif
     return PAGE_MenuTouchRow();
 }
 static int target(unsigned x,unsigned y){
 #ifdef TX15_CARD_UI
     if(PAGE_GetID()==PAGEID_MIXTEMPL)return PAGE_MixCardHit(x,y);
+    if(PAGE_GetID()==PAGEID_MIXER)return PAGE_MixerTouchHit(x,y);
 #endif
     return tx15_menu_touch_hit(x,y);
 }
@@ -71,14 +74,16 @@ void tx15_menu_touch_poll(void){
         if(!moved && hit>=0 && hit==target(event.x,event.y)){
 #ifdef TX15_CARD_UI
             if(page==PAGEID_MIXTEMPL){PAGE_MixCardTap(event.x,event.y);return;}
+            if(page==PAGEID_MIXER){PAGE_MixerTouchTap(event.x,event.y);return;}
 #endif
             PAGE_MenuTouchTap(event.x,event.y);return;
         }
-        if(hit>=0 && hit<6 && ay>=24 && ay>ax){
+        if(hit>=0 && ay>=24 && ay>ax){
 #ifdef TX15_CARD_UI
             if(page==PAGEID_MIXTEMPL)return;
+            if(page==PAGEID_MIXER){if(hit<10)PAGE_MixerTouchScroll(dy<0?1:-1);return;}
 #endif
-            PAGE_MenuTouchScroll(dy<0?1:-1);return;
+            if(hit<6)PAGE_MenuTouchScroll(dy<0?1:-1);return;
         }
     }
 }

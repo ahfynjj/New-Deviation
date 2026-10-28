@@ -3,6 +3,7 @@
 #include "pages.h"
 #include "config/display.h"
 #include "card_ui.h"
+#include "mix_switch.h"
 static struct display_settings saved;
 static unsigned active;
 struct LabelDesc tx15_card_font(unsigned large){
@@ -16,15 +17,23 @@ void tx15_card_draw_plate(guiObject_t *obj,const char *text,const struct LabelDe
     LCD_FillRect(x,y,w,h,TX15_CARD_BG); /* Clear the previous square focus outline, including corners. */
     LCD_FillRoundRect(x,y,w,h,5,font->fill_color);
     LCD_DrawRoundRect(x,y,w,h,5,font->outline_color);
+    unsigned adjusting=obj->Type==TextSelect
+        && (((guiTextSelect_t *)obj)->enable&TX15_SWITCH_EDITING) && w>=120 && h>=40;
+    unsigned available=w-(adjusting?88:8);
+    if(adjusting){
+        LCD_DrawFastHLine(x+12,y+h/2,16,TX15_CARD_ACCENT);
+        LCD_DrawFastHLine(x+w-28,y+h/2,16,TX15_CARD_ACCENT);
+        LCD_DrawFastVLine(x+w-20,y+h/2-8,17,TX15_CARD_ACCENT);
+    }
     LCD_SetFont(font->font);u16 tw,th;
     LCD_GetStringDimensions((const u8 *)text,&tw,&th);
-    if(tw>w-8 || th>h-4){LCD_SetFont(LABEL_FONT.font);LCD_GetStringDimensions((const u8 *)text,&tw,&th);}
-    if(tw>w-8 || th>h-4)return;
+    if(tw>available || th>h-4){LCD_SetFont(LABEL_FONT.font);LCD_GetStringDimensions((const u8 *)text,&tw,&th);}
+    if(tw>available || th>h-4)return;
     LCD_SetFontColor(font->font_color);
     LCD_PrintStringXY(font->align==ALIGN_LEFT?x+6:x+(w-tw)/2,y+(h-th)/2,text);
 }
 void tx15_card_page_theme(int page){
-    int on=page==PAGEID_MENU || page==PAGEID_MODELMNU || page==PAGEID_TXMENU || page==PAGEID_MIXTEMPL;
+    int on=page==PAGEID_MENU || page==PAGEID_MODELMNU || page==PAGEID_TXMENU || page==PAGEID_MIXTEMPL || page==PAGEID_MIXER;
     if(on && !active){saved=Display;active=1;}
     if(!on && active){Display=saved;active=0;}
     if(!on)return;

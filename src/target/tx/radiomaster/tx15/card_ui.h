@@ -12,4 +12,8 @@ int PAGE_MixCardHit(unsigned x,unsigned y);
 void PAGE_MixCardTap(unsigned x,unsigned y);
 int PAGE_MixCardActive(void);
 int PAGE_MixCardGeneration(void);
+int PAGE_MixerTouchHit(unsigned x,unsigned y);
+int PAGE_MixerTouchRow(void);
+void PAGE_MixerTouchTap(unsigned x,unsigned y);
+void PAGE_MixerTouchScroll(int direction);
 #endif

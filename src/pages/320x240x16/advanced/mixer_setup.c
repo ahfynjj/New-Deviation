@@ -20,6 +20,9 @@
 #else
 #define set_input_switch_cb set_input_source_cb
 #endif
+#ifdef TX15_CARD_UI
+static void tx15_mix_none_cards(void);
+#endif
 
 #include "../../common/advanced/_mixer_setup.c"
 
@@ -72,7 +75,8 @@ static const int GRAPH_Y = ((220 - 40 - 150) / 2 + 40);
 static void _show_titlerow()
 {
 #ifdef TX15_CARD_UI
-    if(mp->cur_template==MIXERTEMPLATE_COMPLEX){tx15_mix_card_header();return;}
+    if(mp->cur_template==MIXERTEMPLATE_COMPLEX || mp->cur_template==MIXERTEMPLATE_SIMPLE
+        || mp->cur_template==MIXERTEMPLATE_NONE){tx15_mix_card_header();return;}
 #endif
     GUI_CreateLabelBox(&gui->chan, 4, 10, COL_TEMPLATE - 4, 14, &TITLE_FONT, MIXPAGE_ChanNameProtoCB, NULL, (void *)((long)mp->cur_mixer->dest));
     GUI_CreateTextSelect(&gui->tmpl, COL_TEMPLATE, 8, TEXTSELECT_96, NULL, templatetype_cb, (void *)((long)mp->channel));
@@ -82,6 +86,9 @@ static void _show_titlerow()
 
 static void _show_simple()
 {
+#ifdef TX15_CARD_UI
+    tx15_mix_simple_cards();return;
+#endif
     const int space = 40;
     int y = 60;
     //Row 1

@@ -15,6 +15,7 @@ class MixCardsTests(unittest.TestCase):
 static struct mixer_page memory,*mp=&memory;
 static struct advmixcfg_obj objects,*gui=&objects;
 static struct advmixcfg_obj_g3 *gui3=&objects.u.g3;
+static struct advmixcfg_obj_g1 *gui1=&objects.u.g1;
 static unsigned fields,labels,graphs,sources,values,touches,saves,changes;
 static guiObject_t *selected;
 int PAGE_GetID(void){return PAGEID_MIXTEMPL;}
@@ -77,6 +78,7 @@ void tx15_mix_source_register(guiTextSelect_t *o){(void)o;sources++;}
 void tx15_mix_switch_register(guiTextSelect_t *o){(void)o;sources++;}
 void tx15_mix_value_register(guiTextSelect_t *o){(void)o;values++;}
 void tx15_mix_field_touch(guiObject_t *o){selected=o;touches++;}
+void tx15_mix_field_step(guiObject_t *o,int d){(void)o;(void)d;}
 void tx15_mix_switch_forget(guiObject_t *o){(void)o;}
 #include "src/pages/320x240x16/advanced/mixer_cards.inc"
 int main(void){
@@ -94,6 +96,6 @@ int main(void){
  PAGE_MixCardTap(30,55);assert(touches==2 && selected==(guiObject_t *)&gui3->nummix);
  assert(PAGE_MixCardHit(30,235)==-1);
  PAGE_MixCardTap(400,300);assert(saves==1);
- mp->cur_template=MIXERTEMPLATE_SIMPLE;assert(!PAGE_MixCardActive());
+ mp->cur_template=MIXERTEMPLATE_EXPO_DR;assert(!PAGE_MixCardActive());
  return 0;
 }''',[])

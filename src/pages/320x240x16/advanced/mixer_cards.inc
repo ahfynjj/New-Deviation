@@ -3,6 +3,7 @@
 static unsigned tx15_mix_card_more,tx15_mix_card_generation;
 static guiLabel_t tx15_mix_card_footer[3],tx15_mix_card_trim,tx15_mix_card_curve_edit;
 static guiLabel_t tx15_mix_card_position;
+static guiLabel_t tx15_mix_card_empty;
 static const char *tx15_mix_card_position_cb(guiObject_t *o,const void *data){
     (void)o;(void)data;
     snprintf(tempstring,sizeof(tempstring),"Mix %u/%u",(unsigned)(mp->cur_mixer-mp->mixer)+1,mp->num_mixers);
@@ -10,7 +11,9 @@ static const char *tx15_mix_card_position_cb(guiObject_t *o,const void *data){
 }
 static const char *tx15_mix_card_caption(guiObject_t *o,const void *data){
     (void)o;
-    switch((uintptr_t)data){case 7:return "Cancel";case 8:return tx15_mix_card_more?"Basic 2/2":"More 1/2";case 9:return "OK";default:return "Edit curve";}
+    switch((uintptr_t)data){case 7:return "Cancel";case 8:
+        return mp->cur_template==MIXERTEMPLATE_SIMPLE?"Edit curve":mp->cur_template==MIXERTEMPLATE_NONE?"Template":tx15_mix_card_more?"Basic 2/2":"More 1/2";
+        case 9:return "OK";default:return "Edit curve";}
 }
 static void tx15_mix_card_visibility(void){
     guiObject_t *primary[]={
@@ -30,6 +33,8 @@ static void tx15_mix_card_visibility(void){
 static void tx15_mix_card_more_cb(guiObject_t *obj,s8 press,const void *data){
     (void)obj;(void)data;if(press!=-1)return;
     tx15_mix_switch_forget(GUI_GetSelected());
+    if(mp->cur_template==MIXERTEMPLATE_NONE){tx15_mix_field_touch((guiObject_t *)&gui->tmpl);return;}
+    if(mp->cur_template==MIXERTEMPLATE_SIMPLE){curveselect_cb((guiObject_t *)&gui1->curve,&mp->mixer[0]);return;}
     tx15_mix_card_more^=1;tx15_mix_card_generation++;
     tx15_mix_card_visibility();
     GUI_Redraw(&tx15_mix_card_footer[1]);
@@ -41,7 +46,7 @@ static void tx15_mix_card_action(guiObject_t *obj,s8 press,const void *data){
     tx15_mix_switch_forget(GUI_GetSelected());
     if(action==7 || action==9)okcancel_cb(obj,(const void *)(uintptr_t)(action==9));
     else if(action==10){toggle_trim_cb(obj,NULL);GUI_Redraw(&tx15_mix_card_trim);}
-    else if(action==11)curveselect_cb((guiObject_t *)&gui3->curve,mp->cur_mixer);
+    else if(action==11)curveselect_cb((guiObject_t *)(mp->cur_template==MIXERTEMPLATE_SIMPLE?&gui1->curve:&gui3->curve),mp->cur_mixer);
 }
 static void tx15_mix_card_label(guiLabel_t *obj,unsigned y,const char *text){
     struct LabelDesc font=tx15_card_font(0);font.align=ALIGN_LEFT;
@@ -96,35 +101,82 @@ static void tx15_mix_complex_cards(int page_change){
     GUI_CreateLabelBox(&tx15_mix_card_trim,12,132,292,40,&font,show_trim_cb,tx15_mix_card_action,(const void *)10);
     tx15_mix_card_visibility();
 }
-int PAGE_MixCardActive(void){return PAGE_GetID()==PAGEID_MIXTEMPL && mp->cur_template==MIXERTEMPLATE_COMPLEX;}
+static void tx15_mix_simple_cards(void){
+    tx15_mix_card_generation++;
+    struct LabelDesc font=tx15_card_font(1);
+    mp->firstObj=(guiObject_t *)&gui1->srclbl;
+    tx15_mix_card_label(&gui1->srclbl,44,"Source");
+    GUI_CreateTextSourcePlate(&gui1->src,108,44,196,40,&font,sourceselect_cb,set_source_cb,
+        set_input_source_cb,&mp->mixer[0].src);tx15_mix_source_register(&gui1->src);
+    tx15_mix_card_label(&gui1->curvelbl,88,"Curve");
+    GUI_CreateTextSelectPlate(&gui1->curve,108,88,196,40,&font,curveselect_cb,set_curvename_cb,&mp->mixer[0]);tx15_mix_value_register(&gui1->curve);
+    tx15_mix_card_label(&gui1->scalelbl,132,"Scale");
+    GUI_CreateTextSelectPlate(&gui1->scale,108,132,196,40,&font,NULL,set_number100_cb,&mp->mixer[0].scalar);tx15_mix_value_register(&gui1->scale);
+    tx15_mix_card_label(&gui1->offsetlbl,176,"Offset");
+    GUI_CreateTextSelectPlate(&gui1->offset,108,176,196,40,&font,NULL,set_number100_cb,&mp->mixer[0].offset);tx15_mix_value_register(&gui1->offset);
+    GUI_CreateXYGraph(&gui1->graph,328,48,136,164,CHAN_MIN_VALUE,CHAN_MIN_VALUE*5/4,
+        CHAN_MAX_VALUE,CHAN_MAX_VALUE*5/4,0,PCT_TO_RANGE(25),eval_mixer_cb,curpos_cb,touch_cb,&mp->mixer[0]);
+    GUI_CreateLabelBox(&tx15_mix_card_curve_edit,316,224,152,40,&font,tx15_mix_card_caption,tx15_mix_card_action,(const void *)11);
+}
+static void tx15_mix_none_cards(void){
+    tx15_mix_card_generation++;
+    struct LabelDesc font=tx15_card_font(0);
+    mp->firstObj=GUI_CreateLabelBox(&tx15_mix_card_empty,12,64,456,80,&font,NULL,NULL,"Choose a template above");
+}
+int PAGE_MixCardActive(void){return PAGE_GetID()==PAGEID_MIXTEMPL
+    && (mp->cur_template==MIXERTEMPLATE_COMPLEX || mp->cur_template==MIXERTEMPLATE_SIMPLE || mp->cur_template==MIXERTEMPLATE_NONE);}
 int PAGE_MixCardGeneration(void){return tx15_mix_card_generation;}
-int PAGE_MixCardHit(unsigned x,unsigned y){
+static int tx15_mix_card_base_hit(unsigned x,unsigned y){
     if(!PAGE_MixCardActive() || x>=480 || y>=320)return -1;
+    if(mp->cur_template==MIXERTEMPLATE_NONE && y>=40 && y<280)return -1;
     if(x>=12 && x<304 && y>=44 && y<260){
         unsigned row=(y-44)/44;
         if((y-44)%44>=40)return -1;
+        if(mp->cur_template==MIXERTEMPLATE_SIMPLE)return row<4?(int)row:-1;
         if(tx15_mix_card_more && (row>2 || (row==2 && !MIXER_SourceHasTrim(MIXER_SRC(mp->mixer[0].src)))))return -1;
         return row;
     }
-    if(x>=316 && x<468 && y>=180 && y<220)return 5;
+    if(mp->cur_template==MIXERTEMPLATE_COMPLEX && x>=316 && x<468 && y>=180 && y<220)return 5;
     if(x>=100 && x<320 && y<40)return 6;
     if(x>=316 && x<468 && y>=224 && y<264)return 11;
     if(x>=12 && y>=280){unsigned c=(x-12)/156;if(c<3 && (x-12)%156<144)return 7+c;}
     return -1;
 }
+static guiTextSelect_t *tx15_mix_card_field(int hit){
+    if(hit==6)return &gui->tmpl;
+    if(mp->cur_template==MIXERTEMPLATE_SIMPLE){
+        guiTextSelect_t *rows[]={&gui1->src,&gui1->curve,&gui1->scale,&gui1->offset};
+        return hit>=0 && hit<4?rows[hit]:NULL;
+    }
+    if(hit==5)return &gui3->curve;
+    if(tx15_mix_card_more)return hit==0?&gui3->nummix:hit==1?&gui3->page:NULL;
+    guiTextSelect_t *rows[]={&gui3->src,&gui3->sw,&gui3->mux,&gui3->scale,&gui3->offset};
+    return hit>=0 && hit<5?rows[hit]:NULL;
+}
+int PAGE_MixCardHit(unsigned x,unsigned y){
+    int hit=tx15_mix_card_base_hit(x,y);
+    if(hit<0 || hit>6)return hit;
+    guiTextSelect_t *field=tx15_mix_card_field(hit);
+    if(field && (field->enable&TX15_SWITCH_EDITING)){
+        struct guiBox *box=&field->header.box;
+        if(x>=box->x && x<box->x+40)return 100+hit*2;
+        if(x>=box->x+box->width-40 && x<box->x+box->width)return 101+hit*2;
+    }
+    return hit;
+}
 void PAGE_MixCardTap(unsigned x,unsigned y){
     int hit=PAGE_MixCardHit(x,y);
     if(hit<0)return;
+    if(hit>=100){
+        guiTextSelect_t *field=tx15_mix_card_field((hit-100)/2);
+        if(field)tx15_mix_field_step((guiObject_t *)field,hit&1?1:-1);
+        return;
+    }
     if(hit==8){tx15_mix_card_more_cb(NULL,-1,NULL);return;}
     if(hit>=7){tx15_mix_card_action(NULL,-1,(const void *)(uintptr_t)hit);return;}
-    guiObject_t *obj=NULL;
-    if(hit==5)obj=(guiObject_t *)&gui3->curve;
-    else if(hit==6)obj=(guiObject_t *)&gui->tmpl;
-    else if(tx15_mix_card_more){
-        if(hit==2){tx15_mix_card_action(NULL,-1,(const void *)10);return;}
-        obj=(guiObject_t *)(hit==0?&gui3->nummix:&gui3->page);
-    }else{
-        guiTextSelect_t *rows[]={&gui3->src,&gui3->sw,&gui3->mux,&gui3->scale,&gui3->offset};obj=(guiObject_t *)rows[hit];
+    if(mp->cur_template==MIXERTEMPLATE_COMPLEX && tx15_mix_card_more && hit==2){
+        tx15_mix_card_action(NULL,-1,(const void *)10);return;
     }
-    tx15_mix_field_touch(obj);
+    guiTextSelect_t *field=tx15_mix_card_field(hit);
+    if(field)tx15_mix_field_touch((guiObject_t *)field);
 }

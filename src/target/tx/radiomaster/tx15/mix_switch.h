@@ -11,6 +11,7 @@
 #define TX15_VALUE_FIELD 32u
 void tx15_mix_value_register(guiTextSelect_t *field);
 void tx15_mix_field_touch(guiObject_t *field);
+void tx15_mix_field_step(guiObject_t *field,int direction);
 void tx15_mix_switch_register(guiTextSelect_t *field);
 void tx15_mix_source_register(guiTextSelect_t *field);
 void tx15_mix_switch_init(void);

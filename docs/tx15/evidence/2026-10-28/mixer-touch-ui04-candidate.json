@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "date": "2026-10-28",
+  "base": "23c137af",
+  "status": "usb-candidate-not-installed",
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "a818341cf84310055a76b92bb2476341aeaf9f8151840e50a9dbb874160bce32",
+    "payload_sha256": "79e724439bf33873a596fe2e86bf7a3262bddd99faea31648b1b43df56558d11",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false,
+    "status_regions": false,
+    "frame_swap": true,
+    "touch_diagnostic": true,
+    "menu_touch": true,
+    "card_ui": true
+  },
+  "tests_passed": 64,
+  "arm_objects": 157,
+  "resources_bytes": 464375,
+  "package": {
+    "path": "local\\tx15-usb-release\\tx15-mixer-touch-ui04-20261028.ndu",
+    "bytes": 719720,
+    "sha256": "9712c31433d6be59959d1157c8e1224f19981ec2d3e30bd3758eb8d81b6940d9",
+    "image_bytes": 719592,
+    "image_crc": "0x14b426b2",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "scope": "Native five-row Mixer list and Simple/Complex/None template chooser; armed 40px minus/plus zones; same callbacks and save/cancel; legacy child pages rotary-only.",
+  "review": "One independent static review: no important actionable findings.",
+  "device_accessed": false,
+  "flash_written": false,
+  "hardware_acceptance": "Pending USB: list tap/swipe, Simple/Complex and template rebuild, single-step/center-confirm, wheel/EXIT, source/switch capture, OK versus Cancel persistence."
+}
