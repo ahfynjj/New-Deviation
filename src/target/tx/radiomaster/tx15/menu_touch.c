@@ -14,6 +14,7 @@ static uint32_t activated,down_ms;
 static unsigned down_x,down_y;
 static int eligible(int page){
 #ifdef TX15_CARD_UI
+    if(tx15_mix_touch_active())return 1;
     if(page==PAGEID_MIXTEMPL)return PAGE_MixCardActive();
     if(page==PAGEID_MIXER)return 1;
 #endif
@@ -21,6 +22,7 @@ static int eligible(int page){
 }
 static int position(void){
 #ifdef TX15_CARD_UI
+    if(tx15_mix_touch_active())return tx15_mix_touch_generation();
     if(PAGE_GetID()==PAGEID_MIXTEMPL)return PAGE_MixCardGeneration();
     if(PAGE_GetID()==PAGEID_MIXER)return PAGE_MixerTouchRow();
 #endif
@@ -28,6 +30,7 @@ static int position(void){
 }
 static int target(unsigned x,unsigned y){
 #ifdef TX15_CARD_UI
+    if(tx15_mix_touch_active())return tx15_mix_touch_hit(x,y);
     if(PAGE_GetID()==PAGEID_MIXTEMPL)return PAGE_MixCardHit(x,y);
     if(PAGE_GetID()==PAGEID_MIXER)return PAGE_MixerTouchHit(x,y);
 #endif
@@ -73,6 +76,7 @@ void tx15_menu_touch_poll(void){
         if((uint32_t)(event.ms-down_ms)>500u)continue;
         if(!moved && hit>=0 && hit==target(event.x,event.y)){
 #ifdef TX15_CARD_UI
+            if(tx15_mix_touch_active()){tx15_mix_touch_tap(event.x,event.y);return;}
             if(page==PAGEID_MIXTEMPL){PAGE_MixCardTap(event.x,event.y);return;}
             if(page==PAGEID_MIXER){PAGE_MixerTouchTap(event.x,event.y);return;}
 #endif
@@ -80,6 +84,7 @@ void tx15_menu_touch_poll(void){
         }
         if(hit>=0 && ay>=24 && ay>ax){
 #ifdef TX15_CARD_UI
+            if(tx15_mix_touch_active())return;
             if(page==PAGEID_MIXTEMPL)return;
             if(page==PAGEID_MIXER){if(hit<10)PAGE_MixerTouchScroll(dy<0?1:-1);return;}
 #endif

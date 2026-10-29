@@ -23,6 +23,10 @@ static struct tx15_touch_event queued;
 u32 CLOCK_getms(void){return ms;}
 int PAGE_GetID(void){return page;}
 guiObject_t *GUI_IsModal(void){return NULL;}
+int tx15_mix_touch_active(void){return 0;}
+int tx15_mix_touch_generation(void){return 0;}
+int tx15_mix_touch_hit(unsigned x,unsigned y){(void)x;(void)y;return -1;}
+void tx15_mix_touch_tap(unsigned x,unsigned y){(void)x;(void)y;assert(0);}
 int PAGE_MixCardActive(void){return enabled;}
 int PAGE_MixCardGeneration(void){return generation;}
 int PAGE_MixCardHit(unsigned x,unsigned y){return x<300 && y>=44 && y<84?0:-1;}
@@ -121,7 +125,7 @@ int main(void){
  GUI_DrawTextSelect((guiObject_t *)&field);assert(prints==2);
  guiLabel_t label={0};label.header.box=(struct guiBox){322,156,146,96};label.desc=tx15_card_font(1);
  tx15_card_draw_label(&label,"Transmitter menu");assert(prints==3);
- tx15_card_page_theme(PAGEID_EDITCURVE);assert(!memcmp(&original,&Display,sizeof(Display)));
+ tx15_card_page_theme(PAGEID_MAIN);assert(!memcmp(&original,&Display,sizeof(Display)));
  return 0;
 }''',[])
     def test_actual_card_menu_enumeration_and_scroll(self):

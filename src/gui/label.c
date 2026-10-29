@@ -55,6 +55,9 @@ guiObject_t *GUI_CreateLabelBox(guiLabel_t *label, u16 x, u16 y, u16 width, u16 
         label->strCallback = strCallback;
     label->pressCallback = pressCallback;
     label->cb_data = data;
+#ifdef TX15_CARD_UI
+    if(pressCallback && desc->style>=LABEL_PANEL)tx15_mix_touch_add(obj);
+#endif
     if (! label->desc.font)
         label->desc.font = LABEL_FONT.font;
     if (! label->desc.font)

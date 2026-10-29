@@ -103,10 +103,10 @@ void press_button_cb(guiObject_t *obj, const void *data)
         break;
     case REMOVE:
         if(rl.count > 1) {
-            for(tmp = rl.selected; tmp < rl.count; tmp++)
+            for(tmp = rl.selected; tmp + 1 < rl.count; tmp++)
                 rl.list[tmp] = rl.list[tmp+1];
-            rl.list[rl.count] = 0;
             rl.count--;
+            rl.list[rl.count] = 0;
             if(rl.selected == rl.count)
                 rl.selected--;
             redraw();

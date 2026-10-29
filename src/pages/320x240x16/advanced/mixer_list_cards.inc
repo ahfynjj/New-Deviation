@@ -41,6 +41,7 @@ static int tx15_mixer_list_row(int row,int relative,int y,void *data){
     (void)data;
     unsigned ch=tx15_mixer_list_channel(row);
     struct LabelDesc font=tx15_card_font(1);
+    font.style=LABEL_MIX_ACTION;
     int named=ch<NUM_OUT_CHANNELS || !_is_virt_cyclic(ch);
     GUI_CreateLabelBox(&gui->name[relative].lbl,12,y,88,40,&font,MIXPAGE_ChanNameProtoCB,
         named?tx15_mixer_list_name:NULL,(const void *)(uintptr_t)ch);

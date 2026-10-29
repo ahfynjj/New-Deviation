@@ -122,6 +122,9 @@ guiObject_t *GUI_CreateTextSelectPlate(guiTextSelect_t *select, u16 x, u16 y, u1
     if ((width == 0 || height == 0) && ! underline)
         select->desc.style = LABEL_NO_BOX;
 
+#ifdef TX15_CARD_UI
+    tx15_mix_touch_add(obj);
+#endif
     return obj;
 }
 

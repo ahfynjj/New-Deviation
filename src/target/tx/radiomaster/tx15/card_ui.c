@@ -6,10 +6,56 @@
 #include "mix_switch.h"
 static struct display_settings saved;
 static unsigned active;
-static struct {guiObject_t *object;const char *caption;} mix_rows[5];
+static struct {guiObject_t *object;const char *caption;} mix_rows[24];
+static guiObject_t *mix_targets[40];
+static unsigned mix_count,mix_generation;
+static int mix_owner=-1;
+int tx15_mix_touch_active(void){return mix_owner==PAGE_GetID() && mix_count!=0;}
+int tx15_mix_touch_generation(void){return mix_generation;}
+void tx15_mix_touch_changed(void){mix_generation++;}
+void tx15_mix_touch_begin(int page){mix_owner=page;mix_count=0;mix_generation++;tx15_card_mix_rows_reset();}
+void tx15_mix_touch_add(guiObject_t *obj){
+    if(mix_owner!=PAGE_GetID())return;
+    mix_generation++; /* A reused row object may now name a different channel. */
+    for(unsigned i=0;i<mix_count;i++)if(mix_targets[i]==obj)return;
+    if(mix_count<40)mix_targets[mix_count++]=obj;
+}
+int tx15_mix_touch_hit(unsigned x,unsigned y){
+    if(!tx15_mix_touch_active())return -1;
+    for(unsigned i=0;i<mix_count;i++){
+        guiObject_t *o=mix_targets[i];struct guiBox *b=&o->box;
+        if(!OBJ_IS_USED(o) || OBJ_IS_HIDDEN(o) || x<b->x || y<b->y || x>=b->x+b->width || y>=b->y+b->height)continue;
+        if(o->Type==TextSelect){
+            guiTextSelect_t *f=(guiTextSelect_t *)o;
+            if(!(f->enable&1))continue;
+            if(f->enable&TX15_SWITCH_EDITING){if(x<b->x+40)return i*3+1;if(x>=b->x+b->width-40)return i*3+2;}
+        }
+        return i*3;
+    }
+    return -1;
+}
+void tx15_mix_touch_tap(unsigned x,unsigned y){
+    int hit=tx15_mix_touch_hit(x,y);if(hit<0)return;
+    guiObject_t *o=mix_targets[hit/3];
+    if(o->Type==TextSelect){
+        if(hit%3)tx15_mix_field_step(o,hit%3==1?-1:1);
+        else tx15_mix_field_touch(o);
+    }else if(o->Type==Label){
+        tx15_mix_switch_forget(GUI_GetSelected());GUI_SetSelected(o);
+        guiLabel_t *l=(guiLabel_t *)o;if(l->pressCallback)l->pressCallback(o,-1,l->cb_data);
+    }else if(o->Type==XYGraph){
+        tx15_mix_switch_forget(GUI_GetSelected());
+        guiXYGraph_t *g=(guiXYGraph_t *)o;struct guiBox *b=&o->box;
+        if(g->touch_cb && b->width>1 && b->height>1){
+            s16 px=g->min_x+(s32)(x-b->x)*(g->max_x-g->min_x)/(b->width-1);
+            s16 py=g->max_y-(s32)(y-b->y)*(g->max_y-g->min_y)/(b->height-1);
+            if(g->touch_cb(px,py,g->cb_data))GUI_Redraw(o);
+        }
+    }
+}
 void tx15_card_mix_rows_reset(void){memset(mix_rows,0,sizeof(mix_rows));}
 void tx15_card_mix_row(guiTextSelect_t *field,const char *caption){
-    for(unsigned i=0;i<5;i++)if(!mix_rows[i].object || mix_rows[i].object==(guiObject_t *)field){
+    for(unsigned i=0;i<24;i++)if(!mix_rows[i].object || mix_rows[i].object==(guiObject_t *)field){
         mix_rows[i].object=(guiObject_t *)field;mix_rows[i].caption=caption;
         field->desc.style=LABEL_MIX_ROW;return;
     }
@@ -47,7 +93,7 @@ static void mix_plate(guiObject_t *obj,const char *text,const struct LabelDesc *
         if(editing)LCD_DrawRoundRect(x+1,y+1,w-2,h-2,4,TX15_CARD_ACCENT);
         if(font->style==LABEL_MIX_ROW){
             const char *caption="";
-            for(unsigned i=0;i<5;i++)if(mix_rows[i].object==obj){caption=mix_rows[i].caption;break;}
+            for(unsigned i=0;i<24;i++)if(mix_rows[i].object==obj){caption=mix_rows[i].caption;break;}
             mix_text(caption,x+(editing?44:12),y,64,h,LABEL_FONT.font,TX15_CARD_MUTED,0);
             if(editing)mix_text("EDIT",x+110,y,30,h,LABEL_FONT.font,TX15_CARD_ACCENT,0);
             mix_text(text,x+148,y,w-148-(editing?40:36),h,font->font,font->font_color,1);
@@ -95,7 +141,8 @@ void tx15_card_draw_plate(guiObject_t *obj,const char *text,const struct LabelDe
     LCD_PrintStringXY(font->align==ALIGN_LEFT?x+6:x+(w-tw)/2,y+(h-th)/2,text);
 }
 void tx15_card_page_theme(int page){
-    int on=page==PAGEID_MENU || page==PAGEID_MODELMNU || page==PAGEID_TXMENU || page==PAGEID_MIXTEMPL || page==PAGEID_MIXER;
+    int on=page==PAGEID_MENU || page==PAGEID_MODELMNU || page==PAGEID_TXMENU || page==PAGEID_MIXTEMPL || page==PAGEID_MIXER
+        || page==PAGEID_EDITCURVE || page==PAGEID_EDITLIMIT || page==PAGEID_REORDER;
     if(on && !active){saved=Display;active=1;}
     if(!on && active){Display=saved;active=0;}
     if(!on)return;

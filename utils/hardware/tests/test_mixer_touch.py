@@ -11,7 +11,7 @@ class MixerTouchTests(unittest.TestCase):
                     'static unsigned fields,labels,graphs,sources,values,touches,saves,changes;\nstatic int steps;')
                 code=code.replace('void tx15_mix_field_step(guiObject_t *o,int d){(void)o;(void)d;}',
                     'void tx15_mix_field_step(guiObject_t *o,int d){assert(o==selected);steps+=d;}')
-                code=code.replace('mp->cur_template=MIXERTEMPLATE_EXPO_DR;assert(!PAGE_MixCardActive());',r'''
+                code=code.replace('mp->cur_template=MIXERTEMPLATE_EXPO_DR;assert(PAGE_MixCardActive());',r'''
  tx15_mix_card_more_cb(NULL,-1,NULL); /* back to Basic */
  selected=(guiObject_t *)&gui3->scale;gui3->scale.enable=1|TX15_SWITCH_EDITING;
  assert(PAGE_MixCardHit(24,190)==106 && PAGE_MixCardHit(300,190)==107);
@@ -26,7 +26,7 @@ class MixerTouchTests(unittest.TestCase):
  mp->cur_template=MIXERTEMPLATE_NONE;tx15_mix_none_cards();assert(PAGE_MixCardActive());
  assert(PAGE_MixCardHit(200,100)==-1 && PAGE_MixCardHit(200,20)==6);
  assert(PAGE_MixCardHit(200,300)==8); /* template footer */
- mp->cur_template=MIXERTEMPLATE_EXPO_DR;assert(!PAGE_MixCardActive());
+ mp->cur_template=MIXERTEMPLATE_EXPO_DR;assert(PAGE_MixCardActive());
 ''')
                 return helper.SwitchUpgradeTests.run_c(case,code,sources)
         Adapted('test_dense_geometry_more_page_and_touch_callbacks').test_dense_geometry_more_page_and_touch_callbacks()

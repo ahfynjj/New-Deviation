@@ -75,8 +75,7 @@ static const int GRAPH_Y = ((220 - 40 - 150) / 2 + 40);
 static void _show_titlerow()
 {
 #ifdef TX15_CARD_UI
-    if(mp->cur_template==MIXERTEMPLATE_COMPLEX || mp->cur_template==MIXERTEMPLATE_SIMPLE
-        || mp->cur_template==MIXERTEMPLATE_NONE){tx15_mix_card_header();return;}
+    tx15_mix_card_header();return;
 #endif
     GUI_CreateLabelBox(&gui->chan, 4, 10, COL_TEMPLATE - 4, 14, &TITLE_FONT, MIXPAGE_ChanNameProtoCB, NULL, (void *)((long)mp->cur_mixer->dest));
     GUI_CreateTextSelect(&gui->tmpl, COL_TEMPLATE, 8, TEXTSELECT_96, NULL, templatetype_cb, (void *)((long)mp->channel));
@@ -118,6 +117,9 @@ static void _show_simple()
 
 static void _show_expo_dr()
 {
+#ifdef TX15_CARD_UI
+    tx15_mix_expo_cards();return;
+#endif
     sync_mixers();
     //Row 1
     mp->firstObj = GUI_CreateLabelBox(&gui2->srclbl, COL1_TEXT, 32, 96, 16, &NARROW_FONT, GUI_Localize, NULL, _tr_noop("Src"));
@@ -227,6 +229,9 @@ static void _show_complex(int page_change)
 
 static void _update_rate_widgets(u8 idx)
 {
+#ifdef TX15_CARD_UI
+    (void)idx;tx15_mix_expo_visibility();return;
+#endif
     u8 mix = idx + 1;
     if (MIXER_SRC(mp->mixer[mix].sw)) {
         GUI_SetHidden((guiObject_t *)&gui2->rate[idx], 0);
@@ -252,6 +257,9 @@ void MIXPAGE_RedrawGraphs()
 {
     switch(mp->cur_template) {
         case MIXERTEMPLATE_SIMPLE:
+#ifdef TX15_CARD_UI
+            GUI_Redraw(&tx15_mix_card_output);
+#endif
             GUI_Redraw(&gui1->graph);
             break;
         case MIXERTEMPLATE_EXPO_DR:

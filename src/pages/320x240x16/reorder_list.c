@@ -43,6 +43,11 @@ static int row_cb(int absrow, int relrow, int y, void *data)
     return 1;
 }
 
+#ifdef TX15_CARD_UI
+#include "card_ui.h"
+#include "mix_switch.h"
+#include "reorder_cards.inc"
+#endif
 
 void PAGE_ReorderInit(int page)
 {
@@ -58,6 +63,9 @@ void PAGE_ReorderInit(int page)
         else
             rl.list[i] = 0;
     }
+#ifdef TX15_CARD_UI
+    tx15_order_cards(requested);return;
+#endif
     PAGE_ShowHeader("");
     GUI_CreateButton(&gui->save, 220 + (LCD_WIDTH - 320), 4, BUTTON_96, _show_button_cb, okcancel_cb, (void *)SAVE);
     GUI_CreateButton(&gui->up, 8 + REORD_XOFFSET, 40, BUTTON_96x16, _show_button_cb, press_button_cb, (void *)MOVE_UP);

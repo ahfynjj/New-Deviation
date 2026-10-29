@@ -17,10 +17,18 @@
 #include <stdlib.h>
 
 #include "../../common/advanced/_mixer_limits.c"
+#ifdef TX15_CARD_UI
+#include "card_ui.h"
+#include "mix_switch.h"
+#include "mixer_limits_cards.inc"
+#endif
 
 
 static void _show_limits()
 {
+#ifdef TX15_CARD_UI
+    tx15_limit_cards();return;
+#endif
     enum {
         COL1 = (8 + ((LCD_WIDTH - 320) / 2)),
         COL2 = (COL1 + 120),
@@ -71,6 +79,9 @@ static void _show_limits()
 
 static void _show_titlerow()
 {
+#ifdef TX15_CARD_UI
+    tx15_limit_title();return;
+#endif
     enum {
         TITLE_X     = 40,
         BUTTON_X    = LCD_WIDTH - 96 - 8,

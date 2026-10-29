@@ -22,7 +22,12 @@ static int read_knobs(int armed,int values[2]) {
     return tx15_knob_capture_step(&knobs,values,tx15_analog_status==4,armed);
 }
 static guiTextSelect_t *selected_field(void) {
-    if(PAGE_GetID()!=PAGEID_MIXTEMPL || GUI_IsModal())return NULL;
+    int page=PAGE_GetID();
+    if((page!=PAGEID_MIXTEMPL
+#ifdef TX15_CARD_UI
+        && page!=PAGEID_EDITCURVE && page!=PAGEID_EDITLIMIT && page!=PAGEID_REORDER
+#endif
+        ) || GUI_IsModal())return NULL;
     guiObject_t *obj=GUI_GetSelected();
     if(!obj || obj->Type!=TextSelect || !OBJ_IS_USED(obj) || OBJ_IS_HIDDEN(obj))return NULL;
     guiTextSelect_t *field=(guiTextSelect_t *)obj;

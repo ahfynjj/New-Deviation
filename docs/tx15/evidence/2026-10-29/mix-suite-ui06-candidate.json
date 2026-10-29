@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "base": "3df434bc",
+  "status": "usb-candidate-not-installed",
+  "build": {
+    "schema": 1,
+    "mode": "standalone-elrs-candidate",
+    "elf_sha256": "ba243c1668b5d7a49a3c16665eeb8a2af959276b09d6b774c4c917ed0fc77712",
+    "payload_sha256": "e75f91f0ad569aff2b1156a7ddb9f4e0860161ebc23287e472a75bfcf137896a",
+    "rf_enabled": true,
+    "persistent_settings": true,
+    "audio_diagnostic": true,
+    "storage_read_only": true,
+    "buffered_display": false,
+    "status_regions": false,
+    "frame_swap": true,
+    "touch_diagnostic": true,
+    "menu_touch": true,
+    "card_ui": true
+  },
+  "tests_passed": 73,
+  "arm_objects": 157,
+  "resources_bytes": 464375,
+  "package": {
+    "path": "local\\tx15-usb-release\\tx15-mix-suite-ui06-20261029.ndu",
+    "bytes": 723144,
+    "sha256": "d37bdb9a935c51d532d91b856509bd6571463436e466282e8364128699d00246",
+    "image_bytes": 723016,
+    "image_crc": "0xf3988e3f",
+    "boot_api": 1,
+    "settings_abi": 1
+  },
+  "scope": [
+    "Mixer list styles",
+    "None and template header",
+    "Simple and Complex/More rows",
+    "Expo rate selector and linked/off guards",
+    "curve controls and release-only graph point setting",
+    "ten live limit controls, two banks, failsafe enable and Revert",
+    "reorder selection/move/copy/insert/remove/save/cancel"
+  ],
+  "review": "Independent review found Expo Edit curve off/linked bypass; visibility and callback guards fixed, regression added and reviewer confirmed closed.",
+  "regressions": "Actual native child-page callbacks tested for curve reverse/save/cancel, limit bank/safety/Revert/live Back, reorder move/save/cancel; registry bounds/hidden/disabled/page generation and old reorder REMOVE buffer guard.",
+  "device_accessed": false,
+  "flash_written": false,
+  "hardware_acceptance": "Pending USB full MIX workflow typography, physical wheel/EXIT/capture, touch/refresh and persistence. Shared system keyboard and Monitor are not redrawn."
+}
